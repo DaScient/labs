@@ -2,106 +2,240 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Live RSS AI Articles</title>
+<title>ASCII — Live RSS AI-Style Articles</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  body {
-    margin: 0;
-    background: black;
-    color: #00FF7F;
-    font-family: monospace;
-    white-space: pre-wrap;
-    padding: 10px;
-  }
-  a { color: #33f1b1; text-decoration: none; }
+  /* ultra-simple terminal look */
+  html,body{height:100%}
+  body{margin:0;background:#000;color:#a6ffb3;font:14px/1.55 ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap}
+  #t{padding:10px}
+  a{color:#7fffd4;text-decoration:none}
 </style>
 </head>
 <body>
-<pre id="term">[Starting live RSS AI article feed...]\n</pre>
-
+<pre id="t">[boot] ascii writer online…</pre>
 <script>
 "use strict";
-const term = document.getElementById("term");
+
+/* ===== tiny helpers ===== */
+const T = document.getElementById('t');
 const now = () => new Date().toISOString().replace('T',' ').replace(/\..+/,'');
+const println = (s='') => { T.textContent += '\n' + s; T.scrollTop = T.scrollHeight; };
+const words = t => (t.toLowerCase().match(/[a-z]{3,}/g) || []);
+const SENT_SPLIT=/([.!?])\s+/g;
+function sentences(t){ if(!t) return []; return t.split(SENT_SPLIT).reduce((a,c,i,arr)=>{ if(i%2===0){ const s=(c+(arr[i+1]||'')).trim(); if(s) a.push(s)} return a},[]) }
 
-function println(s="") {
-  term.textContent += s + "\n";
-  term.scrollTop = term.scrollHeight;
-}
-
-// Minimal readable text extractor
-function extractReadable(html){
-  const doc = new DOMParser().parseFromString(html, "text/html");
-  doc.querySelectorAll('script,style,noscript,iframe').forEach(e=>e.remove());
-  return (doc.body?.innerText || '').replace(/\s+/g,' ').trim();
-}
-
-// Basic keyword grabber
-function keywords(text, limit=5) {
-  const words = (text.toLowerCase().match(/\b[a-z]{4,}\b/g) || []);
-  const freq = {};
-  for (let w of words) freq[w] = (freq[w] || 0) + 1;
-  return Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,limit).map(e=>e[0]);
-}
-
-// Simple summarizer (first N sentences)
-function summarize(text, sentences=5) {
-  return text.split(/(?<=[.!?])\s+/).slice(0,sentences).join(" ");
-}
-
-async function fetchText(url) {
-  const r = await fetch(url);
-  if (!r.ok) throw new Error(r.status);
+/* ===== corrected /cors fetch ===== */
+async function fetchText(url, corsBase){
+  if(!corsBase){
+    const r = await fetch(url, {headers:{'Accept':'application/rss+xml,text/xml,text/html'}}); 
+    if(!r.ok) throw new Error(r.status); 
+    return await r.text();
+  }
+  const base = new URL(corsBase, location.origin);
+  if(!base.pathname.endsWith('/cors')) base.pathname = base.pathname.replace(/\/$/,'') + '/cors';
+  base.searchParams.set('url', url);
+  const r = await fetch(base.toString(), {cache:'no-cache'});
+  if(!r.ok) throw new Error(r.status);
   return await r.text();
 }
 
+/* ===== rss parse + fast readability ===== */
 function parseFeed(xmlTxt){
-  const doc = new DOMParser().parseFromString(xmlTxt, "application/xml");
-  let items = Array.from(doc.querySelectorAll('item, entry'));
-  return items.map(n => ({
-    title: n.querySelector('title')?.textContent.trim() || '',
-    link: n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent.trim() || ''
+  const doc = new DOMParser().parseFromString(xmlTxt,'application/xml');
+  let items = Array.from(doc.querySelectorAll('item'));
+  if(!items.length) items = Array.from(doc.querySelectorAll('entry'));
+  return items.map(n=>({
+    title:(n.querySelector('title')?.textContent||'').trim(),
+    link:(n.querySelector('link')?.getAttribute('href')||n.querySelector('link')?.textContent||'').trim(),
+    guid:(n.querySelector('guid')?.textContent||n.querySelector('id')?.textContent||'').trim(),
+    published:(n.querySelector('pubDate')?.textContent||n.querySelector('updated')?.textContent||'').trim()
   }));
 }
 
-async function processItem(item) {
-  println(`[${now()}] NEW: ${item.title}`);
-  try {
-    const html = await fetchText(item.link);
-    const clean = extractReadable(html);
-    if (!clean) { println(`(no content)\n`); return; }
-    const summary = summarize(clean, 7);
-    const kw = keywords(clean, 5).join(", ");
-    println(`Summary:\n${summary}\n`);
-    println(`Keywords: ${kw}\n`);
-    println(`Source: ${item.link}\n`);
-    println(`------------------------------------------------------------\n`);
-  } catch(e) {
-    println(`Error fetching article: ${e}\n`);
-  }
+function extractReadable(html){
+  const doc = new DOMParser().parseFromString(html,'text/html');
+  doc.querySelectorAll('script,style,noscript,iframe,header,footer,nav').forEach(e=>e.remove());
+  const blocks=[]; 
+  doc.querySelectorAll('p,article,section,div').forEach(el=>{
+    const txt=(el.textContent||'').replace(/\s+/g,' ').trim();
+    if(txt.split(' ').length>=12) blocks.push({txt,score:txt.length});
+  });
+  blocks.sort((a,b)=>b.score-a.score);
+  const best = blocks.slice(0,8).map(b=>b.txt).join('\n\n');
+  return best || (doc.body?.innerText||'').trim();
 }
 
-async function pollFeeds() {
-  const feeds = [
-    "https://feeds.washingtonpost.com/rss/national",
-    "https://www.forbes.com/most-popular/feed/"
-  ];
-  for (let feed of feeds) {
-    try {
-      const xml = await fetchText(feed);
-      const items = parseFeed(xml).slice(0,3);
-      for (let it of items) {
-        await processItem(it);
-      }
-    } catch(e) {
-      println(`[${now()}] Feed error (${feed}): ${e}\n`);
+/* ===== light NLP ===== */
+function textrank(text, topN=10){
+  const s = sentences(text), n = s.length;
+  const toks = s.map(x=>new Set(words(x)));
+  const M = Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++) for(let j=i+1;j<n;j++){
+    const A=toks[i], B=toks[j];
+    const inter=[...A].filter(x=>B.has(x)).length;
+    const den=Math.log(A.size+1)+Math.log(B.size+1);
+    const sim=den>0? inter/den : 0;
+    M[i][j]=M[j][i]=sim;
+  }
+  let rank=Array(n).fill(1/n), d=.85;
+  for(let it=0; it<30; it++){
+    const nr=Array(n).fill((1-d)/n);
+    for(let i=0;i<n;i++){
+      const deg=M[i].reduce((a,b)=>a+b,0);
+      if(deg>0){ for(let j=0;j<n;j++) if(M[i][j]>0) nr[j]+=d*(M[i][j]/deg)*rank[i]; }
+    }
+    rank=nr;
+  }
+  const idx=rank.map((v,i)=>[i,v]).sort((a,b)=>b[1]-a[1]).slice(0,topN).map(x=>x[0]).sort((a,b)=>a-b);
+  return idx.map(i=>s[i]).join(' ');
+}
+function rake(text, k=5){
+  const stop = new Set(("a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,at").split(','));
+  const ws = words(text).filter(w=>!stop.has(w) && w.length>3);
+  const freq = new Map(); for(const w of ws) freq.set(w,(freq.get(w)||0)+1);
+  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0, k).map(x=>x[0]);
+}
+
+/* ===== article generator (ASCII sections) ===== */
+function bulletsFrom(text, n=6){
+  const sents = sentences(text);
+  const picks = sents.filter(s=>s.length>40).slice(0, n);
+  return picks.map(s=>'- ' + s.replace(/\s+/g,' ').trim());
+}
+function section(title){ return '\n' + title.toUpperCase() + '\n'; }
+
+function writeRegulatory(text){
+  const key = textrank(text, 8);
+  const kws = rake(text,5);
+  const pts = bulletsFrom(key,5);
+  let out = '';
+  out += section('REGULATORY TRENDS') + pts.join('\n') + '\n';
+  out += section('RECOMMENDATIONS FOR ORGANIZATIONS') + [
+    '- Develop content governance and misinformation response protocols.',
+    '- Implement privacy-by-design and transparent consent flows.',
+    '- Clarify IP ownership when using AI-assisted content.',
+    '- Adopt auditable, ethical AI guidelines; publish disclosures.',
+    '- Engage with regulators and standards bodies proactively.'
+  ].join('\n') + '\n';
+  out += section('ACTION CHECKLIST') + [
+    '- Audit moderation + brand safety playbooks.',
+    '- Map data flows; align to GDPR/CCPA equivalents.',
+    '- Update IP/license registers for UGC and AI outputs.',
+    '- Publish AI usage policy and model cards summary.',
+    '- Track policy dockets; assign an owner for advocacy.'
+  ].join('\n') + '\n';
+  out += '\nSEO KEYWORDS: ' + kws.join('; ') + '\n';
+  return out;
+}
+
+function writeConsumerUX(title, text){
+  const key = textrank(text, 10);
+  const kws = rake(text,5);
+  let out = '';
+  out += section('CONSUMER IMPACT & UX');
+  out += '\nHOW THIS STORY SHAPES CONSUMER EXPERIENCE AND ENGAGEMENT\n\n';
+  out += 'INTRODUCTION\n' + (sentences(text).slice(0,3).join(' ')) + '\n\n';
+  out += 'CONSUMER BEHAVIOR INSIGHTS\n' + bulletsFrom(key,5).join('\n') + '\n\n';
+  out += 'UX DESIGN IMPLICATIONS\n' + [
+    '1. Personalization with clear privacy controls.',
+    '2. Omnichannel consistency across web, app, social, and commerce.',
+    '3. Accessibility and inclusive patterns by default.',
+    '4. Real-time features for peak moments (live, polls, Q&A).',
+    '5. Trust messaging around data collection and use.'
+  ].join('\n') + '\n\n';
+  out += 'RECOMMENDATIONS\n' + [
+    '- Ship interactive modules tied to the event narrative.',
+    '- Use server-side A/B tests for high-traffic periods.',
+    '- Add performance budgets; prefetch critical assets.',
+    '- Build explainable personalization (why am I seeing this?).',
+    '- Close the loop with UX metrics and VOC surveys.'
+  ].join('\n') + '\n\n';
+  out += 'ACTION CHECKLIST\n' + [
+    '- Map end-to-end fan journey.',
+    '- Enable privacy-safe recs + suppression rules.',
+    '- Add real-time UI blocks and rate-limit guards.',
+    '- Validate WCAG compliance.',
+    '- Monitor conversion + retention deltas weekly.'
+  ].join('\n') + '\n';
+  out += '\nSEO KEYWORDS: ' + kws.join('; ') + '\n';
+  return out;
+}
+
+/* ===== engine ===== */
+let seen = new Set();
+
+async function processItem(feedUrl, item, corsBase){
+  const fp = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(feedUrl+'|'+item.guid+'|'+item.link));
+  const key = Array.from(new Uint8Array(fp)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  if(seen.has(key)) return; seen.add(key);
+
+  println(`\n[${now()}] NEW :: ${item.title}`);
+  println(`SRC  :: ${item.link}`);
+
+  let html=''; 
+  try { html = await fetchText(item.link, corsBase); }
+  catch(e){ println(`ERR  :: fetch article failed (${e})`); return; }
+
+  const clean = extractReadable(html);
+  if(!clean || clean.split(' ').length < 80){ println(`SKIP :: not enough content`); return; }
+
+  // Compose two clean ASCII articles per item (simple & strategic)
+  const reg = writeRegulatory(clean);
+  const ux  = writeConsumerUX(item.title, clean);
+
+  println('\n-----\n' + reg + '\n-----\n' + ux + '\n-----\n');
+  // iframe auto-height for GoDaddy
+  parent.postMessage({type:'AIRTICLE_HEIGHT', height:document.documentElement.scrollHeight}, '*');
+}
+
+async function pollOnce(){
+  const feeds = window.FEEDS;
+  const corsBase = window.CORS_BASE;
+  for(const f of feeds){
+    try{
+      const xml = await fetchText(f, corsBase);
+      const items = parseFeed(xml).slice(0, 5);
+      for(const it of items) await processItem(f, it, corsBase);
+    }catch(e){
+      println(`[${now()}] FEED ERR :: ${f} → ${e}`);
     }
   }
 }
 
-// Run immediately and repeat
-pollFeeds();
-setInterval(pollFeeds, 180000); // every 3 min
+/* ===== boot from query =====
+   ?autoStart=1&interval=180
+   &feedsUrl=/labs/configs/feeds.txt
+   &corsBase=/        (or https://your-worker.example.com/cors)
+*/
+(async function(){
+  const q = new URLSearchParams(location.search);
+  const get = (k,d=null)=> q.get(k) ?? d;
+
+  async function loadList(u){
+    const abs = u.startsWith('http') ? u : new URL(u, location.origin).toString();
+    const r = await fetch(abs, {cache:'no-cache'}); if(!r.ok) throw new Error(r.status);
+    return (await r.text()).split('\n').map(s=>s.trim()).filter(Boolean);
+  }
+
+  try{
+    window.FEEDS = await loadList(get('feedsUrl','/labs/configs/feeds.txt'));
+  }catch(e){
+    // fallback defaults
+    window.FEEDS = [
+      'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml',
+      'https://feeds.washingtonpost.com/rss/national',
+      'https://www.forbes.com/most-popular/feed/'
+    ];
+    println(`[${now()}] WARN :: using default feeds (${e})`);
+  }
+  window.CORS_BASE = get('corsBase','/');  // allow "/", "/cors", or absolute
+  const interval = Math.max(30, parseInt(get('interval','180')) || 180);
+
+  println(`[${now()}] START :: interval=${interval}s  feeds=${window.FEEDS.length}`);
+  await pollOnce();
+  if(get('autoStart','1') === '1'){ setInterval(pollOnce, interval*1000); }
+})();
 </script>
 </body>
 </html>
