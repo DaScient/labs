@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ASCII AI Articles</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body {
+    background-color: black;
+    color: #00ff66;
+    font-family: monospace;
+    font-size: 14px;
+    line-height: 1.5em;
+    padding: 20px;
+    white-space: pre-wrap;
+  }
+  #output {
+    max-width: 900px;
+    margin: auto;
+  }
+</style>
+</head>
+<body>
+<div id="output">Loading AI-enriched summaries...</div>
+
+<script>
+const FEEDS = "/labs/configs/feeds.txt"; // relative to your Cloudflare Pages
+const INTERVAL = 180000; // 180 seconds
+const GEN_URL = "https://YOUR-WORKER.workers.dev/gen"; // Cloudflare Worker that calls OpenAI
+
+async function fetchFeeds() {
+  const feedList = await fetch(FEEDS).then(r => r.text());
+  const feeds = feedList.split("\n").filter(l => l.trim() && !l.startsWith("#"));
+
+  for (let feed of feeds) {
+    try {
+      const aiData = await fetch(`${GEN_URL}?feed=${encodeURIComponent(feed)}`).then(r => r.text());
+      appendOutput(aiData.trim());
+      appendOutput("\n" + "-".repeat(80) + "\n");
+    } catch (e) {
+      appendOutput(`Error fetching ${feed}: ${e.message}`);
+    }
+  }
+}
+
+function appendOutput(text) {
+  document.getElementById("output").textContent += "\n" + text;
+}
+
+// First load
+fetchFeeds();
+// Repeat every INTERVAL
+setInterval(fetchFeeds, INTERVAL);
+</script>
+</body>
+</html>
