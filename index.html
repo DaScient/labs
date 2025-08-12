@@ -389,6 +389,52 @@ $('#startBtn').onclick = async () => {
 $('#stopBtn').onclick = () => { if (timer){ clearInterval(timer); timer=null; log(`[${now()}] Stopped.`); } };
 $('#onceBtn').onclick = () => { log(`[${now()}] Run once`); pollOnce(); };
 
+/* ======= GitHub Pages config via query params =======
+   Supports:
+   - ?autoStart=1
+   - ?interval=180
+   - ?feedsUrl=/labs/configs/feeds.txt   (absolute or full URL)
+   - ?perspUrl=/labs/configs/perspectives.txt
+   - ?corsBase=https%3A%2F%2Fapi.dascient.com%2Fcors
+*/
+(async function configureFromQuery(){
+  const q = new URLSearchParams(location.search);
+  const get = (k, d=null) => q.get(k) ?? d;
+
+  // interval
+  const qInterval = parseInt(get('interval',''));
+  if (!isNaN(qInterval) && qInterval > 0) $('#interval').value = qInterval;
+
+  // corsBase
+  const qCors = get('corsBase','');
+  if (qCors) $('#corsBase').value = qCors;
+
+  // helper to fetch text into a textarea
+  async function loadText(url, targetSel){
+    try {
+      const abs = url.startsWith('http') ? url : new URL(url, location.origin).toString();
+      const r = await fetch(abs, { cache: 'no-cache' });
+      if (!r.ok) throw new Error(r.status);
+      const txt = await r.text();
+      $(targetSel).value = txt.trim();
+    } catch (e) {
+      log(`Config load failed for ${url}: ${e}`);
+    }
+  }
+
+  // feedsUrl / perspectivesUrl
+  const feedsUrl = get('feedsUrl','');
+  if (feedsUrl) await loadText(feedsUrl, '#feeds');
+
+  const perspUrl = get('perspUrl','');
+  if (perspUrl) await loadText(perspUrl, '#perspectives');
+
+  // autoStart
+  if (get('autoStart','') === '1') {
+    $('#startBtn').click();
+  }
+})();
+
 /* Auto-resize for iframe parents (optional) */
 (function(){
   function postHeight(){
