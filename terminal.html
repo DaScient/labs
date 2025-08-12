@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>DASCIENT — Terminal RSS Analyzer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  html,body{height:100%}
+  body{margin:0;background:#000;color:#00ff7f;font:14px/1.5 ui-monospace,Menlo,Consolas,monospace}
+  .wrap{max-width:1100px;margin:0 auto;padding:12px}
+  .bar{color:#34d399}
+  .muted{color:#00aa66}
+  pre{white-space:pre-wrap;word-break:break-word}
+  .blink{animation:bl 1s steps(1,end) infinite}@keyframes bl{50%{opacity:0}}
+  a{color:#33f1b1;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">DASCIENT ░ live-rss ░ terminal <span class="blink">▊</span></div>
+  <pre id="term"></pre>
+</div>
+
+<script>
+"use strict";
+
+/* ---------- tiny helpers ---------- */
+const term = document.getElementById("term");
+const now = () => new Date().toISOString().replace('T',' ').replace(/\..+/,'');
+
+function println(s=""){ term.textContent += s + "\n"; term.scrollTop = term.scrollHeight; }
+function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]) }
+const SENT_SPLIT=/([.!?])\s+/g;
+function sentences(t){ if(!t) return []; return t.split(SENT_SPLIT).reduce((a,c,i,arr)=>{ if(i%2===0){ const s=(c+(arr[i+1]||"")).trim(); if(s) a.push(s)} return a},[])}
+
+/* ---------- stable hash (dedupe) ---------- */
+async function sha256(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ---------- CORS-aware fetch text ---------- */
+function buildCorsURL(corsBase, target){
+  // If no cors base: direct
+  if (!corsBase) return { url: target, passthru: true };
+  // Normalize corsBase
+  const base = corsBase.trim();
+  // If corsBase already looks like an endpoint that expects ?url=
+  // or already ends with '/cors', just use it directly
+  const needsJoin = !(base.includes('?') || base.endsWith('/cors'));
+  const endpoint = needsJoin ? (base.replace(/\/$/,'') + '/cors') : base;
+  const u = new URL(endpoint, location.origin);
+  u.searchParams.set("url", target);
+  return { url: u.toString(), passthru: false };
+}
+
+async function fetchText(url, corsBase){
+  const { url: u } = buildCorsURL(corsBase, url);
+  const r = await fetch(u, { headers: { "Accept":"application/rss+xml,text/xml,text/html" } });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return await r.text();
+}
+
+/* ---------- parse RSS ---------- */
+function parseFeed(xmlTxt){
+  const doc = new DOMParser().parseFromString(xmlTxt, "application/xml");
+  let items = Array.from(doc.querySelectorAll('item'));
+  if (!items.length) items = Array.from(doc.querySelectorAll('entry'));
+  return items.map(n => ({
+    title: (n.querySelector('title')?.textContent || '').trim(),
+    link: (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim(),
+    guid: (n.querySelector('guid')?.textContent || n.querySelector('id')?.textContent || '').trim(),
+    published: (n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || '').trim()
+  }));
+}
+
+/* ---------- readability-lite ---------- */
+function extractReadable(html){
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  doc.querySelectorAll('script,style,noscript,iframe,header,footer,nav').forEach(e=>e.remove());
+  const blocks = [];
+  doc.querySelectorAll('p,article,section,div').forEach(el=>{
+    const text=(el.textContent||'').replace(/\s+/g,' ').trim();
+    if (text.split(' ').length>=12) blocks.push({text,score:text.length});
+  });
+  blocks.sort((a,b)=>b.score-a.score);
+  const best = blocks.slice(0,8).map(b=>b.text).join('\n\n');
+  return best || (doc.body?.innerText||'').trim();
+}
+
+/* ---------- TextRank + RAKE ---------- */
+function textRank(text, topN=12){
+  const sents=sentences(text),tokens=sents.map(s=>new Set(words(s))),n=sents.length,M=Array.from({length:n},()=>Array(n).fill(0));
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    const a=tokens[i],b=tokens[j],inter=[...a].filter(x=>b.has(x)).length,den=Math.log(a.size+1)+Math.log(b.size+1),sim=den>0?inter/den:0;M[i][j]=M[j][i]=sim
+  }
+  let rank=Array(n).fill(1/n),d=.85;for(let it=0;it<30;it++){
+    const nr=Array(n).fill((1-d)/n);
+    for(let i=0;i<n;i++){
+      let sum=0,deg=M[i].reduce((A,B)=>A+B,0);
+      if(deg>0){ for(let j=0;j<n;j++) if(M[i][j]>0) sum+=M[i][j]/deg*rank[i] }
+      nr[i]+=d*sum
+    }
+    rank=nr
+  }
+  const idx=rank.map((v,i)=>[i,v]).sort((a,b)=>b[1]-a[1]).slice(0,topN).map(x=>x[0]).sort((a,b)=>a-b);
+  return idx.map(i=>sents[i]);
+}
+
+function rake(text, topK=5){
+  const stop=new Set(("a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among").split(","));
+  const terms=words(text).filter(w=>!stop.has(w)&&w.length>2);
+  const freq=new Map(); for(const t of terms) freq.set(t,(freq.get(t)||0)+1);
+  const pairs=[...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,50).map(x=>x[0]);
+  const sents=sentences(text),phr=new Map();
+  for(const s of sents){
+    const w=words(s).filter(x=>!stop.has(x));
+    for(let i=0;i<w.length-1;i++){ const ph=`${w[i]} ${w[i+1]}`; phr.set(ph,(phr.get(ph)||0)+1) }
+  }
+  const topP=[...phr.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20).map(x=>x[0]);
+  return [...new Set([...topP, ...pairs])].slice(0,topK);
+}
+
+/* ---------- writer ---------- */
+function writePerspective(persp, title, baseSummary, sourceText, minW, maxW){
+  const take=textRank(sourceText,12).join(' ');
+  const context=(baseSummary+' '+take).trim();
+  const outline=[
+    "INTRO","CONTEXT","DRIVERS","IMPLICATIONS","RISKS","ROADMAP","CHECKLIST"
+  ];
+  const chunks=[];
+  for(const head of outline){
+    let body="";
+    if(head==="INTRO") body=`${persp.toUpperCase()}: ${title}`;
+    else if(head==="CONTEXT") body=`${baseSummary.slice(0,400)} ${take.slice(0,600)}`;
+    else if(head==="DRIVERS") body=`Signals: ${rake(context,5).join(', ')}`;
+    else if(head==="IMPLICATIONS") body=`Turn signals into action across org, product, and go-to-market.`;
+    else if(head==="RISKS") body=`Beware headline-chasing, compliance drift, vendor lock-in.`;
+    else if(head==="ROADMAP") body=`0–14d: brief + metrics. 15–45d: pilot. 46–120d: scale or sunset.`;
+    else if(head==="CHECKLIST") body=`- Owner + metric\n- Now/Next/Later\n- Counterfactual\n- Comms note\n- Monthly review`;
+    chunks.push(`[${head}] ${body}`);
+  }
+  let article = chunks.join('\n\n');
+  const want = Math.max(minW, Math.min(maxW, 1e9));
+  while (article.split(/\s+/).length < want){
+    article += `\n\n[NOTES] ` + textRank(context,6).join(' ');
+  }
+  const keywords = rake(context,5).join('; ');
+  return article + `\n\n[SEO] ${keywords}`;
+}
+
+/* ---------- engine ---------- */
+let seen = new Set();
+async function processItem(feedUrl, item, corsBase, minW, maxW, perspectives){
+  const fp = await sha256([feedUrl,item.guid,item.link,item.title].join('|'));
+  if (seen.has(fp)) return; seen.add(fp);
+
+  println(`[${now()}] NEW  :: ${item.title}`);
+  println(`FEED :: ${feedUrl}`);
+  println(`LINK :: ${item.link}`);
+  println(`TIME :: ${item.published || ''}`);
+
+  let html="";
+  try { html = await fetchText(item.link, corsBase); }
+  catch(e){ println(`ERR  :: fetch article failed (${e})\n`); return; }
+
+  const clean = extractReadable(html);
+  if (!clean || clean.split(' ').length < 80){ println(`SKIP :: too little content\n`); return; }
+
+  const base = textRank(clean, 8).join(' ');
+  for (const p of perspectives){
+    const txt = writePerspective(p, item.title, base, clean, window.MIN_WORDS, window.MAX_WORDS);
+    println(`----- PERSPECTIVE: ${p} -----\n${txt}\n`);
+  }
+  println(`============================================================\n`);
+}
+
+async function pollOnce(){
+  const feeds = window.FEEDS;
+  const corsBase = window.CORS_BASE;
+  for (const f of feeds){
+    try {
+      const xml = await fetchText(f, corsBase);
+      const items = parseFeed(xml).slice(0,8);
+      for (const it of items) {
+        try { await processItem(f, it, corsBase, window.MIN_WORDS, window.MAX_WORDS, window.PERSPS); }
+        catch(e){ println(`[${now()}] ERR  :: item error (${e})`); }
+      }
+    } catch(e){
+      println(`[${now()}] ERR  :: feed error (${f}) → ${e}`);
+    }
+  }
+}
+
+/* ---------- bootstrap via query params ---------- */
+(async function(){
+  const q = new URLSearchParams(location.search);
+  const get = (k,d=null)=> q.get(k) ?? d;
+
+  const feedsUrl = get('feedsUrl','/labs/configs/feeds.txt');
+  const perspUrl = get('perspUrl','/labs/configs/perspectives.txt');
+  const interval = Math.max(30, parseInt(get('interval','180')) || 180);
+  // IMPORTANT: pass "/" here (NOT "/cors") so our builder doesn't double-append
+  const corsBaseRaw = get('corsBase','/'); 
+
+  // load lists
+  async function loadList(u){
+    const abs = u.startsWith('http') ? u : new URL(u, location.origin).toString();
+    const r = await fetch(abs, { cache:'no-cache' });
+    if(!r.ok) throw new Error(r.status);
+    return (await r.text()).split('\n').map(s=>s.trim()).filter(Boolean);
+  }
+  try {
+    window.FEEDS = await loadList(feedsUrl);
+    window.PERSPS = await loadList(perspUrl);
+  } catch(e){
+    println(`[${now()}] ERR  :: config load failed (${e})`);
+    window.FEEDS = [];
+    window.PERSPS = [];
+  }
+  window.MIN_WORDS = Math.max(300, parseInt(get('min','900')) || 900);
+  window.MAX_WORDS = Math.max(window.MIN_WORDS+100, parseInt(get('max','1500')) || 1500);
+
+  // normalize cors base to endpoint builder
+  window.CORS_BASE = corsBaseRaw;
+
+  println(`[${now()}] START :: interval=${interval}s  feeds=${window.FEEDS.length}  perspectives=${window.PERSPS.length}`);
+  await pollOnce();
+  if (get('autoStart','1') === '1'){
+    setInterval(pollOnce, interval*1000);
+  }
+
+  // keep GoDaddy iframe tall enough
+  function postHeight(){
+    const h = document.documentElement.scrollHeight;
+    parent.postMessage({ type:"AIRTICLE_HEIGHT", height:h }, "*");
+  }
+  new ResizeObserver(postHeight).observe(document.documentElement);
+  window.addEventListener('load', postHeight);
+  setInterval(postHeight, 1200);
+})();
+</script>
+</body>
+</html>
