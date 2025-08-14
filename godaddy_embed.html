@@ -1,0 +1,53 @@
+<!-- Paste this entire block into a GoDaddy 'HTML' section -->
+<style>
+  .dz-grid{width:100%;border-collapse:collapse;font-family:ui-sans-serif,system-ui;-webkit-font-smoothing:antialiased;color:#e6e6f0}
+  .dz-grid th,.dz-grid td{padding:10px;border-bottom:1px solid #222}
+  .dz-grid thead th{background:#12122a;position:sticky;top:0;z-index:1}
+  .dz-tag{padding:4px 10px;border-radius:999px;font-weight:700;display:inline-block}
+  .dz-buy{background:rgba(46,204,113,.15);color:#2ecc71;border:1px solid rgba(46,204,113,.5)}
+  .dz-sell{background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.5)}
+  .dz-hold{background:rgba(149,165,166,.15);color:#95a5a6;border:1px solid rgba(149,165,166,.5)}
+  .dz-chip{padding:6px 10px;border-radius:8px;background:#151536;border:1px solid #26264a;margin-right:6px;display:inline-block}
+</style>
+<div>
+  <div style="margin:6px 0 10px">
+    <label>Symbols: <input id="dz-syms" value="AAPL,MSFT,NVDA,SPY"></label>
+    <label>API: <input id="dz-api" value="https://YOUR-WORKER-SUBDOMAIN.workers.dev"></label>
+    <button onclick="dzLoad()">Load</button>
+  </div>
+  <table class="dz-grid">
+    <thead>
+      <tr><th>Symbol</th><th>Price</th><th>Price Target</th><th>Buy/Sell/Hold</th><th>Options</th></tr>
+    </thead>
+    <tbody id="dz-body"></tbody>
+  </table>
+</div>
+<script>
+function dzFmt(n){return (n==null||isNaN(n))?'—':Number(n).toFixed(2)}
+function dzTag(p,t,rk){
+  if(rk){rk=String(rk).toLowerCase();if(rk.includes('buy'))return 'buy';if(rk.includes('sell'))return 'sell'}
+  const d=(t-p)/p; if(d>=0.1) return 'buy'; if(d<=-0.05) return 'sell'; return 'hold';
+}
+async function dzGet(u){const r=await fetch(u,{cache:'no-store'});if(!r.ok)throw new Error(r.status);return r.json();}
+async function dzLoad(){
+  const api=document.getElementById('dz-api').value.replace(/\/+$/,'');
+  const syms=document.getElementById('dz-syms').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  const body=document.getElementById('dz-body'); body.innerHTML='';
+  for(const s of syms){
+    try{
+      const [sum,opt]=await Promise.all([dzGet(api+'/api/summary?symbol='+s),dzGet(api+'/api/options?symbol='+s)]);
+      const tag=dzTag(sum.price,sum.targetMeanPrice,sum.recommendationKey);
+      const call=opt.atmCall?('Call '+dzFmt(opt.atmCall.strike)+' @ '+dzFmt(opt.atmCall.mid)):'—';
+      const put =opt.atmPut ?('Put '+dzFmt(opt.atmPut.strike)+' @ '+dzFmt(opt.atmPut.mid)) :'—';
+      const spr =opt.bullCallSpread?('Bull '+dzFmt(opt.bullCallSpread.lower)+'→'+dzFmt(opt.bullCallSpread.upper)+' ≈ '+dzFmt(opt.bullCallSpread.debit)):'—';
+      body.insertAdjacentHTML('beforeend',
+        '<tr><td><b>'+s+'</b></td><td>$'+dzFmt(sum.price)+'</td><td>$'+dzFmt(sum.targetMeanPrice)+'</td>'+
+        '<td><span class="dz-tag dz-'+tag+'">'+tag.toUpperCase()+'</span></td>'+
+        '<td><span class="dz-chip">ATM '+call+'</span><span class="dz-chip">ATM '+put+'</span><span class="dz-chip">'+spr+'</span></td></tr>');
+    }catch(e){
+      body.insertAdjacentHTML('beforeend','<tr><td><b>'+s+'</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>')
+    }
+  }
+}
+setTimeout(dzLoad,300);
+</script>

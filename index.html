@@ -1,186 +1,43 @@
-<!DOCTYPE html><html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DASCIENT — API-Free Live RSS Article Analyzer</title>
-<style>
-:root{--bg:#0e1117;--panel:#151a23;--text:#e6e9ef;--muted:#9aa4b2;--line:#202636}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial}
-header{padding:14px 18px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0f141d,#0e1117)}
-h1{margin:0;font-size:18px;letter-spacing:.3px}
-main{display:grid;grid-template-columns:340px 1fr;gap:14px;padding:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,.25)}
-.card h2{margin:0;padding:12px 14px;border-bottom:1px solid var(--line);font-size:13px;text-transform:uppercase;letter-spacing:.1em;color:#cfd6e6}
-.content{padding:12px 14px}label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
-input,textarea{width:100%;background:#0c111a;border:1px solid #1e2534;color:var(--text);padding:9px 11px;border-radius:10px;outline:0}
-textarea{min-height:110px;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical}
-.row{display:flex;gap:8px;align-items:center}.row>*{flex:1}
-.btn{background:#111726;border:1px solid #22304a;color:#dfe6fb;padding:10px 12px;border-radius:10px;cursor:pointer;transition:border-color .15s}
-.btn:hover{border-color:#2c3d63}.btn.primary{background:linear-gradient(180deg,#1b2a4f,#172446)}
-.btn.warn{background:#261b11;border-color:#5a3b16}.btn.copy{font-size:12px;padding:6px 8px}
-.fine{font-size:12px;color:var(--muted)}
-.log{white-space:pre-wrap;background:#0c111a;border:1px solid #1e2534;border-radius:10px;padding:12px;min-height:160px}
-.outputs{max-height:72vh;overflow:auto}.item{padding:10px;border-bottom:1px dashed #222a3c}.item:last-child{border-bottom:0}
-.pill{display:inline-block;background:#0c111a;border:1px solid #22304a;border-radius:999px;padding:2px 8px;margin:0 6px 6px 0;font-size:12px;color:#c9d3f5}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace}.divider{height:1px;background:#1f2535;margin:10px 0}
-a{color:#9fc1ff;text-decoration:none}
-@media (max-width:980px){main{grid-template-columns:1fr}}
-</style>
-</head><body>
-<header><h1>DASCIENT — API-Free Live RSS Article Analyzer</h1></header>
-<main>
-<section class="card"><h2>Settings</h2><div class="content">
-<label>Polling Interval (seconds)</label><input id="interval" type="number" min="30" value="180">
-<label>RSS Feeds (one per line)</label>
-<textarea id="feeds">https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
-https://feeds.washingtonpost.com/rss/national
-https://www.forbes.com/most-popular/feed/</textarea>
-<label>Perspectives (one per line)</label>
-<textarea id="perspectives">Business Strategy
-Finance & Markets
-Analytics & Data
-Science & Technology
-AI/ML Applications
-Generative AI (GenAI)
-Profitability & Unit Economics
-Commerce & Go-To-Market
-Policy, Regulation & Ethics
-Consumer Impact & UX
-Forward-Thinking (Futures)</textarea>
-<div class="row"><div><label>Min Words</label><input id="minWords" type="number" min="300" value="900"></div>
-<div><label>Max Words</label><input id="maxWords" type="number" min="600" value="1500"></div></div>
-<label>CORS Helper (optional, e.g. https://cors.dascient.com/cors)</label><input id="corsBase" placeholder="(leave blank to fetch feeds directly)">
-<div class="row" style="margin-top:10px">
-<button id="startBtn" class="btn primary">Start</button>
-<button id="stopBtn" class="btn warn">Stop</button>
-<button id="onceBtn" class="btn">Run Once</button>
-</div>
-<div class="divider"></div>
-<div class="fine">100% API-free: in-browser RSS fetch, readability extraction, TextRank + heuristic writer, RAKE keywords. Use a free Cloudflare Worker as a CORS helper if a feed blocks direct fetches.</div>
-</div></section>
-<section class="card"><h2>Outputs</h2><div id="outputList" class="content outputs"></div></section>
-</main>
-<section class="card" style="margin:14px"><h2>Log</h2><div class="content"><div id="log" class="log"></div></div></section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DASCIENT — Options Dashboard (Lite)</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <h1>DASCIENT — Options Dashboard (Lite)</h1>
+      <div class="controls">
+        <label>Symbols
+          <input id="symbols" type="text" value="AAPL,MSFT,NVDA,SPY" />
+        </label>
+        <label>API Base
+          <input id="api" type="text" value="https://YOUR-WORKER-SUBDOMAIN.workers.dev" />
+        </label>
+        <button id="load">Load</button>
+      </div>
+    </header>
 
-<section class="card" style="margin:14px">
-<h2>Free Cloudflare Worker (CORS helper)</h2>
-<div class="content"><div class="fine">Deploy this Worker (free) and paste its URL above to bypass CORS.</div>
-<pre class="log"><code>export default{async fetch(req){const u=new URL(req.url);if(u.pathname==="/cors"&&u.searchParams.get("url")){const t=u.searchParams.get("url");const r=await fetch(t,{headers:{"User-Agent":"DASCIENT-API-FREE/1.0"}});const x=await r.text();return new Response(x,{headers:{"Content-Type":r.headers.get("content-type")||"text/plain; charset=utf-8","Access-Control-Allow-Origin":"*"}})}return new Response("OK",{status:200})}}</code></pre>
-</div></section>
+    <table class="grid" id="grid">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Price</th>
+          <th>Price Target</th>
+          <th>Buy/Sell/Hold</th>
+          <th>Options (ATM Calls / Puts / Simple Spread)</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
 
-<script>
-"use strict";
-/* ===== Utilities ===== */
-const $=s=>document.querySelector(s);
-const log=(...a)=>{const el=$("#log");el.textContent+=a.join(" ")+"\n";el.scrollTop=el.scrollHeight};
-const now=()=>new Date().toISOString().replace("T"," ").replace(/\..+/,"");
-async function sha256(str){const enc=new TextEncoder().encode(str);const buf=await crypto.subtle.digest("SHA-256",enc);return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("")}
-let timer=null,seen=new Set();
-
-/* ===== Fetch helpers ===== */
-async function fetchText(url,corsBase){
-  if(!corsBase){const r=await fetch(url,{headers:{"Accept":"application/rss+xml,text/xml,text/html"}});if(!r.ok)throw new Error("Fetch failed: "+r.status);return r.text()}
-  const u=new URL(corsBase.replace(/\/$/,"")+"/cors");u.searchParams.set("url",url);
-  const r=await fetch(u.toString());if(!r.ok)throw new Error("CORS fetch failed: "+r.status);return r.text()
-}
-function parseFeed(xmlTxt){
-  const doc=new DOMParser().parseFromString(xmlTxt,"application/xml");
-  let items=[...doc.querySelectorAll("item")];if(!items.length)items=[...doc.querySelectorAll("entry")];
-  return items.map(n=>({title:(n.querySelector("title")?.textContent||"").trim(),link:(n.querySelector("link")?.getAttribute("href")||n.querySelector("link")?.textContent||"").trim(),guid:(n.querySelector("guid")?.textContent||n.querySelector("id")?.textContent||"").trim(),published:(n.querySelector("pubDate")?.textContent||n.querySelector("updated")?.textContent||"").trim()}))
-}
-function extractReadable(html){
-  const doc=new DOMParser().parseFromString(html,"text/html");
-  doc.querySelectorAll("script,style,noscript,iframe,header,footer,nav").forEach(e=>e.remove());
-  const blocks=[];doc.querySelectorAll("p,article,section,div").forEach(el=>{const text=(el.textContent||"").replace(/\s+/g," ").trim();if(text.split(" ").length>=12)blocks.push({text,score:text.length})});
-  blocks.sort((a,b)=>b.score-a.score);const best=blocks.slice(0,8).map(b=>b.text).join("\n\n");
-  return best||(doc.body?.innerText||"").trim()
-}
-
-/* ===== Lightweight NLP ===== */
-const SENT_SPLIT=/([.!?])\s+/g;
-function sentences(t){if(!t)return[];return t.split(SENT_SPLIT).reduce((a,c,i,arr)=>{if(i%2===0){const s=(c+(arr[i+1]||"")).trim();if(s)a.push(s)}return a},[])}
-function words(t){return(t.toLowerCase().match(/[a-z0-9]+/g)||[])}
-function textRank(text,topN=12){
-  const sents=sentences(text),tokens=sents.map(s=>new Set(words(s))),n=sents.length,M=Array.from({length:n},()=>Array(n).fill(0));
-  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){const a=tokens[i],b=tokens[j],inter=[...a].filter(x=>b.has(x)).length,den=Math.log(a.size+1)+Math.log(b.size+1),sim=den>0?inter/den:0;M[i][j]=M[j][i]=sim}
-  let rank=Array(n).fill(1/n),d=.85;for(let it=0;it<30;it++){const nr=Array(n).fill((1-d)/n);for(let i=0;i<n;i++){let sum=0,deg=M[i].reduce((A,B)=>A+B,0);if(deg>0){for(let j=0;j<n;j++)if(M[i][j]>0)sum+=M[i][j]/deg*rank[i]}nr[i]+=d*sum}rank=nr}
-  const idx=rank.map((v,i)=>[i,v]).sort((a,b)=>b[1]-a[1]).slice(0,topN).map(x=>x[0]).sort((a,b)=>a-b);return idx.map(i=>sents[i])
-}
-function rake(text,topK=5){
-  const stop=new Set(("a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among").split(","));
-  const terms=words(text).filter(w=>!stop.has(w)&&w.length>2),freq=new Map();for(const t of terms)freq.set(t,(freq.get(t)||0)+1);
-  const pairs=[...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,50).map(x=>x[0]);
-  const sents=sentences(text),phr=new Map();for(const s of sents){const w=words(s).filter(x=>!stop.has(x));for(let i=0;i<w.length-1;i++){const ph=`${w[i]} ${w[i+1]}`;phr.set(ph,(phr.get(ph)||0)+1)}}
-  const topP=[...phr.entries()].sort((a,b)=>b[1]-a[1]).slice(0,20).map(x=>x[0]);return[...new Set([...topP,...pairs])].slice(0,topK)
-}
-function writePerspective(persp,title,meta,base,src,minW,maxW){
-  const take=textRank(src,12).join(" "),context=(base+" "+take).trim(),outline=["INTRODUCTION","MARKET CONTEXT","SIGNALS & DRIVERS","STRATEGIC IMPLICATIONS","RISKS & COUNTERMEASURES","EXECUTION ROADMAP","ACTION CHECKLIST"],secs=[];
-  for(const head of outline){
-    let body="";switch(head){
-      case"INTRODUCTION":body=`This ${persp.toLowerCase()} lens reframes "${title}" into decisions leaders can execute now. We distill the reporting into signals, timelines, and practical moves.`;break;
-      case"MARKET CONTEXT":body=`Key facts and dynamics: ${base.slice(0,400)} ${take.slice(0,600)}`;break;
-      case"SIGNALS & DRIVERS":body=`Emerging patterns include: ${rake(context,5).join(", ")}. Consider second-order effects on pricing, regulation, supply, and customer demand.`;break;
-      case"STRATEGIC IMPLICATIONS":body=`For ${persp.toLowerCase()}, prioritize near-term wins, moat-building capabilities, and optionality under uncertainty. Convert insights into portfolio and roadmap bets.`;break;
-      case"RISKS & COUNTERMEASURES":body=`Primary risks: overfitting to headlines, compliance drift, vendor lock-in, and narrative whiplash. Counter with guardrails, staged rollouts, and scenario planning.`;break;
-      case"EXECUTION ROADMAP":body=`Now (0–14d): instrument metrics and publish internal brief. Next (15–45d): pilot 1–2 initiatives with explicit success criteria. Later (46–120d): scale or sunset based on ROI and signal strength.`;break;
-      case"ACTION CHECKLIST":body=["- Define owner, timeline, and metric per initiative.","- Create a three-bucket plan: Now / Next / Later.","- Add counterfactual: what if the premise is wrong?","- Publish an internal comms note with links to sources.","- Review monthly; prune or double-down."].join("\n");break;}
-    secs.push("\n"+head+"\n"+body)
-  }
-  let article=secs.join("\n"),want=Math.max(minW,Math.min(maxW,1e9));while(article.split(/\s+/).length<want){article+="\nSUPPORTING NOTES\n"+textRank(context,6).join(" ")}
-  const keywords=rake(context,5).join("; ");return article.trim()+`\n\nSEO KEYWORDS: ${keywords}`
-}
-
-/* ===== Render ===== */
-function addOutput(meta,text){
-  const wrap=document.createElement("div");wrap.className="item";
-  wrap.innerHTML=`<div><span class="pill">FEED</span> <span class="fine">${meta.feed}</span></div>
-  <div style="margin-top:6px;"><strong>${meta.title}</strong></div>
-  <div class="fine">${meta.published||""} — <a href="${meta.link}" target="_blank" rel="noopener">${meta.link}</a></div>
-  <div class="row" style="margin-top:6px;"><button class="btn copy">Copy</button><button class="btn copy">Download</button></div>
-  <div class="divider"></div>`;
-  const pre=document.createElement("pre");pre.className="log";pre.textContent=text;wrap.appendChild(pre);$("#outputList").prepend(wrap);
-  const[copyBtn,dlBtn]=wrap.querySelectorAll("button");
-  copyBtn.onclick=async()=>{await navigator.clipboard.writeText(text);copyBtn.textContent="Copied";setTimeout(()=>copyBtn.textContent="Copy",900)};
-  dlBtn.onclick=()=>{const stamp=new Date().toISOString().replace(/[:.]/g,"-"),name=`${stamp}-${(meta.title||"article").toLowerCase().replace(/[^a-z0-9]+/g,"-")}.txt`;const blob=new Blob([text],{type:"text/plain"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();URL.revokeObjectURL(a.href)}
-}
-
-/* ===== Engine ===== */
-async function processItem(feedUrl,item,corsBase,minW,maxW,perspectives){
-  const fp=await sha256([feedUrl,item.guid,item.link,item.title].join("|"));if(seen.has(fp))return;seen.add(fp);
-  log(`[${now()}] NEW: ${item.title}`);
-  let html="";try{html=await fetchText(item.link,corsBase)}catch(e){log(`Fetch article failed: ${e}`);return}
-  const clean=extractReadable(html);if(!clean||clean.split(" ").length<80){log(`[${now()}] Skipped (too little content)`);return}
-  const base=textRank(clean,8).join(" "),pieces=[];for(const p of perspectives){const art=writePerspective(p,item.title,{link:item.link,published:item.published},base,clean,minW,maxW);pieces.push(`-----\nPERSPECTIVE: ${p}\n-----\n`+art)}
-  addOutput({title:item.title,link:item.link,published:item.published,feed:feedUrl},pieces.join("\n\n"))
-}
-async function pollOnce(){
-  const feeds=$("#feeds").value.split("\n").map(s=>s.trim()).filter(Boolean);
-  const perspectives=$("#perspectives").value.split("\n").map(s=>s.trim()).filter(Boolean);
-  const corsBase=$("#corsBase").value.trim(),minW=Math.max(300,parseInt($("#minWords").value,10)||900),maxW=Math.max(minW+100,parseInt($("#maxWords").value,10)||1500);
-  for(const f of feeds){try{const xml=await fetchText(f,corsBase);const items=parseFeed(xml).slice(0,8);for(const it of items){try{await processItem(f,it,corsBase,minW,maxW,perspectives)}catch(e){log(`[${now()}] Item error: ${e}`)}}}catch(e){log(`[${now()}] Feed error (${f}): ${e}`)}}
-}
-
-/* ===== Controls ===== */
-$("#startBtn").onclick=async()=>{if(timer)return;const interval=Math.max(30,parseInt($("#interval").value,10)||180);log(`[${now()}] Started. Interval=${interval}s`);await pollOnce();timer=setInterval(pollOnce,interval*1000)};
-$("#stopBtn").onclick=()=>{if(timer){clearInterval(timer);timer=null;log(`[${now()}] Stopped.`)}};
-$("#onceBtn").onclick=()=>{log(`[${now()}] Run once`);pollOnce()};
-
-/* ===== Query config (GitHub Pages) =====
-  ?autoStart=1
-  ?interval=180
-  ?feedsUrl=/labs/configs/feeds.txt
-  ?perspUrl=/labs/configs/perspectives.txt
-  ?corsBase=https%3A%2F%2Fcors.dascient.com%2Fcors
-*/
-(async function(){
-  const q=new URLSearchParams(location.search),get=(k,d=null)=>q.get(k)??d;
-  const qInterval=parseInt(get("interval",""));if(!isNaN(qInterval)&&qInterval>0)$("#interval").value=qInterval;
-  const qCors=get("corsBase","");if(qCors)$("#corsBase").value=qCors;
-  async function loadText(url,targetSel){try{const abs=url.startsWith("http")?url:new URL(url,location.origin).toString();const r=await fetch(abs,{cache:"no-cache"});if(!r.ok)throw new Error(r.status);const txt=await r.text();$(targetSel).value=txt.trim()}catch(e){log(`Config load failed for ${url}: ${e}`)}}
-  const feedsUrl=get("feedsUrl","");if(feedsUrl)await loadText(feedsUrl,"#feeds");
-  const perspUrl=get("perspUrl","");if(perspUrl)await loadText(perspUrl,"#perspectives");
-  if(get("autoStart","")==="1")$("#startBtn").click();
-})();
-
-/* ===== Iframe auto-resize (optional) ===== */
-(function(){function postHeight(){const h=document.documentElement.scrollHeight;parent.postMessage({type:"AIRTICLE_HEIGHT",height:h},"*")}new ResizeObserver(postHeight).observe(document.documentElement);window.addEventListener("load",postHeight);setInterval(postHeight,1000)})();
-</script>
-</body></html>
+    <footer class="footer">
+      <p>Tip: Replace the API Base with your Cloudflare Worker URL, then click Load.</p>
+    </footer>
+  </main>
+  <script src="assets/app.js"></script>
+</body>
+</html>
