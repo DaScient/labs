@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>Cryptocurrencies Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic Cryptocurrencies</description>
+  <language>en</language>
+  <item>
+   <title>How Much Bitcoin To Own in 2026 — Financial Planners Weigh In</title>
+   <link>https://www.nasdaq.com/articles/how-much-bitcoin-own-2026-financial-planners-weigh</link>
+   <description>
+        Financial experts say Bitcoin may suit 2026 portfolios as a high-risk, high-reward asset. Key factors include risk tolerance, age and diversification strategy.
+    </description>
+   <pubDate>Fri, 15 Aug 2025 20:07:08 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/how-much-bitcoin-own-2026-financial-planners-weigh?time=1755288428</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>I Asked ChatGPT To Explain Bitcoin to Me Like I’m 12 — Here’s What It Said</title>
+   <link>https://www.nasdaq.com/articles/i-asked-chatgpt-explain-bitcoin-me-im-12-heres-what-it-said</link>
+   <description>
+        Even adults who are savvy with financial know-how can struggle to understand how cryptocurrency works. So we decided to put ChatGPT to the test.
+    </description>
+   <pubDate>Thu, 14 Aug 2025 05:06:07 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/i-asked-chatgpt-explain-bitcoin-me-im-12-heres-what-it-said?time=1755147967</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Expert Warns How You Invest in Bitcoin Can Drastically Alter Results — 2 Reasons To Tread Lightly</title>
+   <link>https://www.nasdaq.com/articles/expert-warns-how-you-invest-bitcoin-can-drastically-alter-results-2-reasons-tread-lightly</link>
+   <description>
+        Bitcoin investing isn’t one-size-fits-all—an expert reveals 2 key reasons your approach could make or break your returns. Tread carefully.
+    </description>
+   <pubDate>Mon, 11 Aug 2025 15:59:07 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/expert-warns-how-you-invest-bitcoin-can-drastically-alter-results-2-reasons-tread-lightly?time=1754927947</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>How Fidelity Just Made It Easier for the Average American To Invest In Bitcoin</title>
+   <link>https://www.nasdaq.com/articles/how-fidelity-just-made-it-easier-average-american-invest-bitcoin</link>
+   <description>
+        Fidelity brokerage clients became the largest shareholders in Metaplanet, a Tokyo investment firm. This might make it easier for investors to dip into crypto.
+    </description>
+   <pubDate>Fri, 08 Aug 2025 16:04:08 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/how-fidelity-just-made-it-easier-average-american-invest-bitcoin?time=1754669048</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>10 Things You Must Know About Crypto Taxes Before You File in 2026</title>
+   <link>https://www.nasdaq.com/articles/10-things-you-must-know-about-crypto-taxes-you-file-2026</link>
+   <description>
+        To be sure you're reporting any tax-relevant info correctly and not getting into trouble, two money experts explained what to know about crypto before filing.
+    </description>
+   <pubDate>Thu, 07 Aug 2025 13:11:05 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/10-things-you-must-know-about-crypto-taxes-you-file-2026?time=1754572265</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Understanding the Shift in Consumer Behavior</title>
+   <link>https://www.nasdaq.com/articles/understanding-shift-consumer-behavior</link>
+   <description>
+        Nasdaq TradeTalks explores the intersection of emerging crypto legislation and the digital asset market evolution. Chris Dearborn, Managing Director on the Nasdaq Market Intelligence Desk, also analyzes why consumer spending behavior is shifting and what it means for companies. 
+    </description>
+   <pubDate>Mon, 04 Aug 2025 13:45:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/understanding-shift-consumer-behavior?time=1754315100</guid>
+   <dc:creator>TradeTalks</dc:creator>
+   <category>Economy</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>6 of the Best Times To Buy Bitcoin in History — and When To Buy Next</title>
+   <link>https://www.nasdaq.com/articles/6-best-times-buy-bitcoin-history-and-when-buy-next</link>
+   <description>
+        The best times to buy bitcoin have almost always come during periods of fear, when prices bottomed out after hype-driven bubbles burst. What's coming next?
+    </description>
+   <pubDate>Sun, 03 Aug 2025 21:34:07 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/6-best-times-buy-bitcoin-history-and-when-buy-next?time=1754256847</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>3 Ways To Earn Money With Crypto — Aside From Actually Investing In It</title>
+   <link>https://www.nasdaq.com/articles/3-ways-earn-money-crypto-aside-actually-investing-it</link>
+   <description>
+        Want to earn money from cryptocurrency without actually investing in it? Discover how staking, cloud mining and liquidity pools could help you earn money.
+    </description>
+   <pubDate>Sat, 02 Aug 2025 15:45:29 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-ways-earn-money-crypto-aside-actually-investing-it?time=1754149529</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>July 2025 Review and Outlook</title>
+   <link>https://www.nasdaq.com/articles/july-2025-review-and-outlook</link>
+   <description>
+        July continued the strong run for stocks seeing the S&amp;P 500 up for the third month in a row, and the Nasdaq for the fourth.
+    </description>
+   <pubDate>Fri, 01 Aug 2025 17:55:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/july-2025-review-and-outlook?time=1754070900</guid>
+   <dc:creator>The Market Intelligence Desk Team</dc:creator>
+   <category>US Markets,Earnings,Cryptocurrencies,Central Banks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Companies Are Buying This Crypto — and No, It’s Not Bitcoin: Should You Invest Too?</title>
+   <link>https://www.nasdaq.com/articles/companies-are-buying-crypto-and-no-its-not-bitcoin-should-you-invest-too</link>
+   <description>
+        Bitcoin isn't the only crypto worth investing in.  Another name getting attention lately is ethereum, the No. 2 crypto with a market cap of bout $456 billion.
+    </description>
+   <pubDate>Wed, 30 Jul 2025 16:13:55 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/companies-are-buying-crypto-and-no-its-not-bitcoin-should-you-invest-too?time=1753892035</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Major Bank Thinks Bitcoin Is Going To Get Less Volatile — Is It Time To Invest?</title>
+   <link>https://www.nasdaq.com/articles/major-bank-thinks-bitcoin-going-get-less-volatile-it-time-invest</link>
+   <description>
+        Bitcoin may be entering a new era. Discover why its volatility could be falling and how that might attract cautious investors and reshape crypto’s future.
+    </description>
+   <pubDate>Sun, 27 Jul 2025 15:23:09 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/major-bank-thinks-bitcoin-going-get-less-volatile-it-time-invest?time=1753629789</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>3 Ways Trump Signing the GENIUS Act Could Impact the Price of Crypto</title>
+   <link>https://www.nasdaq.com/articles/3-ways-trump-signing-genius-act-could-impact-price-crypto</link>
+   <description>
+        President Donald Trump signed the GENIUS Act into law. It's the first significant legislation for crypto in the U.S. What does it mean for crypto prices?
+    </description>
+   <pubDate>Sun, 27 Jul 2025 14:17:05 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-ways-trump-signing-genius-act-could-impact-price-crypto?time=1753625825</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>One of the Most Promising Frontiers for the Future of Finance</title>
+   <link>https://www.nasdaq.com/articles/one-most-promising-frontiers-future-finance</link>
+   <description>
+        Nasdaq TradeTalks explores what consumer discretionary categories are performing well and where spend is being cut back. Paul Grewal, Chief Legal Officer at Coinbase, also shares why tokenization is one of the most promising frontiers for the future of finance.
+    </description>
+   <pubDate>Thu, 24 Jul 2025 13:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/one-most-promising-frontiers-future-finance?time=1753363800</guid>
+   <dc:creator>TradeTalks</dc:creator>
+   <category>Digital Assets</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Here’s What Could Happen to Cryptocurrency if Trump Fires Jerome Powell</title>
+   <link>https://www.nasdaq.com/articles/heres-what-could-happen-cryptocurrency-if-trump-fires-jerome-powell</link>
+   <description>
+        Here's what crypto investors need to know if President Donald Trump fires Fed Chair Jerome Powell.  
+    </description>
+   <pubDate>Tue, 22 Jul 2025 13:58:11 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/heres-what-could-happen-cryptocurrency-if-trump-fires-jerome-powell?time=1753192691</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>I Asked ChatGPT How To Get Rich Off of Bitcoin — Here’s What It Said</title>
+   <link>https://www.nasdaq.com/articles/i-asked-chatgpt-how-get-rich-bitcoin-heres-what-it-said</link>
+   <description>
+        Get rich with bitcoin in 2025 -- ChatGPT suggested ideas like buy-and-hold, day trading, crypto payments and Bitcoin-related stock. Learn this plus the risks.
+    </description>
+   <pubDate>Sun, 20 Jul 2025 21:12:21 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/i-asked-chatgpt-how-get-rich-bitcoin-heres-what-it-said?time=1753045941</guid>
+   <dc:creator>GOBankingRates</dc:creator>
+   <category>Cryptocurrencies</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+ </channel>
+</rss>

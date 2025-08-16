@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>Markets Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic Markets</description>
+  <language>en</language>
+  <item>
+   <title>Where Will Opendoor Stock Be in 5 Years?</title>
+   <link>https://www.nasdaq.com/articles/where-will-opendoor-stock-be-5-years</link>
+   <description>
+        Opendoor Technologies (NASDAQ: OPEN) saw its stock nearly 10x after Reddit crowned it "the next Carvana." But with crumbling fundamentals, negative earnings, and slashed guidance, this may be more hype than turnaround. Should investors hold, sell, or double down?
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:05:15 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/where-will-opendoor-stock-be-5-years?time=1755363915</guid>
+   <dc:creator>The Motley Fool</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>OPEN,OPEN</nasdaq:tickers>
+  </item>
+  <item>
+   <title>LHX Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/lhx-quantitative-stock-analysis-9</link>
+   <description>
+        Below is Validea's guru fundamental report for L3HARRIS TECHNOLOGIES INC (LHX). Of the 22 guru strategies we follow,  LHX rates highest using our Multi-Factor Investor model based on the published strategy of Pim van Vliet. This multi-factor model seeks low volatility stocks that
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:39 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/lhx-quantitative-stock-analysis-9?time=1755363819</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>LHX</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>DUOL Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/duol-quantitative-stock-analysis-0</link>
+   <description>
+        Below is Validea's guru fundamental report for DUOLINGO INC (DUOL). Of the 22 guru strategies we follow,  DUOL rates highest using our Twin Momentum Investor model based on the published strategy of Dashan Huang. This momentum model looks for a combination of fundamental momentum
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:39 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/duol-quantitative-stock-analysis-0?time=1755363819</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>DUOL</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>QS Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/qs-quantitative-stock-analysis-1</link>
+   <description>
+        Below is Validea's guru fundamental report for QUANTUMSCAPE CORP (QS). Of the 22 guru strategies we follow,  QS rates highest using our Quantitative Momentum Investor model based on the published strategy of Wesley Gray. This momentum model looks for stocks with strong and consis
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:38 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/qs-quantitative-stock-analysis-1?time=1755363818</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>QS</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>HUBS Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/hubs-quantitative-stock-analysis-2</link>
+   <description>
+        Below is Validea's guru fundamental report for HUBSPOT INC (HUBS). Of the 22 guru strategies we follow,  HUBS rates highest using our P/B Growth Investor model based on the published strategy of Partha Mohanram. This growth model looks for low book-to-market stocks that exhibit c
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:38 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/hubs-quantitative-stock-analysis-2?time=1755363818</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>HUBS</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>CMI Quantitative Stock Analysis - Peter Lynch</title>
+   <link>https://www.nasdaq.com/articles/cmi-quantitative-stock-analysis-peter-lynch-4</link>
+   <description>
+        Below is Validea's guru fundamental report for CUMMINS INC (CMI). Of the 22 guru strategies we follow,  CMI rates highest using our P/E/Growth Investor model based on the published strategy of Peter Lynch. This strategy looks for stocks trading at a reasonable price relative to e
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:38 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/cmi-quantitative-stock-analysis-peter-lynch-4?time=1755363818</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>CMI</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>ECL Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/ecl-quantitative-stock-analysis-3</link>
+   <description>
+        Below is Validea's guru fundamental report for ECOLAB INC (ECL). Of the 22 guru strategies we follow,  ECL rates highest using our Multi-Factor Investor model based on the published strategy of Pim van Vliet. This multi-factor model seeks low volatility stocks that also have stro
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:38 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/ecl-quantitative-stock-analysis-3?time=1755363818</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>ECL</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>AIG Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/aig-quantitative-stock-analysis-2</link>
+   <description>
+        Below is Validea's guru fundamental report for AMERICAN INTERNATIONAL GROUP INC (AIG). Of the 22 guru strategies we follow,  AIG rates highest using our Shareholder Yield Investor model based on the published strategy of Meb Faber. This strategy looks for companies returning cash
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:37 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/aig-quantitative-stock-analysis-2?time=1755363817</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>AIG</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>GLW Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/glw-quantitative-stock-analysis-4</link>
+   <description>
+        Below is Validea's guru fundamental report for CORNING INC (GLW). Of the 22 guru strategies we follow,  GLW rates highest using our Multi-Factor Investor model based on the published strategy of Pim van Vliet. This multi-factor model seeks low volatility stocks that also have str
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:37 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/glw-quantitative-stock-analysis-4?time=1755363817</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>GLW</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>COHR Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/cohr-quantitative-stock-analysis-0</link>
+   <description>
+        Below is Validea's guru fundamental report for COHERENT CORP (COHR). Of the 22 guru strategies we follow,  COHR rates highest using our Small-Cap Growth Investor model based on the published strategy of Motley Fool. This strategy looks for small cap growth stocks with solid funda
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:37 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/cohr-quantitative-stock-analysis-0?time=1755363817</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>COHR</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>B Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/b-quantitative-stock-analysis-2</link>
+   <description>
+        Below is Validea's guru fundamental report for BARRICK MINING CORP (USA) (B). Of the 22 guru strategies we follow,  B rates highest using our Acquirer's Multiple Investor model based on the published strategy of Tobias Carlisle. This deep value model looks for inexpensive stocks
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:37 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/b-quantitative-stock-analysis-2?time=1755363817</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>B</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>ALL Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/all-quantitative-stock-analysis-2</link>
+   <description>
+        Below is Validea's guru fundamental report for ALLSTATE CORP (ALL). Of the 22 guru strategies we follow,  ALL rates highest using our Multi-Factor Investor model based on the published strategy of Pim van Vliet. This multi-factor model seeks low volatility stocks that also have s
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:36 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/all-quantitative-stock-analysis-2?time=1755363816</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>ALL</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>RSG Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/rsg-quantitative-stock-analysis-3</link>
+   <description>
+        Below is Validea's guru fundamental report for REPUBLIC SERVICES INC (RSG). Of the 22 guru strategies we follow,  RSG rates highest using our Multi-Factor Investor model based on the published strategy of Pim van Vliet. This multi-factor model seeks low volatility stocks that als
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:36 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/rsg-quantitative-stock-analysis-3?time=1755363816</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>RSG</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>RKT Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/rkt-quantitative-stock-analysis-0</link>
+   <description>
+        Below is Validea's guru fundamental report for ROCKET COMPANIES INC (RKT). Of the 22 guru strategies we follow,  RKT rates highest using our Contrarian Investor model based on the published strategy of David Dreman. This contrarian strategy finds the most unpopular mid- and large
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:36 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/rkt-quantitative-stock-analysis-0?time=1755363816</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>RKT</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>BP Quantitative Stock Analysis</title>
+   <link>https://www.nasdaq.com/articles/bp-quantitative-stock-analysis-5</link>
+   <description>
+        Below is Validea's guru fundamental report for BP PLC (ADR) (BP). Of the 22 guru strategies we follow,  BP rates highest using our Shareholder Yield Investor model based on the published strategy of Meb Faber. This strategy looks for companies returning cash to shareholders via d
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:03:36 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/bp-quantitative-stock-analysis-5?time=1755363816</guid>
+   <dc:creator>Validea</dc:creator>
+   <category>Markets</category>
+   <nasdaq:tickers>BP</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://blog.validea.com">Guru Investor Blog</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/nasdaq">Premium Guru Tools</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.validea.com/excess-returns-podcast">Excess Returns Podcast</nasdaq:partnerlink>
+  </item>
+ </channel>
+</rss>

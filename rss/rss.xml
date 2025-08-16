@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/nasdaq-original/rss.xml">
+ <channel>
+  <title>Nasdaq Original Feed</title>
+  <link>https://www.nasdaq.com/feed/nasdaq-original/rss.xml</link>
+  <description>This feed is responsible for generating the rss feed related to the topic nasdaq original</description>
+  <language>en</language>
+  <item>
+   <title>Insuring the AI Economy</title>
+   <link>https://www.nasdaq.com/articles/insuring-ai-economy</link>
+   <description>
+        Nasdaq TradeTalks explores the key drivers of demand and volatility in the precious metals space, and George Lewin-Smith, CEO of Testudo, discusses insuring the AI economy.
+    </description>
+   <pubDate>Thu, 14 Aug 2025 12:25:58 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/insuring-ai-economy?time=1755174358</guid>
+   <dc:creator>TradeTalks</dc:creator>
+  </item>
+  <item>
+   <title>Texas Innovator Takes Flight with Nasdaq: Firefly Launches IPO</title>
+   <link>https://www.nasdaq.com/newsroom/texas-innovator-takes-flight-nasdaq-firefly-launches-ipo</link>
+   <description>
+        Space and defense technology company Firefly Aerospace made its public debut on Thursday, August 7th, 2025, marking another trailblazing Texas company tapping Nasdaq at its partner for joining public markets.
+    </description>
+   <pubDate>Thu, 07 Aug 2025 18:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/newsroom/texas-innovator-takes-flight-nasdaq-firefly-launches-ipo?time=1754591400</guid>
+   <dc:creator>Nasdaq Newsroom</dc:creator>
+  </item>
+  <item>
+   <title>Understanding the Shift in Consumer Behavior</title>
+   <link>https://www.nasdaq.com/articles/understanding-shift-consumer-behavior</link>
+   <description>
+        Nasdaq TradeTalks explores the intersection of emerging crypto legislation and the digital asset market evolution. Chris Dearborn, Managing Director on the Nasdaq Market Intelligence Desk, also analyzes why consumer spending behavior is shifting and what it means for companies. 
+    </description>
+   <pubDate>Mon, 04 Aug 2025 13:45:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/understanding-shift-consumer-behavior?time=1754315100</guid>
+   <dc:creator>TradeTalks</dc:creator>
+  </item>
+  <item>
+   <title>July 2025 Review and Outlook</title>
+   <link>https://www.nasdaq.com/articles/july-2025-review-and-outlook</link>
+   <description>
+        July continued the strong run for stocks seeing the S&amp;P 500 up for the third month in a row, and the Nasdaq for the fourth.
+    </description>
+   <pubDate>Fri, 01 Aug 2025 17:55:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/july-2025-review-and-outlook?time=1754070900</guid>
+   <dc:creator>The Market Intelligence Desk Team</dc:creator>
+  </item>
+  <item>
+   <title>Looking All Day for Data on 24-Hour Trading</title>
+   <link>https://www.nasdaq.com/articles/looking-all-day-data-24-hour-trading</link>
+   <description>
+        Discover what research says about how overnight trading works now. The data points might help us work out how 24-hour trading should work. 
+    </description>
+   <pubDate>Thu, 31 Jul 2025 22:15:47 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/looking-all-day-data-24-hour-trading?time=1754000147</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+  </item>
+  <item>
+   <title>Regulatory Roundup: Selective Gains, Collective Losses: The Cost of Cherry Picking</title>
+   <link>https://www.nasdaq.com/articles/fintech/regulatory-roundup-july-2025</link>
+   <description>
+        Tony Sio's latest regulatory analysis delves into the complexities of cherry picking in financial markets. Discover how brokers selectively allocate profitable trades to their own accounts or preferred clients, while assigning losing trades to others.
+    </description>
+   <pubDate>Wed, 30 Jul 2025 19:05:18 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/fintech/regulatory-roundup-july-2025?time=1753902318</guid>
+   <dc:creator>Tony Sio</dc:creator>
+  </item>
+  <item>
+   <title>The 2025 Intern’s Guide to Options</title>
+   <link>https://www.nasdaq.com/articles/2025-interns-guide-options</link>
+   <description>
+        Options trading has become increasingly popular in recent years, and we thought it was time to update our intern's guide for U.S. options to help you understand options and how options markets work. 
+    </description>
+   <pubDate>Thu, 24 Jul 2025 21:45:16 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/2025-interns-guide-options?time=1753393516</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+  </item>
+  <item>
+   <title>One of the Most Promising Frontiers for the Future of Finance</title>
+   <link>https://www.nasdaq.com/articles/one-most-promising-frontiers-future-finance</link>
+   <description>
+        Nasdaq TradeTalks explores what consumer discretionary categories are performing well and where spend is being cut back. Paul Grewal, Chief Legal Officer at Coinbase, also shares why tokenization is one of the most promising frontiers for the future of finance.
+    </description>
+   <pubDate>Thu, 24 Jul 2025 13:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/one-most-promising-frontiers-future-finance?time=1753363800</guid>
+   <dc:creator>TradeTalks</dc:creator>
+  </item>
+  <item>
+   <title>IPO Market Resilient Despite Dip in IPOs</title>
+   <link>https://www.nasdaq.com/articles/ipo-market-resilient-despite-dip-ipos</link>
+   <description>
+        There may have been some slowdown in the number of operating companies going public, but it’s been relatively mild, and capital raised actually rose significantly year-on-year in the U.S. and Stockholm, despite market volatility and the initial tariff sell-off. 
+    </description>
+   <pubDate>Thu, 17 Jul 2025 21:25:12 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/ipo-market-resilient-despite-dip-ipos?time=1752787512</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+  </item>
+  <item>
+   <title>3 Key Factors Driving Institutional Adoption of Digital Assets</title>
+   <link>https://www.nasdaq.com/articles/3-key-factors-driving-institutional-adoption-digital-assets</link>
+   <description>
+        Nasdaq TradeTalks explores how data-driven insights can inform smarter public spending, better policy, and stronger health outcomes across the U.S., and Tim Kwok, Head of Sales for Americas at Talos, highlights the trends that will drive institutional adoption of digital assets.
+
+    </description>
+   <pubDate>Thu, 17 Jul 2025 13:55:38 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-key-factors-driving-institutional-adoption-digital-assets?time=1752760538</guid>
+   <dc:creator>TradeTalks</dc:creator>
+  </item>
+  <item>
+   <title>The 2025 Intern’s Guide to ETFs</title>
+   <link>https://www.nasdaq.com/articles/2025-interns-guide-etfs</link>
+   <description>
+        We explore an important part of the stock market ecosystem: Exchange-traded funds (ETFs), which are one of the most successful financial innovations of the last 30 years.
+    </description>
+   <pubDate>Thu, 10 Jul 2025 20:35:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/2025-interns-guide-etfs?time=1752179700</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+  </item>
+  <item>
+   <title>The Transformative Benefits of Deploying on Blockchain</title>
+   <link>https://www.nasdaq.com/articles/transformative-benefits-deploying-blockchain</link>
+   <description>
+        Nasdaq TradeTalks explores how human capital and emerging technologies will determine the future of national and cybersecurity. John Wu, President of Ava Labs, also highlights the 3 key trends driving institutional adoption of blockchain.
+    </description>
+   <pubDate>Thu, 10 Jul 2025 12:45:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/transformative-benefits-deploying-blockchain?time=1752151500</guid>
+   <dc:creator>TradeTalks</dc:creator>
+  </item>
+  <item>
+   <title>The Entrepreneurial Spirit of the RIA Community</title>
+   <link>https://www.nasdaq.com/articles/entrepreneurial-spirit-ria-community</link>
+   <description>
+        Nasdaq TradeTalks explores how innovation is redefining financial protection across industries and Brian Francetich, President &amp; Partner of Golsan Scruggs, shares his insights on how the RIA space will evolve. 
+    </description>
+   <pubDate>Thu, 03 Jul 2025 13:15:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/entrepreneurial-spirit-ria-community?time=1751548500</guid>
+   <dc:creator>TradeTalks</dc:creator>
+  </item>
+  <item>
+   <title>June, Second Quarter 2025 Review and Outlook</title>
+   <link>https://www.nasdaq.com/articles/june-second-quarter-2025-review-and-outlook</link>
+   <description>
+        This year has been nothing short of a wild ride for U.S. equities, starting with the S&amp;P 500 declining more than 21% from its February high into the low reached during the second week of April.  
+    </description>
+   <pubDate>Tue, 01 Jul 2025 19:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/june-second-quarter-2025-review-and-outlook?time=1751398200</guid>
+   <dc:creator>The Market Intelligence Desk Team</dc:creator>
+  </item>
+  <item>
+   <title>Analyzing the Russell Indexes Last Annual Reconstitution</title>
+   <link>https://www.nasdaq.com/articles/analyzing-russell-indexes-last-annual-reconstitution</link>
+   <description>
+        Friday, June 27, will be the last annual Russel Reconstitution before the index provider switches to reconstitutions twice a year. It’s likely that we’ll see near $200 billion trade around the close as index tracking funds buy Russell U.S. Index additions and sell deletions.
+    </description>
+   <pubDate>Thu, 26 Jun 2025 21:25:28 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/analyzing-russell-indexes-last-annual-reconstitution?time=1750973128</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+  </item>
+ </channel>
+</rss>

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>Stocks Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic Stocks</description>
+  <language>en</language>
+  <item>
+   <title>Stocks Close Mildly Lower as US Consumer Sentiment Declines</title>
+   <link>https://www.nasdaq.com/articles/stocks-close-mildly-lower-us-consumer-sentiment-declines</link>
+   <description>
+        The S&amp;P 500 Index ($SPX ) (SPY ) on Friday fell by -0.20%, the Dow Jones Industrials Index ($DOWI ) (DIA ) rose by +0.17%, and the Nasdaq 100 Index ($IUXX ) (QQQ ) fell by -0.43%.  September E-mini S&amp;P futures (ESU25 ) fell -0.22%, and September E-mini Nasdaq futures...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 18:31:50 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/stocks-close-mildly-lower-us-consumer-sentiment-declines?time=1755369110</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers>TGT,AMAT,DHI,SNDK,UNH,COIN,TSLA,LRCX,SPY,DIA,KLAC,GOOG,META,QQQ,LEN,INTC,RIOT,AMZN,CRM</nasdaq:tickers>
+  </item>
+  <item>
+   <title>Cotton Leaks Lower into the Weekend</title>
+   <link>https://www.nasdaq.com/articles/cotton-leaks-lower-weekend</link>
+   <description>
+        Cotton futures closed out the Friday session with contracts down 7 to 18 points, as December still managed to post a 94 point gain this week on the early half strength. The US dollar index was down another $0.383 to $97.720, as crude oil futures were down another $0.78. CFTC...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 17:37:26 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/cotton-leaks-lower-weekend?time=1755365846</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Wheat Closes Mixed as Spring Wheat Weighs on Things</title>
+   <link>https://www.nasdaq.com/articles/wheat-closes-mixed-spring-wheat-weighs-things</link>
+   <description>
+        The wheat complex was mixed to round out the week with the spring wheat market reverting lower. CBT soft red wheat futures were 2 to 3 cents in the green to close out the week that say September down 8 cents. KC HRW futures managed to close with 2 to...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 10:44:07 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/wheat-closes-mixed-spring-wheat-weighs-things?time=1755341047</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Corn Posts Strength on Friday to Close the Week Back to Where it Started</title>
+   <link>https://www.nasdaq.com/articles/corn-posts-strength-friday-close-week-back-where-it-started</link>
+   <description>
+        Corn futures were rallying back on Friday, with contracts up 7 to 8 ¾ cents. September managed to pull out of the week with a penny gain, as December was down just a tick. A win for the bulls considering there’s 1 billion more bushels on the balance sheet than...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 08:37:35 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/corn-posts-strength-friday-close-week-back-where-it-started?time=1755333455</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Corn Bulls Showing Off to Round Out the Week</title>
+   <link>https://www.nasdaq.com/articles/corn-bulls-showing-round-out-week</link>
+   <description>
+        Corn futures are in rally back mode to round out the week, as contracts are up 5 to 7 cents across the front months. The CmdtyView national average Cash Corn price is up 6 1/4 cent at $3.63 1/2. Precip is limited over the next week for much of the...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 06:39:11 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/corn-bulls-showing-round-out-week?time=1755326351</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Soybeans Rallying Back on Friday</title>
+   <link>https://www.nasdaq.com/articles/soybeans-rallying-back-friday</link>
+   <description>
+        Soybeans are up 13 to 14 cents so far on Friday, as bulls take back what they lost on Thursday. The cmdtyView national average Cash Bean price is up 13 1/4 cents at $9.78 1/2. Soymeal futures are back steady to a dime higher on the day, with Soy Oil...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 06:39:10 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/soybeans-rallying-back-friday?time=1755326350</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Cotton Posting Midday Losses on Friday</title>
+   <link>https://www.nasdaq.com/articles/cotton-posting-midday-losses-friday</link>
+   <description>
+        Cotton futures are down 11 to 15 points across the front months on Friday. The US dollar index is down another $0.408 to $97.695, as crude oil futures are down another $0.63 USDA’s Export Sales data as the new crop book at 3.127 million RB, which is 28% of the...
+    </description>
+   <pubDate>Sat, 16 Aug 2025 03:04:29 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/cotton-posting-midday-losses-friday?time=1755313469</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Can AECOM's $24.6B Backlog Weather Economic and Policy Shocks?</title>
+   <link>https://www.nasdaq.com/articles/can-aecoms-246b-backlog-weather-economic-and-policy-shocks</link>
+   <description>
+        With a $24.6B backlog, ACM eyes growth from global infrastructure booms despite looming economic and policy risks.
+    </description>
+   <pubDate>Sat, 16 Aug 2025 02:00:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/can-aecoms-246b-backlog-weather-economic-and-policy-shocks?time=1755309600</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>Stocks,Investing</category>
+   <nasdaq:tickers>PWR,ACM,EME,J</nasdaq:tickers>
+  </item>
+  <item>
+   <title>Humana, DrFirst Ties Up to Boost Statin Use in High-Risk Patients</title>
+   <link>https://www.nasdaq.com/articles/humana-drfirst-ties-boost-statin-use-high-risk-patients</link>
+   <description>
+        HUM partners with DrFirst to increase statin use in high-risk patients with diabetes and cardiovascular disease, aiming to close care gaps. 
+    </description>
+   <pubDate>Sat, 16 Aug 2025 02:00:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/humana-drfirst-ties-boost-statin-use-high-risk-patients?time=1755309600</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>Stocks,Investing</category>
+   <nasdaq:tickers>UNH,HUM,MOH,CNC</nasdaq:tickers>
+  </item>
+  <item>
+   <title>Lockheed Secures a $720M Contract for JAGM &amp; Hellfire Missiles</title>
+   <link>https://www.nasdaq.com/articles/lockheed-secures-720m-contract-jagm-hellfire-missiles</link>
+   <description>
+        LMT wins a $720M U.S. Army deal to produce Hellfire and JAGM Missiles, enhancing its role in advanced missile defense.
+    </description>
+   <pubDate>Sat, 16 Aug 2025 01:40:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/lockheed-secures-720m-contract-jagm-hellfire-missiles?time=1755308400</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>Stocks,Investing</category>
+   <nasdaq:tickers>BA,LMT,NOC,RTX</nasdaq:tickers>
+  </item>
+  <item>
+   <title>HBM Sells 30% Stake in Copper World to Mitsubishi for $600M</title>
+   <link>https://www.nasdaq.com/articles/hbm-sells-30-stake-copper-world-mitsubishi-600m</link>
+   <description>
+        Hudbay Minerals secures $600M from Mitsubishi for a 30% stake in its Copper World project, slashing its upfront costs and boosting long-term growth plans.
+    </description>
+   <pubDate>Sat, 16 Aug 2025 01:36:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/hbm-sells-30-stake-copper-world-mitsubishi-600m?time=1755308160</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>Stocks,Investing</category>
+   <nasdaq:tickers>FCX,HBM,WPM,MSBHF</nasdaq:tickers>
+  </item>
+  <item>
+   <title>Soybeans Rally into the Weekend</title>
+   <link>https://www.nasdaq.com/articles/soybeans-rally-weekend</link>
+   <description>
+        Soybeans took back the Thursday losses on Friday, with gains of 12 to 14 ¾ cents. September rounded out the week with a 54 ½ cent gain, as November was up 55 cents. The cmdtyView national average Cash Bean price was up 12 1/2 cents at $9.77 3/4. Soymeal futures...
+    </description>
+   <pubDate>Fri, 15 Aug 2025 23:05:35 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/soybeans-rally-weekend?time=1755299135</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Cattle Rally, as Choice Beef Surpasses $400</title>
+   <link>https://www.nasdaq.com/articles/cattle-rally-choice-beef-surpasses-400</link>
+   <description>
+        Live cattle futures are posted gains of $2.90 to 3.90 across most contracts on Friday, with August up $3.70 on the week. Cash trade was mostly steady this week, with light dressed trade at $384-386 in the North and live action at $243-245. Southern sales have been picked up at...
+    </description>
+   <pubDate>Fri, 15 Aug 2025 23:05:34 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/cattle-rally-choice-beef-surpasses-400?time=1755299134</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Hogs Post Friday Gains</title>
+   <link>https://www.nasdaq.com/articles/hogs-post-friday-gains</link>
+   <description>
+        Lean hog futures posted Friday gains of 97 cents to $1.50, as bulls fought back to close out the week. October was still down 57 cents since last Friday. USDA’s national base hog price was down $2.49 in the Friday PM report, at $107.88. The CME Lean Hog Index was...
+    </description>
+   <pubDate>Fri, 15 Aug 2025 23:05:34 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/hogs-post-friday-gains?time=1755299134</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Stocks Are Undercut by US Consumer Sentiment Decline</title>
+   <link>https://www.nasdaq.com/articles/stocks-are-undercut-us-consumer-sentiment-decline</link>
+   <description>
+        The S&amp;P 500 Index ($SPX ) (SPY ) is down -0.11%, the Dow Jones Industrials Index ($DOWI ) (DIA ) is up +0.40%, and the Nasdaq 100 Index ($IUXX ) (QQQ ) is down -0.50%.  September E-mini S&amp;P futures (ESU25 ) are down -0.22%, and September E-mini Nasdaq futures (NQU25...
+    </description>
+   <pubDate>Fri, 15 Aug 2025 23:00:24 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/stocks-are-undercut-us-consumer-sentiment-decline?time=1755298824</guid>
+   <dc:creator>Barchart</dc:creator>
+   <category>Stocks</category>
+   <nasdaq:tickers>KLAC,TGT,NVDA,AMAT,DHI,SNDK,UNH,QQQ,LEN,LRCX,RIOT,SPY,DIA</nasdaq:tickers>
+  </item>
+ </channel>
+</rss>

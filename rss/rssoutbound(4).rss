@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>Dividends Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic Dividends</description>
+  <language>en</language>
+  <item>
+   <title>3 Big Dividend Plays With Strong Earnings to Back Them</title>
+   <link>https://www.nasdaq.com/articles/3-big-dividend-plays-strong-earnings-back-them</link>
+   <description>
+        Long-term dividend plays tend to be more stable than many other stocks&amp;mdash;after all, this stability is why they are able to provide consistent dividends in the first place. Traditional dividend stocks are large, well-established companies that are unlikely to experience significant
+    </description>
+   <pubDate>Mon, 11 Aug 2025 12:38:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-big-dividend-plays-strong-earnings-back-them?time=1754915880</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Earnings,Energy,Stocks,Management</category>
+   <nasdaq:tickers>WM,WM,ES,JNJ</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Realty Income Rallies Post-Earnings Miss—Here’s What Drove It</title>
+   <link>https://www.nasdaq.com/articles/realty-income-rallies-post-earnings-miss-heres-what-drove-it</link>
+   <description>
+        Even after a decline in net earnings per share (EPS), shares of Realty Income Corp. (NYSE: O) are rallying by roughly a point and a half in the pre-market hours the day after they released their quarterly financials. This can be confusing for investors, as some companies perform
+    </description>
+   <pubDate>Thu, 07 Aug 2025 13:33:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/realty-income-rallies-post-earnings-miss-heres-what-drove-it?time=1754573580</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Earnings,Stocks,Management</category>
+   <nasdaq:tickers>O</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Buybacks Over Dividends? These 2 Stock Picks Make a Strong Case</title>
+   <link>https://www.nasdaq.com/articles/buybacks-over-dividends-these-2-stock-picks-make-strong-case</link>
+   <description>
+        There are typically two ways for investors to see the benefits of stock investing. One of them (and the most common) is buying low and selling high for a profit. However, there comes a time when investors find that one company they never want to let go of, no matter how much of
+    </description>
+   <pubDate>Thu, 07 Aug 2025 12:15:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/buybacks-over-dividends-these-2-stock-picks-make-strong-case?time=1754568900</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Stocks</category>
+   <nasdaq:tickers>DLTR,DLTR,BAC</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>4 Stocks Planning to Substantially Boost Buybacks After Solid Q2</title>
+   <link>https://www.nasdaq.com/articles/4-stocks-planning-substantially-boost-buybacks-after-solid-q2</link>
+   <description>
+        With Q2 earnings season now in full swing, hundreds of companies have reported financial results over the past several weeks. However, only a few big names have announced something many investors want: increasing buybacks. This can occur through boosting buyback authorizations o
+    </description>
+   <pubDate>Mon, 28 Jul 2025 20:11:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/4-stocks-planning-substantially-boost-buybacks-after-solid-q2?time=1753733460</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Earnings,Stocks</category>
+   <nasdaq:tickers>BAC,BAC,DHI,SCHW,TDY</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Build Stability and Income With 3 Overlooked Dividend Leaders</title>
+   <link>https://www.nasdaq.com/articles/build-stability-and-income-3-overlooked-dividend-leaders</link>
+   <description>
+        Dividend investing is one of the most popular strategies among retail investors seeking a combination of stability and passive income. A long-term buy-and-hold approach for stalwart dividend players like&amp;nbsp;The Coca-Cola Co. (NYSE: KO) or Johnson &amp; Johnson (NYSE: JNJ) rewards patie
+    </description>
+   <pubDate>Mon, 21 Jul 2025 20:02:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/build-stability-and-income-3-overlooked-dividend-leaders?time=1753128120</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Stocks</category>
+   <nasdaq:tickers>EPD,EPD,KO,JNJ,OKE,UPS</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Analysts See Upside in These 5 Stocks That Just Raised Dividends</title>
+   <link>https://www.nasdaq.com/articles/analysts-see-upside-these-5-stocks-just-raised-dividends</link>
+   <description>
+        Dividends are on the rise for these five U.S. stocks, and Wall Street analysts see further return potential through price appreciation.
+So, what does the high-end total return potential look like for these stocks when considering rising dividends and Wall Street price targets?&amp;nbsp;L
+    </description>
+   <pubDate>Mon, 21 Jul 2025 16:07:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/analysts-see-upside-these-5-stocks-just-raised-dividends?time=1753114020</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Insurance,Dividends,Gold,Energy,Stocks</category>
+   <nasdaq:tickers>DUK,DUK,CMI,UNM,R,PPG</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>3 Stocks Offering Diversification in Trump’s Tariff &amp; Trade Reset</title>
+   <link>https://www.nasdaq.com/articles/3-stocks-offering-diversification-trumps-tariff-trade-reset</link>
+   <description>
+        President Donald Trump is in the early stages of executing what some are calling a &amp;ldquo;Great Reset&amp;rdquo; of the U.S. economy. Tariffs are one of the president&amp;rsquo;s tools of choice with a goal towards spurring a domestic manufacturing revival. According to the administration, achieving that
+    </description>
+   <pubDate>Mon, 21 Jul 2025 12:21:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-stocks-offering-diversification-trumps-tariff-trade-reset?time=1753100460</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Investing,Dividends,Gold,Stocks</category>
+   <nasdaq:tickers>VZ,VZ,FCX,KO,GDX,NVDA</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>3 Retailers Poised to Outmaneuver Tariff and Recession Concerns</title>
+   <link>https://www.nasdaq.com/articles/3-retailers-poised-outmaneuver-tariff-and-recession-concerns</link>
+   <description>
+        Several months into the Trump administration's unfolding tariff program, investors are still unlikely to have much clarity surrounding the impact of current and potential future levies. However, as inflation creeps upward once again and analysts continue to forecast a decent lik
+    </description>
+   <pubDate>Sun, 20 Jul 2025 12:25:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-retailers-poised-outmaneuver-tariff-and-recession-concerns?time=1753014300</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Stocks,Management</category>
+   <nasdaq:tickers>TJX,TJX,GLBE,SHOP,XRT,BOOT</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Yield Generators: 3 Stocks Enhancing Shareholder Value</title>
+   <link>https://www.nasdaq.com/articles/yield-generators-3-stocks-enhancing-shareholder-value</link>
+   <description>
+        Several stocks recently unveiled plans to significantly enhance shareholder value. These plans include the two major types of capital returns that investors often pay attention to:&amp;nbsp;dividends and buybacks. Dividends mean direct cash going into investors' pockets, while buybacks h
+    </description>
+   <pubDate>Wed, 09 Jul 2025 13:20:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/yield-generators-3-stocks-enhancing-shareholder-value?time=1752067200</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Stocks</category>
+   <nasdaq:tickers>THO,THO,DAN,FICO,ALSN</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>3 Safe Buy-and-Hold Dividend Stocks With Strong Balance Sheets</title>
+   <link>https://www.nasdaq.com/articles/3-safe-buy-and-hold-dividend-stocks-strong-balance-sheets</link>
+   <description>
+        Dividend yield is a commonly used metric for finding dividend stocks to buy and hold. The dividend yield is the amount of a company&amp;rsquo;s dividend as a percentage of its stock price. Since a company&amp;rsquo;s stock price can fluctuate every day, so will the dividend yield. However, because
+    </description>
+   <pubDate>Tue, 01 Jul 2025 11:02:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-safe-buy-and-hold-dividend-stocks-strong-balance-sheets?time=1751367720</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Stocks</category>
+   <nasdaq:tickers>MDT,MDT,COST,ADM,MMM</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Buybacks Galore: Repurchases From the Oval Office to Olive Garden</title>
+   <link>https://www.nasdaq.com/articles/buybacks-galore-repurchases-oval-office-olive-garden</link>
+   <description>
+        Several notable stocks, associated with everything from President Trump to pasta dinners, are significantly&amp;nbsp;boosting their buybacks. Together, these newly announced programs add over $10 billion in fresh repurchase capacity to the stock market. While the reasons vary, the messag
+    </description>
+   <pubDate>Mon, 30 Jun 2025 17:54:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/buybacks-galore-repurchases-oval-office-olive-garden?time=1751306040</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Technology,Bitcoin,Stocks</category>
+   <nasdaq:tickers>DJT,DJT,JCI,DRI</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>5 High-Yielding ETFs to Buy and Hold Forever</title>
+   <link>https://www.nasdaq.com/articles/5-high-yielding-etfs-buy-and-hold-forever</link>
+   <description>
+        In a market dominated by AI hype cycles and rapid-fire momentum trades, there&amp;rsquo;s something comforting and effective about sticking to time-tested principles. For long-term investors who prioritize steady income, low volatility, and compounding growth, diverse and broad-based blue
+    </description>
+   <pubDate>Mon, 30 Jun 2025 14:39:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/5-high-yielding-etfs-buy-and-hold-forever?time=1751294340</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Technology,Energy,ETFs,Stocks</category>
+   <nasdaq:tickers>JEPI,JEPI,SDY,SCHD,VOO,XLU</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>These 3 Dividend Stocks Combine Strong Yields With Upside</title>
+   <link>https://www.nasdaq.com/articles/these-3-dividend-stocks-combine-strong-yields-upside</link>
+   <description>
+        Dividend stocks can play many roles in an investor&amp;rsquo;s portfolio. Income generation is paramount. A key benefit to owning dividend stocks is the ability to generate reliable income that can supplement income or be reinvested to deliver compound growth.
+In volatile markets, dividen
+    </description>
+   <pubDate>Fri, 20 Jun 2025 13:48:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/these-3-dividend-stocks-combine-strong-yields-upside?time=1750427280</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Oil,Stocks</category>
+   <nasdaq:tickers>PRGO,PRGO,XOM,HAS,CVX</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Fastenal Stock After Split: Poised for 5 More Years of Gains</title>
+   <link>https://www.nasdaq.com/articles/fastenal-stock-after-split-poised-5-more-years-gains</link>
+   <description>
+        [content-module:CompanyOverview|NASDAQ:FAST]
+The hum of industrial operations and the rhythm of construction would not be possible without the stable supply chains that ensure the productivity of each sector.&amp;nbsp;Fastenal Company (NASDAQ: FAST) is a leading wholesale distributor of
+    </description>
+   <pubDate>Fri, 13 Jun 2025 11:32:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/fastenal-stock-after-split-poised-5-more-years-gains?time=1749814320</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Stocks</category>
+   <nasdaq:tickers>FAST</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>4 Stocks Raising Dividends Across Energy, Retail &amp; More</title>
+   <link>https://www.nasdaq.com/articles/4-stocks-raising-dividends-across-energy-retail-more</link>
+   <description>
+        Dividends are getting boosted across different sectors and industries in the market. This is important to see. Dividend increases across sectors allow for growing income opportunities while also allowing a way for yield-seeking investors to achieve diversification.
+Below are the
+    </description>
+   <pubDate>Tue, 10 Jun 2025 13:23:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/4-stocks-raising-dividends-across-energy-retail-more?time=1749561780</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Dividends,Energy,Stocks</category>
+   <nasdaq:tickers>EOG,EOG,LOW,DCI,CB,HD</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+ </channel>
+</rss>

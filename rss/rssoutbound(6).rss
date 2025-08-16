@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>Ipos Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic IPOs</description>
+  <language>en</language>
+  <item>
+   <title>How Did Peter Thiel-Backed Crypto Exchange Bullish's IPO Go?</title>
+   <link>https://www.nasdaq.com/articles/how-did-peter-thiel-backed-crypto-exchange-bullishs-ipo-go</link>
+   <description>
+        It&amp;rsquo;s been a good year for the financials sector. Between President Trump&amp;rsquo;s deregulatory platform and the anticipation of the Federal Reserve cutting interest rates at its September meeting, financials have put together a strong performance. Its 8.55% year-to-date gain ranks fift
+    </description>
+   <pubDate>Thu, 14 Aug 2025 22:33:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/how-did-peter-thiel-backed-crypto-exchange-bullishs-ipo-go?time=1755210780</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Markets,Bitcoin,ETFs,Stocks</category>
+   <nasdaq:tickers>IBIT,IBIT,COIN,PYPL,PLTR,ETOR</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Tempus AI’s Strong Q2 Fuels Growth Story—More Upside Ahead?</title>
+   <link>https://www.nasdaq.com/articles/tempus-ais-strong-q2-fuels-growth-story-more-upside-ahead</link>
+   <description>
+        Over the past two years, one of the most interesting healthcare companies to go public is none other than Tempus AI (NASDAQ: TEM). In a world where healthcare IPOs are typically dominated by biotech companies that generate little to no revenue, Tempus stands out.
+
+The firm has p
+    </description>
+   <pubDate>Wed, 13 Aug 2025 20:39:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/tempus-ais-strong-q2-fuels-growth-story-more-upside-ahead?time=1755117540</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Stocks</category>
+   <nasdaq:tickers>TEM</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>IPO Market Stays Hot With These 2 Debuting Stocks</title>
+   <link>https://www.nasdaq.com/articles/ipo-market-stays-hot-these-2-debuting-stocks</link>
+   <description>
+        It&amp;rsquo;s a hot IPO summer as new listings make their long-awaited return to public markets. After a cool first half of 2025, the demand for Initial Public Offerings has exploded in Q3, with anticipated companies like&amp;nbsp;Circle Internet Group Inc. (NYSE: CRCL) and CoreWeave Inc. (NASDAQ
+    </description>
+   <pubDate>Mon, 11 Aug 2025 21:06:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/ipo-market-stays-hot-these-2-debuting-stocks?time=1754946360</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Stocks</category>
+   <nasdaq:tickers>CRWV,MNTN,NFLX,CRCL</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Texas Innovator Takes Flight with Nasdaq: Firefly Launches IPO</title>
+   <link>https://www.nasdaq.com/newsroom/texas-innovator-takes-flight-nasdaq-firefly-launches-ipo</link>
+   <description>
+        Space and defense technology company Firefly Aerospace made its public debut on Thursday, August 7th, 2025, marking another trailblazing Texas company tapping Nasdaq at its partner for joining public markets.
+    </description>
+   <pubDate>Thu, 07 Aug 2025 18:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/newsroom/texas-innovator-takes-flight-nasdaq-firefly-launches-ipo?time=1754591400</guid>
+   <dc:creator>Nasdaq Newsroom</dc:creator>
+   <category>IPOs</category>
+   <nasdaq:tickers>FLY,NDAQ,FLY</nasdaq:tickers>
+  </item>
+  <item>
+   <title>Figma's Wild IPO Ride: Is the Stock's Premium Price Justified?</title>
+   <link>https://www.nasdaq.com/articles/figmas-wild-ipo-ride-stocks-premium-price-justified</link>
+   <description>
+        The first days of public trading for Figma (NYSE: FIG) have been a study in market extremes. After being priced at $33 per share for its Initial Public Offering (IPO), the stock exploded, surging over 250% to a high of $142.92 on its first day. This euphoria was quickly met wit
+    </description>
+   <pubDate>Tue, 05 Aug 2025 14:12:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/figmas-wild-ipo-ride-stocks-premium-price-justified?time=1754403120</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Stocks,Management</category>
+   <nasdaq:tickers>ADBE</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>IPO Market Resilient Despite Dip in IPOs</title>
+   <link>https://www.nasdaq.com/articles/ipo-market-resilient-despite-dip-ipos</link>
+   <description>
+        There may have been some slowdown in the number of operating companies going public, but it’s been relatively mild, and capital raised actually rose significantly year-on-year in the U.S. and Stockholm, despite market volatility and the initial tariff sell-off. 
+    </description>
+   <pubDate>Thu, 17 Jul 2025 21:25:12 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/ipo-market-resilient-despite-dip-ipos?time=1752787512</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+   <category>IPOs,US Markets,World Markets</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>ETFs to Play IPO Market's Rebound in 2025 </title>
+   <link>https://www.nasdaq.com/articles/etfs-play-ipo-markets-rebound-2025</link>
+   <description>
+        IPO market momentum accelerates as U.S. listings surge, boosting ETFs like FPX, IPO, FPXI and IPOS across the board.
+    </description>
+   <pubDate>Thu, 03 Jul 2025 16:55:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/etfs-play-ipo-markets-rebound-2025?time=1751561700</guid>
+   <dc:creator>Zacks</dc:creator>
+   <category>IPOs</category>
+   <nasdaq:tickers>FPXI,IPO,IPOS,FPX</nasdaq:tickers>
+  </item>
+  <item>
+   <title>MarketBeat Week in Review – 06/16 - 06/20</title>
+   <link>https://www.nasdaq.com/articles/marketbeat-week-review-06-16-06-20</link>
+   <description>
+        The start of summer is a reminder that we&amp;rsquo;re almost halfway through the year. For investors, the first six months have seen stocks make sharp moves higher and lower. However, for all the ups and downs, the S&amp;P 500 is essentially flat in 2025.
+    </description>
+   <pubDate>Sat, 21 Jun 2025 11:00:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/marketbeat-week-review-06-16-06-20?time=1750503600</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Technology,Gold,Stocks</category>
+   <nasdaq:tickers>ASTS,ASTS,NVDA,AMD,AMZN,TSLA</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>IPO Momentum Returns: 3 Stocks Rising After CoreWeave’s Surge</title>
+   <link>https://www.nasdaq.com/articles/ipo-momentum-returns-3-stocks-rising-after-coreweaves-surge</link>
+   <description>
+        A revival of merger and acquisition activity and initial public offerings (IPOs) was firmly on the pro side of the column when Wall Street debated the merits of a second Trump presidency. The first aspect hasn&amp;rsquo;t come to pass, as the Federal Trade Commission (FTC) has retained ma
+    </description>
+   <pubDate>Fri, 20 Jun 2025 14:26:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/ipo-momentum-returns-3-stocks-rising-after-coreweaves-surge?time=1750429560</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>Banking,Investing,IPOs,Social Media,Stocks</category>
+   <nasdaq:tickers>CRCL,CRCL,CHYM,CRWV,ETOR</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Investing in CoreWeave: Key Insights on the NVIDIA‑Backed AI IPO</title>
+   <link>https://www.nasdaq.com/articles/investing-coreweave-key-insights-nvidia-backed-ai-ipo</link>
+   <description>
+        [content-module:CompanyOverview|NASDAQ:CRWV]
+When it comes to recent initial public offerings (IPOs), companies like Reddit (NYSE: RDDT) and Tempus AI (NASDAQ: TEM) have stood out due to their strong performance. However, likely the most talked-about company to go public in 2025
+    </description>
+   <pubDate>Fri, 09 May 2025 11:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/investing-coreweave-key-insights-nvidia-backed-ai-ipo?time=1746790200</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Stocks</category>
+   <nasdaq:tickers>CRWV,CRWV,NVDA,RDDT,TEM,MSFT</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Survey: America’s Most Inspirational Women Business Leaders [2025]</title>
+   <link>https://www.nasdaq.com/articles/survey-americas-most-inspirational-women-business-leaders-2025</link>
+   <description>
+        Over the past twenty years, we&amp;rsquo;ve seen remarkable growth in women's leadership.
+    </description>
+   <pubDate>Wed, 07 May 2025 19:30:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/survey-americas-most-inspirational-women-business-leaders-2025?time=1746646200</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Markets,Stocks</category>
+   <nasdaq:tickers></nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>3 Hot New IPOs Defying the 2025 Market Slump</title>
+   <link>https://www.nasdaq.com/articles/3-hot-new-ipos-defying-2025-market-slump</link>
+   <description>
+        Amid the precipitous decline in the general market in 2025, several new stocks on the block have managed to outperform.
+As of the April 11 close, the S&amp;P 500 Index has provided a total return of nearly down 9%. Three stocks that had their initial public offerings (IPOs) in 2024
+    </description>
+   <pubDate>Mon, 14 Apr 2025 14:49:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/3-hot-new-ipos-defying-2025-market-slump?time=1744642140</guid>
+   <dc:creator>MarketBeat</dc:creator>
+   <category>IPOs,Stocks</category>
+   <nasdaq:tickers>TEM,TEM,TTAN,CRWV,NVDA</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketbeat.com/">Stock Market News from MarketBeat</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.earlybirdpublishing.com/">MarketBeat's Pre-Market Newsletter</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.dividendstocks.com/">Dividend Investing Tools</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>IPO Pulses Entering Downturns</title>
+   <link>https://www.nasdaq.com/articles/ipo-pulses-entering-downturns</link>
+   <description>
+        In our last update, Nasdaq’s IPO Pulses for the U.S. and Stockholm were signaling that IPO activity would likely stay in an upturn into midyear. But a lot has changed since January, and now IPO prospects are weakening.
+    </description>
+   <pubDate>Thu, 10 Apr 2025 22:15:55 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/ipo-pulses-entering-downturns?time=1744323355</guid>
+   <dc:creator>Phil Mackintosh</dc:creator>
+   <category>IPOs,US Markets,World Markets</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>How the Future of IT Is Being Redefined</title>
+   <link>https://www.nasdaq.com/articles/how-future-it-being-redefined</link>
+   <description>
+        Nasdaq TradeTalks explores how different types of investors are approaching the IPO market and Bill Briggs, Chief Technology Officer at Deloitte, shares how the future of IT is being redefined.
+    </description>
+   <pubDate>Mon, 31 Mar 2025 13:00:00 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/how-future-it-being-redefined?time=1743426000</guid>
+   <dc:creator>TradeTalks</dc:creator>
+   <category>Artificial Intelligence,Quantum Computing,IPOs,Healthcare,ETFs</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+  <item>
+   <title>Shaping the Next Decade of Economic Opportunity</title>
+   <link>https://www.nasdaq.com/articles/shaping-next-decade-economic-opportunity</link>
+   <description>
+        Nasdaq TradeTalks explores policy, technology and capital flow are shaping the next decade of economic progress and Rebecca Lindland, Managing Director for Allison Worldwide, highlights the opportunities to build a more sustainable and smarter world.
+
+    </description>
+   <pubDate>Mon, 24 Mar 2025 13:45:06 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/shaping-next-decade-economic-opportunity?time=1742823906</guid>
+   <dc:creator>TradeTalks</dc:creator>
+   <category>Policy &amp; Regulation</category>
+   <nasdaq:tickers></nasdaq:tickers>
+  </item>
+ </channel>
+</rss>

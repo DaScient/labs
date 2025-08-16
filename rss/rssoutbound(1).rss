@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/"
+  xmlns:foaf="http://xmlns.com/foaf/0.1/" xmlns:og="http://ogp.me/ns#"
+  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:schema="http://schema.org/"
+  xmlns:sioc="http://rdfs.org/sioc/ns#" xmlns:sioct="http://rdfs.org/sioc/types#"
+  xmlns:skos="http://www.w3.org/2004/02/skos/core#" xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xmlns:nasdaq="http://nasdaq.com/reference/feeds/1.0" version="2.0" xml:base="https://www.nasdaq.com/feed/rssoutbound">
+ <channel>
+  <title>Options Feed</title>
+  <link>https://www.nasdaq.com/feed/rssoutbound</link>
+  <description>This feed is responsible for generating the rss feed related to the topic Options</description>
+  <language>en</language>
+  <item>
+   <title>Notable Friday Option Activity: NEE, GTLB, LYFT</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-nee-gtlb-lyft</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in NextEra Energy Inc (Symbol: NEE), where a total volume of 71,937 contracts has been traded thus far today, a contract volume which is representative of approxima
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:45 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-nee-gtlb-lyft?time=1755286065</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>NEE,NEE,GTLB,LYFT</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.historicalstockprice.com/pzg-historical-stock-prices/">PZG Historical Stock Prices</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/institutional/holders-of-tsoc/">Institutional Holders of TSOC</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/insider-buying/mfic-insider-buying/">MFIC Insider Buying</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Noteworthy Friday Option Activity: CFLT, STZ, VKTX</title>
+   <link>https://www.nasdaq.com/articles/noteworthy-friday-option-activity-cflt-stz-vktx</link>
+   <description>
+        Among the underlying components of the Russell 3000 index, we saw noteworthy options trading volume today in Confluent Inc (Symbol: CFLT), where a total of 69,176 contracts have traded so far, representing approximately 6.9 million underlying shares.  That amounts to about 59.9%
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:41 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/noteworthy-friday-option-activity-cflt-stz-vktx?time=1755286061</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>CFLT,CFLT,STZ,VKTX</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.metalschannel.com/slideshows/ten-oversold-metals-stocks/">Oversold Metals Stocks</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/funds/holding-zsml/">Funds Holding ZSML</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.technicalanalysischannel.com/unitedhealth-group/">UnitedHealth Group Technical Analysis</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: DIS, PPTA, NNE</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-dis-ppta-nne</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Walt Disney Co. (Symbol: DIS), where a total volume of 47,254 contracts has been traded thus far today, a contract volume which is representative of approximatel
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:35 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-dis-ppta-nne?time=1755286055</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>DIS,DIS,PPTA,NNE</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.dividendchannel.com/slideshows/high-yield-baby-bonds/">High Yield Baby Bonds</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/insider-buying/tdoc-insider-buying/">TDOC Insider Buying</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.ytdreturn.com/cent/">CENT YTD Return</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: EVLV, TWLO, CVX</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-evlv-twlo-cvx</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Evolv Technologies Holdings Inc (Symbol: EVLV), where a total volume of 14,992 contracts has been traded thus far today, a contract volume which is representativ
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:34 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-evlv-twlo-cvx?time=1755286054</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>EVLV,EVLV,TWLO,CVX</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.historicalstockprice.com/dw-historical-stock-prices/">DW Historical Stock Prices</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-bscz/">Top Ten Hedge Funds Holding BSCZ</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.etfchannel.com/symbol/eqr/">ETFs Holding EQR</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: GOOGL, NU, MSFT</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-googl-nu-msft</link>
+   <description>
+        Among the underlying components of the Russell 3000 index, we saw noteworthy options trading volume today in Alphabet Inc (Symbol: GOOGL), where a total of 526,788 contracts have traded so far, representing approximately 52.7 million underlying shares.  That amounts to about 139
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:31 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-googl-nu-msft?time=1755286051</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>GOOGL,GOOGL,NU,MSFT</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-alti/">Top Ten Hedge Funds Holding ALTI</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/institutional/holders-of-ahp/">Institutional Holders of AHP</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.stockrsi.com/t-mobile-us/">T-Mobile US RSI</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Noteworthy Friday Option Activity: FIVE, BTDR, UBER</title>
+   <link>https://www.nasdaq.com/articles/noteworthy-friday-option-activity-five-btdr-uber</link>
+   <description>
+        Among the underlying components of the Russell 3000 index, we saw noteworthy options trading volume today in Five Below Inc (Symbol: FIVE), where a total of 6,410 contracts have traded so far, representing approximately 641,000 underlying shares.  That amounts to about 61.7% of
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:28 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/noteworthy-friday-option-activity-five-btdr-uber?time=1755286048</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>FIVE,FIVE,BTDR,UBER</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.sharesoutstandinghistory.com/cp/">CP shares outstanding history</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-namm/">Top Ten Hedge Funds Holding NAMM</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.marketcaphistory.com/vapo/">VAPO market cap history</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Noteworthy Friday Option Activity: META, NFLX, TSLA</title>
+   <link>https://www.nasdaq.com/articles/noteworthy-friday-option-activity-meta-nflx-tsla</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Meta Platforms Inc (Symbol: META), where a total volume of 543,523 contracts has been traded thus far today, a contract volume which is representative of approxi
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:21 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/noteworthy-friday-option-activity-meta-nflx-tsla?time=1755286041</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>META,META,NFLX,TSLA</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.stockoptionschannel.com/symbol/sgnt/">SGNT Options Chain</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.marketnewsvideo.com/symbol/flia/">FLIA Videos</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.ytdreturn.com/wps/">WPS YTD Return</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: GLOB, CNA, KLAC</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-glob-cna-klac</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Globant SA (Symbol: GLOB), where a total volume of 8,991 contracts has been traded thus far today, a contract volume which is representative of approximately 899
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:19 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-glob-cna-klac?time=1755286039</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>GLOB,GLOB,CNA,KLAC</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.cefchannel.com/best-closed-end-funds/">Best Closed End Funds</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-alqa/">Top Ten Hedge Funds Holding ALQA</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.marketnewsvideo.com/symbol/evrg/">EVRG Videos</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: CSCO, SLNO, MDB</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-csco-slno-mdb</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Cisco Systems Inc (Symbol: CSCO), where a total volume of 148,281 contracts has been traded thus far today, a contract volume which is representative of approxim
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:16 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-csco-slno-mdb?time=1755286036</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>CSCO,CSCO,SLNO,MDB</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.etfchannel.com/">ETF Channel</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.stockoptionschannel.com/symbol/scc/">SCC Options Chain</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-gsfp/">Top Ten Hedge Funds Holding GSFP</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: COIN, RUN, COST</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-coin-run-cost</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Coinbase Global Inc (Symbol: COIN), where a total volume of 274,585 contracts has been traded thus far today, a contract volume which is representative of approx
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:15 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-coin-run-cost?time=1755286035</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>COIN,COIN,RUN,COST</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/sold/mlps/">MLPs Hedge Funds Are Selling</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.historicalstockprice.com/grph-historical-stock-prices/">GRPH Historical Stock Prices</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-cmu/">Top Ten Hedge Funds Holding CMU</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: GOOG, ENPH, SNOW</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-goog-enph-snow</link>
+   <description>
+        Looking at options trading activity among components of the Russell 3000 index, there is noteworthy activity today in Alphabet Inc (Symbol: GOOG), where a total volume of 305,569 contracts has been traded thus far today, a contract volume which is representative of approximately
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:14 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-goog-enph-snow?time=1755286034</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>GOOG,GOOG,ENPH,SNOW</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.marketnewsvideo.com/symbol/otix/">OTIX Videos</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.averageannualreturn.com/fox/">FOX Average Annual Return</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/insider-buying/fulc-insider-buying/">FULC Insider Buying</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Noteworthy Friday Option Activity: FOUR, ROKU, OSCR</title>
+   <link>https://www.nasdaq.com/articles/noteworthy-friday-option-activity-four-roku-oscr</link>
+   <description>
+        Among the underlying components of the Russell 3000 index, we saw noteworthy options trading volume today in Shift4 Payments Inc (Symbol: FOUR), where a total of 11,719 contracts have traded so far, representing approximately 1.2 million underlying shares.  That amounts to about
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:12 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/noteworthy-friday-option-activity-four-roku-oscr?time=1755286032</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>FOUR,FOUR,ROKU,OSCR</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.stockoptionschannel.com/symbol/fusn/">FUSN Options Chain</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.historicalstockprice.com/rxdx-historical-stock-prices/">RXDX Historical Stock Prices</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/hedge-funds/holding-flgr/">Top Ten Hedge Funds Holding FLGR</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Noteworthy Friday Option Activity: SLM, ALGM, AGO</title>
+   <link>https://www.nasdaq.com/articles/noteworthy-friday-option-activity-slm-algm-ago</link>
+   <description>
+        Among the underlying components of the Russell 3000 index, we saw noteworthy options trading volume today in SLM Corp. (Symbol: SLM), where a total of 13,257 contracts have traded so far, representing approximately 1.3 million underlying shares.  That amounts to about 66.4% of S
+    </description>
+   <pubDate>Fri, 15 Aug 2025 19:27:11 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/noteworthy-friday-option-activity-slm-algm-ago?time=1755286031</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>SLM,SLM,AGO</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.dividendchannel.com/consumer-goods-dividend-stocks/">Consumer Goods Dividend Stocks</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/institutional/holders-of-ggac/">Institutional Holders of GGAC</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.stockoptionschannel.com/symbol/obk/">OBK Options Chain</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Noteworthy Friday Option Activity: TGT, MU, EXE</title>
+   <link>https://www.nasdaq.com/articles/noteworthy-friday-option-activity-tgt-mu-exe</link>
+   <description>
+        Looking at options trading activity among components of the S&amp;amp;P 500 index, there is noteworthy activity today in Target Corp (Symbol: TGT), where a total volume of 33,332 contracts has been traded thus far today, a contract volume which is representative of approximately 3.3
+    </description>
+   <pubDate>Fri, 15 Aug 2025 17:19:37 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/noteworthy-friday-option-activity-tgt-mu-exe?time=1755278377</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>TGT,TGT,MU,EXE</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/seth-klarman-stock-picks/">Seth Klarman Stock Picks</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.stockoptionschannel.com/symbol/dfar/">DFAR Options Chain</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/institutional/holders-of-lif/">Institutional Holders of LIF</nasdaq:partnerlink>
+  </item>
+  <item>
+   <title>Notable Friday Option Activity: NVDA, UPS, BA</title>
+   <link>https://www.nasdaq.com/articles/notable-friday-option-activity-nvda-ups-ba</link>
+   <description>
+        Looking at options trading activity among components of the S&amp;amp;P 500 index, there is noteworthy activity today in NVIDIA Corp (Symbol: NVDA), where a total volume of 2.2 million contracts has been traded thus far today, a contract volume which is representative of approximate
+    </description>
+   <pubDate>Fri, 15 Aug 2025 17:19:35 +0000</pubDate>
+   <guid isPermaLink="true">https://www.nasdaq.com/articles/notable-friday-option-activity-nvda-ups-ba?time=1755278375</guid>
+   <dc:creator>BNK Invest</dc:creator>
+   <category>Markets,Stocks,Options</category>
+   <nasdaq:tickers>NVDA,NVDA,UPS,BA</nasdaq:tickers>
+   <nasdaq:partnerlink url="https://www.etfchannel.com/slideshows/outflows/">ETFs With Notable Outflows</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.marketnewsvideo.com/symbol/ltch/">LTCH Videos</nasdaq:partnerlink>
+   <nasdaq:partnerlink url="https://www.holdingschannel.com/institutional/holders-of-scnb/">Institutional Holders of SCNB</nasdaq:partnerlink>
+  </item>
+ </channel>
+</rss>
