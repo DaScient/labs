@@ -1,0 +1,12 @@
+{
+  "name": "dascient-scraper",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "node scripts/scrape.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "undici": "^6.19.8"
+  }
+}
