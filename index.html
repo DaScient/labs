@@ -1,17 +1,312 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Dascient Options Dashboard Pro</title>
-  <link rel="stylesheet" href="assets/styles.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DASCIENT — Signal Dashboard</title>
+<style>
+  :root{
+    --bg:#f7f8fb;
+    --card:#ffffff;
+    --ink:#0f172a;
+    --muted:#6b7280;
+    --ok:#0ea5a4;
+    --buy:#16a34a;
+    --hold:#6366f1;
+    --sell:#dc2626;
+    --accent:#0ea5a4;
+    --row:#f2f5fb;
+    --chip:#eef2ff;
+    --chip-ink:#3730a3;
+    --border:#e5e7eb;
+    --bull:#16a34a;
+    --bear:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font:14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    color:var(--ink); background:var(--bg);
+  }
+  .wrap{ max-width:1200px; margin:24px auto; padding:0 16px;}
+  header{ display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  h1{ font-size:20px; margin:0;}
+  .sub{ color:var(--muted); font-size:13px;}
+  .controls{ display:flex; gap:8px; flex-wrap:wrap; margin-top:6px;}
+  input, button{
+    border:1px solid var(--border); background:#fff; color:var(--ink); border-radius:10px; padding:10px 12px;
+  }
+  button{ cursor:pointer; background:var(--accent); color:#fff; border-color:transparent; }
+  button.secondary{ background:#fff; color:var(--ink); border-color:var(--border); }
+  .card{
+    background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:0 1px 2px rgba(16,24,40,.04);
+    padding:12px; overflow:auto;
+  }
+  table{ width:100%; border-collapse:collapse; min-width:800px;}
+  th, td{ padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); vertical-align:middle;}
+  thead th{ font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); background:#fafafa; position:sticky; top:0; z-index:1;}
+  tbody tr:nth-child(even){ background:#fcfdff;}
+  .mono{ font-variant-numeric:tabular-nums; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+  .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; font-weight:600; font-size:12px; }
+  .pill.buy{ background:color-mix(in srgb, var(--buy) 12%, white); color:var(--buy); }
+  .pill.hold{ background:color-mix(in srgb, var(--hold) 12%, white); color:var(--hold); }
+  .pill.sell{ background:color-mix(in srgb, var(--sell) 12%, white); color:var(--sell); }
+  .kvs{ display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{ background:var(--chip); color:var(--chip-ink); border:1px solid #e5e7ff; border-radius:10px; padding:6px 8px; font-size:12px; }
+  .sent-bar{ height:10px; border-radius:999px; background:#f1f5f9; position:relative; overflow:hidden; min-width:120px; }
+  .sent-bar > span{ position:absolute; left:0; top:0; bottom:0; display:block; }
+  .sent-bull{ background:var(--bull); }
+  .sent-bear{ background:var(--bear); opacity:.25; }
+  .sublabel{ font-size:11px; color:var(--muted); margin-top:6px;}
+  .tooltip{ position:relative; display:inline-flex; gap:6px; align-items:center; }
+  .tooltip .tip{
+    visibility:hidden; opacity:0; transition:opacity .15s ease;
+    position:absolute; bottom:125%; left:50%; transform:translateX(-50%);
+    background:#0b1220; color:#fff; padding:10px 12px; border-radius:10px; white-space:nowrap; font-size:12px;
+    box-shadow:0 8px 24px rgba(2,6,23,.24);
+  }
+  .tooltip:hover .tip{ visibility:visible; opacity:1; }
+  .opt-grid{ display:flex; gap:6px; flex-wrap:wrap; }
+  .opt-chip{ border:1px dashed var(--border); background:#fff; border-radius:12px; padding:8px 10px; font-size:12px; }
+  .status{ margin:10px 0; color:var(--muted); font-size:12px;}
+  .small{ font-size:12px; color:var(--muted); }
+  .error{ color:var(--sell); }
+  .ok{ color:var(--buy); }
+  .link{ color:#0369a1; text-decoration:none; }
+  @media (max-width:700px){
+    .wrap{ padding:0 10px;}
+  }
+</style>
 </head>
 <body>
-  <h1>Dascient Options Dashboard Pro</h1>
-  <div>
-    <button onclick="loadMock()">Mock</button>
-    <button onclick="loadLive()">Live</button>
+<div class="wrap">
+  <header>
+    <h1>Signal Dashboard</h1>
+    <div class="sub">Price • Target • Reco • Options • Sentiment</div>
+    <div class="controls">
+      <input id="symbols" type="text" size="60"
+             value="AAPL,ABR,ACHR,AMZN,AXP,CHAT,MSFT,MTPLF,MSTY,NVDA,PMT,RKLB,RYCEY,TSLA,SPY"
+             aria-label="Symbols comma separated" />
+      <button id="load">Load</button>
+      <button id="mock" class="secondary">Use Mock Options</button>
+    </div>
+    <div id="status" class="status">Ready.</div>
+  </header>
+
+  <div class="card">
+    <table id="grid">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Price</th>
+          <th>Price Target</th>
+          <th>Reco</th>
+          <th>Sentiment</th>
+          <th>Options (ATM & Spreads)</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <!-- rows injected -->
+      </tbody>
+    </table>
   </div>
-  <div id="dashboard"></div>
-  <script src="assets/app.js"></script>
+
+  <p class="small">
+    API: <span id="apiBase"></span> • Updated: <span id="updated"></span>
+  </p>
+</div>
+
+<script>
+/*** ==== CONFIG ==== ***/
+const API_BASE = "https://stocks.aristocles24.workers.dev";  // ← your Worker base
+document.getElementById("apiBase").textContent = API_BASE;
+
+/*** ==== HELPERS ==== ***/
+const $ = sel => document.querySelector(sel);
+const el = (tag, attrs={}, kids=[]) => {
+  const n = document.createElement(tag);
+  for (const [k,v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v;
+    else if (k === "html") n.innerHTML = v;
+    else if (v != null) n.setAttribute(k, v);
+  }
+  for (const kid of (Array.isArray(kids)?kids:[kids])) if (kid) n.appendChild(kid);
+  return n;
+};
+const fmt = n => (n==null || isNaN(n) ? "—" : Number(n).toFixed(2));
+
+/*** ==== FETCHERS ==== ***/
+async function fetchJSON(url){
+  const r = await fetch(url, { headers: { "Accept":"application/json" } });
+  if (!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+  return await r.json();
+}
+
+async function getSummaries(symbols){
+  const qs = encodeURIComponent(symbols.join(","));
+  return fetchJSON(`${API_BASE}/api/summary-batch?symbols=${qs}`);
+}
+
+async function getOptions(symbol, useMock=false){
+  const url = new URL(`${API_BASE}/api/options`);
+  url.searchParams.set("symbol", symbol);
+  if (useMock) url.searchParams.set("mock", "1");
+  return fetchJSON(url.toString());
+}
+
+/*** ==== RENDER ==== ***/
+function recoPill(reco){
+  const cls = reco === "buy" ? "buy" : (reco === "sell" ? "sell" : "hold");
+  const label = (reco||"hold").toUpperCase();
+  return el("span", {class:`pill ${cls}`}, label);
+}
+
+function sentimentBlock(sent){
+  const bull = Number(sent?.bullish ?? 0);
+  const bear = Number(sent?.bearish ?? 0);
+  const neu  = Number(sent?.neutral ?? 0);
+  const total = Math.max(1, bull + bear + neu);
+  const bullPct = Math.round((bull / total) * 100);
+  const bearPct = Math.round((bear / total) * 100);
+
+  const bar = el("div", {class:"sent-bar"}, [
+    el("span", {class:"sent-bull", style:`width:${bullPct}%;`}),
+    el("span", {class:"sent-bear", style:`left:${bullPct}%; width:${bearPct}%;`})
+  ]);
+
+  const sub = el("div", {class:"sublabel"}, `Bull ${bullPct}% • Bear ${bearPct}%`);
+  return el("div", {}, [bar, sub]);
+}
+
+function spreadChip(name, data, extra={}) {
+  if (!data) return null;
+  const tipLines = [];
+  const push = (k,v) => tipLines.push(`<div><b>${k}:</b> ${v}</div>`);
+
+  if (name === "ATM Call" || name === "ATM Put") {
+    push("Strike", fmt(data.strike));
+    push("Mid", fmt(data.mid));
+  } else if (name === "Bull Call Spread") {
+    push("Lower", fmt(data.lower));
+    push("Upper", fmt(data.upper));
+    push("Debit", fmt(data.debit));
+  } else if (name === "Bear Put Spread") {
+    push("Upper", fmt(data.upper));
+    push("Lower", fmt(data.lower));
+    push("Debit", fmt(data.debit));
+  } else if (name === "Bull Put Credit") {
+    push("Short", fmt(data.short));
+    push("Long", fmt(data.long));
+    push("Credit", fmt(data.credit));
+  } else if (name === "Bear Call Credit") {
+    push("Short", fmt(data.short));
+    push("Long", fmt(data.long));
+    push("Credit", fmt(data.credit));
+  } else if (name === "Iron Condor") {
+    push("Short Put", fmt(data.shortPut));
+    push("Long  Put", fmt(data.longPut));
+    push("Short Call", fmt(data.shortCall));
+    push("Long  Call", fmt(data.longCall));
+    push("Credit", fmt(data.credit));
+    push("Width", fmt(data.width));
+    if (data.estMaxLoss != null) push("Est Max Loss", fmt(data.estMaxLoss));
+  }
+
+  if (extra.expiration) push("Expiration", extra.expiration);
+  if (extra.price != null) push("Underlying", fmt(extra.price));
+
+  const tip = el("div", {class:"tip", html: tipLines.join("")});
+  return el("span", {class:"tooltip opt-chip", title:""}, [
+    document.createTextNode(name),
+    tip
+  ]);
+}
+
+function optionsBlock(opt){
+  if (!opt) return el("span", {class:"small"}, "No options");
+  const grid = el("div", {class:"opt-grid"});
+  const extra = { expiration: opt.expiration, price: opt.price };
+
+  grid.appendChild(spreadChip("ATM Call", opt.atmCall, extra) || el("span", {class:"opt-chip small"}, "ATM Call —"));
+  grid.appendChild(spreadChip("ATM Put",  opt.atmPut,  extra) || el("span", {class:"opt-chip small"}, "ATM Put —"));
+  grid.appendChild(spreadChip("Bull Call Spread", opt.bullCallSpread, extra) || el("span", {class:"opt-chip small"}, "Bull Call —"));
+  grid.appendChild(spreadChip("Bear Put Spread",  opt.bearPutSpread,  extra) || el("span", {class:"opt-chip small"}, "Bear Put —"));
+  grid.appendChild(spreadChip("Bull Put Credit",  opt.bullPutCredit,  extra) || el("span", {class:"opt-chip small"}, "Bull Put Cr —"));
+  grid.appendChild(spreadChip("Bear Call Credit", opt.bearCallCredit, extra) || el("span", {class:"opt-chip small"}, "Bear Call Cr —"));
+  grid.appendChild(spreadChip("Iron Condor",      opt.ironCondor,     extra) || el("span", {class:"opt-chip small"}, "Condor —"));
+
+  return grid;
+}
+
+function rowFor(summary, opt){
+  const tr = el("tr");
+  const s = summary || {};
+  const price = s.price ?? null;
+  const target = s.targetMeanPrice ?? null;
+
+  tr.appendChild(el("td", {}, s.symbol || "—"));
+  tr.appendChild(el("td", {class:"mono"}, fmt(price)));
+
+  // Price target + delta
+  let targetCell = "—";
+  if (target != null) {
+    const delta = price!=null ? (((target - price) / price) * 100) : null;
+    targetCell = `${fmt(target)}${isFinite(delta) ? `  (${(delta>=0?"+":"")}${delta.toFixed(1)}%)` : ""}`;
+  }
+  tr.appendChild(el("td", {class:"mono"}, targetCell));
+
+  const reco = (s.recommendationKey || "hold").toLowerCase();
+  tr.appendChild(el("td", {}, recoPill(reco)));
+
+  // sentiment
+  tr.appendChild(el("td", {}, sentimentBlock(s.sentiment || null)));
+
+  // options block
+  tr.appendChild(el("td", {}, optionsBlock(opt)));
+
+  return tr;
+}
+
+/*** ==== CONTROLLER ==== ***/
+async function loadAll(useMockOptions=false){
+  const t0 = Date.now();
+  const tbody = $("#tbody"); tbody.innerHTML = "";
+  const status = $("#status"); status.textContent = "Loading…";
+
+  const raw = $("#symbols").value.trim();
+  const symbols = raw.split(",").map(s=>s.trim().toUpperCase()).filter(Boolean);
+
+  try {
+    // 1) summaries in one call
+    const summaries = await getSummaries(symbols);
+    const map = new Map(summaries.map(r => [r.symbol, r]));
+
+    // 2) options per symbol (in parallel with small stagger)
+    const opts = {};
+    await Promise.all(symbols.map(async (sym, i) => {
+      await new Promise(res => setTimeout(res, 60*i));
+      try { opts[sym] = await getOptions(sym, useMockOptions); }
+      catch { opts[sym] = null; }
+    }));
+
+    // 3) render rows
+    for (const sym of symbols) {
+      const tr = rowFor(map.get(sym) || { symbol: sym }, opts[sym]);
+      tbody.appendChild(tr);
+    }
+
+    const ms = Date.now() - t0;
+    status.innerHTML = `<span class="ok">Loaded ${symbols.length} symbols</span> in ${ms} ms.`;
+    $("#updated").textContent = new Date().toLocaleString();
+  } catch (e) {
+    status.innerHTML = `<span class="error">Error: ${e.message}</span>`;
+  }
+}
+
+$("#load").addEventListener("click", () => loadAll(false));
+$("#mock").addEventListener("click", () => loadAll(true));
+
+// auto-load on open
+loadAll(false);
+</script>
 </body>
-</html>                                                              
+</html>
