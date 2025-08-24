@@ -1,4 +1,4 @@
-# DASCIENT — Options Dashboard (Lite)
+# DASCIENT — Momentum-Sentiment Algorithm™ Dashboard (Lite)
 
 A tiny, colorful dashboard that shows **Price**, **Price Target**, **Buy/Sell/Hold**, and **Options (ATM Calls/Puts + simple Bull Call spread)** for any list of tickers.
 
