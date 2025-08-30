@@ -2,31 +2,144 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>GoZaddy — Live RSS → AI Summaries (ASCII)</title>
+<title>GoZaddy — ASCII Summaries</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<link rel="stylesheet" href="./styles.css">
+<style>
+  :root { --bg:#0b0f14; --fg:#d7e1f8; --dim:#8ea2c0; --em:#a5c4ff; }
+  html,body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 ui-monospace,Menlo,Consolas,monospace}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  .line{height:1px;background:#1a2636;margin:14px 0}
+  pre{white-space:pre-wrap;word-wrap:break-word}
+  .stamp{color:var(--dim);font-size:12px;margin:8px 0}
+  a{color:var(--em);text-decoration:none}
+</style>
 </head>
 <body>
-<pre id="out" class="term">
-GoZaddy ▶ Minimal Live RSS → AI Summaries
-Source: feeds.txt | Lenses: perspectives.txt
-------------------------------------------------------------
-
-(loading…)
-</pre>
+<div class="wrap">
+  <div id="out"></div>
+</div>
 
 <script>
-/* Configure via query params if needed */
-const qp = new URLSearchParams(location.search);
-window.GZ_CFG = {
-  corsBase: qp.get('corsBase') || 'https://YOUR-WORKER-SUBDOMAIN.workers.dev',
-  interval: parseInt(qp.get('interval')||'180',10),
-  feedsUrl: qp.get('feedsUrl') || './feeds.txt',
-  perspectivesUrl: qp.get('perspectivesUrl') || './perspectives.txt',
-  minWords: parseInt(qp.get('min')||'700',10),
-  maxWords: parseInt(qp.get('max')||'1200',10),
-};
+(async function(){
+  const $ = sel => document.querySelector(sel);
+  const out = $('#out');
+  const params = new URLSearchParams(location.search);
+
+  const corsBase = decode(params.get('corsBase') || 'https://gozaddy.aristocles24.workers.dev');
+  const feedsUrl = decode(params.get('feedsUrl') || '/labs/gozaddy/feeds.txt');
+  const perspectivesUrl = decode(params.get('perspectivesUrl') || '/labs/gozaddy/perspectives.txt');
+  const interval = Math.max(60, parseInt(params.get('interval')||'180',10));
+
+  function logLine(s){ const div=document.createElement('div'); div.textContent=s; out.prepend(div); resize(); }
+  function divider(title=''){ const w=100; const c='-'.repeat(w); return title? center(title, w) : c; }
+  function center(txt, width){ const t=' '+txt+' '; const pad=Math.max(0, Math.floor((width - t.length)/2)); return '-'.repeat(pad)+t+'-'.repeat(Math.max(0,width-t.length-pad)); }
+  function resize(){ parent.postMessage({type:'AIRTICLE_HEIGHT', height: document.documentElement.scrollHeight }, '*'); }
+
+  async function getText(u){ const r=await fetch(u, { cache:'no-cache' }); if(!r.ok) throw new Error(r.status); return r.text(); }
+  async function corsText(u){ const r=await fetch(`${corsBase.replace(/\/$/,'')}/cors?url=${encodeURIComponent(u)}`); if(!r.ok) throw new Error('CORS '+r.status); return r.text(); }
+
+  function parseFeed(xmlTxt){
+    const doc = new DOMParser().parseFromString(xmlTxt, 'application/xml');
+    let items=[...doc.querySelectorAll('item')];
+    if (!items.length) items = [...doc.querySelectorAll('entry')];
+    return items.map(n => ({
+      title: (n.querySelector('title')?.textContent || '').trim(),
+      link: (n.querySelector('link')?.getAttribute('href') || n.querySelector('link')?.textContent || '').trim(),
+      guid: (n.querySelector('guid')?.textContent || n.querySelector('id')?.textContent || '').trim(),
+      published: (n.querySelector('pubDate')?.textContent || n.querySelector('updated')?.textContent || '').trim()
+    })).filter(x=>x.title && x.link);
+  }
+
+  function extractReadable(html){
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('script,style,noscript,iframe,header,footer,nav').forEach(e=>e.remove());
+    const blocks=[];
+    doc.querySelectorAll('article,section,main,div,p').forEach(el=>{
+      const t=(el.textContent||'').replace(/\s+/g,' ').trim();
+      if (t.split(' ').length >= 12) blocks.push({ t, score: t.length });
+    });
+    blocks.sort((a,b)=>b.score-a.score);
+    return (blocks.slice(0,8).map(b=>b.t).join('\n\n') || (doc.body?.innerText||'').trim() || '').trim();
+  }
+
+  async function generate(meta, text, perspectives){
+    const body = { meta, text, perspectives, min_words: 900, max_words: 1500, temperature: 0.7 };
+    const r = await fetch(`${corsBase.replace(/\/$/,'')}/generate`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if(!r.ok) throw new Error('Generate '+r.status);
+    return r.json();
+  }
+
+  function printArticle(meta, ascii){
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <div class="line"></div>
+      <div class="stamp">FEED: ${meta.feed || ''}</div>
+      <div><strong>${esc(meta.title || '')}</strong></div>
+      <div class="stamp">${esc(meta.published || '')} — <a href="${esc(meta.link || '#')}" target="_blank" rel="noopener">${esc(meta.link || '')}</a></div>
+      <pre>${esc(ascii)}</pre>
+    `;
+    out.prepend(wrap);
+    resize();
+  }
+
+  function esc(s){ return (s||'').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])); }
+
+  const seen = new Set();
+
+  async function pollOnce(){
+    let feeds, perspectives;
+    try {
+      feeds = (await getText(feedsUrl)).split('\n').map(s=>s.trim()).filter(Boolean);
+    } catch(e){ logLine('[error] feeds load failed: '+e); return; }
+    try {
+      perspectives = (await getText(perspectivesUrl)).split('\n').map(s=>s.trim()).filter(Boolean);
+    } catch(e){ logLine('[error] perspectives load failed: '+e); return; }
+
+    for (const feed of feeds){
+      try {
+        const xml = await corsText(feed);
+        const items = parseFeed(xml).slice(0,8);
+        for (const it of items){
+          const fp = await digest(`${feed}|${it.guid}|${it.link}|${it.title}`);
+          if (seen.has(fp)) continue;
+          seen.add(fp);
+
+          const html = await corsText(it.link);
+          const body = extractReadable(html);
+          if (!body || body.split(/\s+/).length < 80) continue;
+
+          const meta = { title: it.title, link: it.link, published: it.published, feed };
+          const res = await generate(meta, body, perspectives);
+          if (res && res.ok && res.text) {
+            printArticle(meta, res.text);
+          } else {
+            logLine('[warn] generation empty for: '+it.title);
+          }
+        }
+      } catch(e){
+        logLine('[warn] feed error ('+feed+'): '+e);
+      }
+    }
+  }
+
+  async function digest(s){
+    const enc = new TextEncoder().encode(s);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  // Initial run + interval
+  await pollOnce();
+  setInterval(pollOnce, interval * 1000);
+
+  // Auto-size for iframe hosts
+  new ResizeObserver(()=>resize()).observe(document.documentElement);
+  window.addEventListener('load', resize);
+})();
 </script>
-<script src="./app.js"></script>
 </body>
 </html>
