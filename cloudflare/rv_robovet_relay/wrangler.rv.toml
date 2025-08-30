@@ -1,0 +1,20 @@
+# cloudflare/rv_robovet_relay/wrangler.rv.toml
+name = "rv-robovet-relay"
+main = "rv_worker.mjs"
+compatibility_date = "2025-08-30"
+
+# Using workers.dev (you already have robovet.aristocles24.workers.dev)
+# If you later want a custom route on your own zone, uncomment and set:
+# routes = [
+#   { pattern = "api.yourdomain.com/robovet/*", zone_name = "yourdomain.com" }
+# ]
+
+[vars]
+MODEL_DEFAULT = "gpt-4o-mini"
+TEMP = "0.2"
+MAX_TOKENS = "1400"
+# Lock CORS in production to your GoDaddy site (scheme + host only):
+ALLOWED_ORIGIN = "https://dascient.com"
+# During testing you can set ALLOW_ALL="1" as a dashboard var (not recommended in prod)
+
+# For local dev only you can rely on .dev.vars
