@@ -1,0 +1,3 @@
+https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
+https://feeds.washingtonpost.com/rss/national
+https://www.forbes.com/most-popular/feed/
