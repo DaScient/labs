@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GoZaddy — Live RSS → AI Summaries (ASCII)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+<pre id="out" class="term">
+GoZaddy ▶ Minimal Live RSS → AI Summaries
+Source: feeds.txt | Lenses: perspectives.txt
+------------------------------------------------------------
+
+(loading…)
+</pre>
+
+<script>
+/* Configure via query params if needed */
+const qp = new URLSearchParams(location.search);
+window.GZ_CFG = {
+  corsBase: qp.get('corsBase') || 'https://YOUR-WORKER-SUBDOMAIN.workers.dev',
+  interval: parseInt(qp.get('interval')||'180',10),
+  feedsUrl: qp.get('feedsUrl') || './feeds.txt',
+  perspectivesUrl: qp.get('perspectivesUrl') || './perspectives.txt',
+  minWords: parseInt(qp.get('min')||'700',10),
+  maxWords: parseInt(qp.get('max')||'1200',10),
+};
+</script>
+<script src="./app.js"></script>
+</body>
+</html>
