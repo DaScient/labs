@@ -1,0 +1,11 @@
+name = "gozaddy-worker"
+main = "worker.js"
+compatibility_date = "2024-05-01"
+
+# If you want a custom route:
+# routes = [{ pattern = "api.dascient.com/*", zone_name = "dascient.com" }]
+
+[vars]
+MODEL_DEFAULT = "gpt-4.1-mini"
+# MODELS_POOL = "gpt-4.1-mini,gpt-4o-mini"
+# ALLOWED_ORIGINS = "https://dascient.com,https://dascient.github.io,https://labs-15v.pages.dev"
