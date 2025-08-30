@@ -1,103 +1,123 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>GoZaddy — Live AI RSS Summaries</title>
-  <style>
-    body {
-      background: #0e1117;
-      color: #d1dbe8;
-      font-family: ui-monospace, monospace;
-      margin: 0;
-      padding: 10px;
-    }
-    h1 {
-      font-size: 16px;
-      margin-bottom: 12px;
-      color: #4ee04e;
-    }
-    #output {
-      background: #0c111a;
-      border: 1px solid #222a3c;
-      border-radius: 6px;
-      padding: 10px;
-      white-space: pre-wrap;
-      line-height: 1.4;
-      font-size: 14px;
-      overflow-y: auto;
-      max-height: 90vh;
-    }
-    .divider {
-      margin: 12px 0;
-      border-top: 1px dashed #444;
-    }
-  </style>
+<meta charset="utf-8" />
+<title>AI-Generated News Summaries</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root { --bg:#0e1117; --fg:#e6e9ef; --muted:#9aa4b2; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+  html,body{height:100%}
+  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
+  header{padding:16px 18px;border-bottom:1px solid #1c2333}
+  h1{margin:0;font-size:16px;letter-spacing:.3px}
+  #meta{color:var(--muted);font-size:12px;margin-top:4px}
+  main{padding:14px}
+  pre{white-space:pre-wrap;word-wrap:break-word;background:#0b1018;border:1px solid #20283a;border-radius:8px;padding:12px;font-family:var(--mono);font-size:13px;min-height:40vh}
+  .row{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
+  button{background:#121a2a;border:1px solid #26344f;color:#dfe6fb;border-radius:8px;padding:6px 10px;cursor:pointer}
+  button:hover{border-color:#33507a}
+  a{color:#9fc1ff;text-decoration:none}
+</style>
 </head>
 <body>
-  <h1>GoZaddy — Live AI RSS Summaries</h1>
-  <div id="output">[Starting up… waiting for feeds]</div>
+<header>
+  <h1>AI-Generated News Summaries</h1>
+  <div id="meta">Loading…</div>
+</header>
 
-  <script>
-    const output = document.getElementById("output");
+<main>
+  <div class="row">
+    <button id="refreshBtn" title="Reload now">Refresh</button>
+    <button id="copyBtn" title="Copy all summaries">Copy</button>
+    <span id="countdown" style="color:#9aa4b2;font-size:12px"></span>
+  </div>
+  <pre id="out" aria-live="polite"></pre>
+</main>
 
-    function log(text) {
-      output.textContent += "\n" + text;
-      output.scrollTop = output.scrollHeight;
+<script>
+(function(){
+  // ====== Config (can be overridden via URL params) ======
+  const q = new URLSearchParams(location.search);
+  const WORKER_BASE = q.get("worker") || "https://gozaddy.aristocles24.workers.dev";
+  const FEEDS = q.get("feeds") ||
+    "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://feeds.washingtonpost.com/rss/national";
+  const LIMIT = parseInt(q.get("limit") || "5", 10);
+  const INTERVAL = parseInt(q.get("interval") || "3600", 10); // seconds (1h default)
+  const MODEL = q.get("model") || "gpt-4.1-mini";
+  const AUTO = (q.get("auto") || "1") === "1"; // auto refresh hourly
+
+  const $ = (s)=>document.querySelector(s);
+  const out = $("#out");
+  const meta = $("#meta");
+  const refreshBtn = $("#refreshBtn");
+  const copyBtn = $("#copyBtn");
+  const countdownEl = $("#countdown");
+
+  let nextAt = 0, tickTimer=null, fetchTimer=null;
+
+  function asciiUrl(){
+    const u = new URL(WORKER_BASE.replace(/\/$/,'') + "/ascii");
+    u.searchParams.set("feeds", FEEDS);
+    u.searchParams.set("limit", String(LIMIT));
+    u.searchParams.set("interval", String(INTERVAL));
+    u.searchParams.set("model", MODEL);
+    return u.toString();
+  }
+
+  async function load(){
+    meta.textContent = "Fetching summaries…";
+    try{
+      const r = await fetch(asciiUrl(), {cache:"no-store"});
+      const txt = await r.text();
+      out.textContent = txt.trim() ? txt : "(no summaries returned)";
+      const ts = new Date();
+      meta.textContent = `Last updated: ${ts.toLocaleString()} · Source: ${new URL(WORKER_BASE).host}`;
+      nextAt = Date.now() + (INTERVAL*1000);
+      startCountdown();
+      postHeight(); // for iframe auto-size
+    }catch(e){
+      out.textContent = "Error loading summaries:\n" + String(e);
+      meta.textContent = "Load failed.";
+      postHeight();
     }
+  }
 
-    async function fetchFeed(url) {
-      try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error(resp.status);
-        return await resp.text();
-      } catch (e) {
-        log(`[Feed error] ${url}: ${e}`);
-        return null;
+  function startCountdown(){
+    if (tickTimer) clearInterval(tickTimer);
+    tickTimer = setInterval(()=>{
+      const ms = Math.max(0, nextAt - Date.now());
+      const s = Math.floor(ms/1000);
+      const m = Math.floor(s/60);
+      const rem = String(s%60).padStart(2,"0");
+      countdownEl.textContent = `Next auto-refresh in ${m}:${rem}`;
+      if (AUTO && ms === 0){
+        clearInterval(tickTimer);
+        if (fetchTimer) clearTimeout(fetchTimer);
+        fetchTimer = setTimeout(load, 250); // slight delay to avoid thrash
       }
-    }
+    }, 1000);
+  }
 
-    function parseFeed(xmlTxt) {
-      const doc = new DOMParser().parseFromString(xmlTxt, "application/xml");
-      let items = [...doc.querySelectorAll("item")];
-      if (!items.length) items = [...doc.querySelectorAll("entry")];
-      return items.map(n => ({
-        title: (n.querySelector("title")?.textContent || "").trim(),
-        link: (n.querySelector("link")?.getAttribute("href") || n.querySelector("link")?.textContent || "").trim(),
-        guid: (n.querySelector("guid")?.textContent || n.querySelector("id")?.textContent || "").trim(),
-        published: (n.querySelector("pubDate")?.textContent || n.querySelector("updated")?.textContent || "").trim()
-      }));
-    }
+  refreshBtn.onclick = () => load();
+  copyBtn.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(out.textContent || "");
+      copyBtn.textContent = "Copied!";
+      setTimeout(()=>copyBtn.textContent="Copy", 1200);
+    } catch {}
+  };
 
-    async function pollOnce() {
-      const feeds = [
-        "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
-        "https://feeds.washingtonpost.com/rss/national",
-        "https://www.forbes.com/most-popular/feed/"
-      ];
-      log(`[${new Date().toLocaleTimeString()}] Checking feeds…`);
+  // Iframe auto-resize (GoDaddy embed)
+  function postHeight(){
+    const h = document.documentElement.scrollHeight;
+    parent.postMessage({ type:"AIRTICLE_HEIGHT", height:h }, "*");
+  }
+  new ResizeObserver(postHeight).observe(document.documentElement);
+  window.addEventListener("load", postHeight);
 
-      for (const f of feeds) {
-        const xml = await fetchFeed(f);
-        if (!xml) continue;
-        const items = parseFeed(xml).slice(0, 2); // just first 2 items per feed
-        for (const it of items) {
-          log("\n----------------------------------------");
-          log(`TITLE: ${it.title}`);
-          log(`LINK: ${it.link}`);
-          log(`PUBLISHED: ${it.published}`);
-          log("\nSUMMARY (AI-mockup):");
-          // 🚨 Placeholder text — replace with API call if you want real AI
-          log(`- Key insight #1 about "${it.title}"`);
-          log(`- Key insight #2`);
-          log(`\nACTION CHECKLIST:\n- Do X\n- Do Y\n`);
-          log(`SEO KEYWORDS: example; placeholder; keywords`);
-        }
-      }
-    }
-
-    // Start polling every 3 minutes
-    pollOnce();
-    setInterval(pollOnce, 180000);
-  </script>
+  // Kick off
+  load();
+})();
+</script>
 </body>
 </html>
