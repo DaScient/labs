@@ -1,0 +1,19 @@
+# GoZaddy Worker
+
+## Endpoints
+- `GET /health` → `{"ok":true,"ts":…}`
+- `GET /cors?url=…` → Proxies target with permissive CORS.
+- `POST /generate` → Body: `{ meta, text, perspectives[], min_words, max_words, temperature }`
+  - Returns `{ ok:true, model, text }` (ASCII).
+
+## Environment
+- `OPENAI_API_KEY` (secret) — set via `wrangler secret put OPENAI_API_KEY`
+- `ALLOWED_ORIGINS` (env var) — CSV, e.g. `https://dascient.com,https://dascient.github.io,https://*.godaddysites.com`
+- `MODEL_PREFS` (env var) — e.g. `gpt-4.1-mini,gpt-4o-mini`
+- `GOZADDY_KV` (KV) — optional for rate limiting.
+
+## Deploy
+```bash
+wrangler kv:namespace create GOZADDY_KV
+wrangler secret put OPENAI_API_KEY
+wrangler publish
