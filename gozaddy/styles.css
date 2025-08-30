@@ -1,0 +1,6 @@
+:root{--bg:#0b0e14;--fg:#d7dae0;--dim:#8b93a7;--hl:#a6cc70;}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:ui-monospace,Menlo,Consolas,monospace}
+.term{padding:16px;white-space:pre-wrap;line-height:1.35}
+.dim{color:var(--dim)}
+.hr{display:block;height:1px;background:#1a1f2b;margin:12px 0}
+.hl{color:var(--hl)}
