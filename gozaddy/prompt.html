@@ -2,34 +2,35 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>GoZaddy — AI Prompt Generator (Article-Aware)</title>
+<title>GoZaddy — Creator Prompts (Article-Aware)</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
-    --bg:#ffffff; --text:#0b1220; --muted:#667085; --accent:#0f6fff;
-    --card:#ffffff; --border:#e5e7eb;
+    --bg:#fff; --text:#0b1220; --muted:#667085; --accent:#0f6fff; --border:#e5e7eb;
   }
   *{box-sizing:border-box}
   body{ margin:0; background:var(--bg); color:var(--text);
-        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.55; }
+        font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.55 }
   header{ position:sticky; top:0; z-index:10; background:rgba(255,255,255,.92);
-          backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border); }
-  .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
-  h1{ margin:0; font-size:24px; font-weight:800; letter-spacing:.2px; }
-  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+          backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border) }
+  .wrap{ max-width:1100px; margin:0 auto; padding:16px }
+  h1{ margin:0; font-size:22px; font-weight:800 }
+  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px }
   .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:#111; background:#f8fafc }
-  .btn{ padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
-  .btn:hover{ border-color:#cbd5e1 }
+  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap }
+  .sel, .num, .btn, .inp{
+    padding:8px 10px; border:1px solid var(--border); border-radius:10px; background:#fff; font-size:14px
+  }
+  .btn{ cursor:pointer } .btn:hover{ border-color:#cbd5e1 }
   main{ padding:18px 0 60px }
-  .grid{ display:grid; gap:16px }
-  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
-  .article{ margin:12px 0; }
-  .title{ font-weight:800; font-size:18px; margin-bottom:6px; line-height:1.3 }
+  .grid{ display:grid; gap:14px }
+  .card{ border:1px solid var(--border); border-radius:14px; padding:14px 16px; background:#fff }
+  .article{ margin:12px 0 }
+  .title{ font-weight:800; font-size:18px; line-height:1.3; margin-bottom:4px }
   .meta{ font-size:13px; color:var(--muted); display:flex; gap:10px; flex-wrap:wrap }
   .summary{ margin-top:8px; font-size:15px }
-  .row{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:8px }
-  .tag{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:#f9fafb; font-size:12px; cursor:pointer }
-  .tag input{ margin-right:6px }
+  .tags{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px }
+  .tag{ display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border:1px solid var(--border); border-radius:999px; background:#f9fafb; font-size:12px; cursor:pointer }
   .promptBox{ white-space:pre-wrap; border:1px dashed #e5e7eb; border-radius:10px; padding:12px; background:#fcfcfd; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px; margin-top:10px }
   a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
 </style>
@@ -37,10 +38,25 @@
 <body>
 <header>
   <div class="wrap">
-    <h1>GoZaddy — AI Prompt Generator</h1>
+    <h1>GoZaddy — Creator Prompt Generator</h1>
     <div class="toolbar">
       <span id="last" class="pill">Loading…</span>
       <span class="pill">Feeds: <code id="feedsLab">default</code></span>
+      <select id="platform" class="sel" title="Target platform">
+        <option>Medium</option><option>Substack</option><option>LinkedIn</option><option>Blog</option>
+      </select>
+      <select id="tone" class="sel" title="Tone">
+        <option value="authoritative">Authoritative</option>
+        <option value="analytical">Analytical</option>
+        <option value="journalistic">Journalistic</option>
+        <option value="conversational">Conversational</option>
+      </select>
+      <label class="row" style="gap:6px">
+        <span class="pill">Words</span>
+        <input id="minW" class="num" type="number" value="800" min="400" style="width:88px">
+        <span>–</span>
+        <input id="maxW" class="num" type="number" value="1200" min="500" style="width:88px">
+      </label>
     </div>
   </div>
 </header>
@@ -48,14 +64,13 @@
 <main class="wrap">
   <section class="card">
     <h2 style="margin:0 0 8px">Choose perspectives</h2>
-    <div id="perspRow" class="row"></div>
+    <div id="perspRow" class="tags"></div>
   </section>
 
-  <section class="grid" id="articles"></section>
+  <section id="articles" class="grid"></section>
 </main>
 
 <script>
-/* ===== CONFIG ===== */
 const WORKER = "https://gozaddy.aristocles24.workers.dev";
 const DEFAULT_FEEDS_URL = "https://raw.githubusercontent.com/DaScient/labs/main/gozaddy/feeds.txt";
 const DEFAULT_PERSP_URL = "https://raw.githubusercontent.com/DaScient/labs/main/gozaddy/perspectives.txt";
@@ -65,41 +80,36 @@ const feedsUrl = q.get("feedsUrl") || DEFAULT_FEEDS_URL;
 const perspUrl = q.get("perspUrl") || DEFAULT_PERSP_URL;
 document.getElementById("feedsLab").textContent = new URL(feedsUrl).hostname;
 
-/* ===== UTIL ===== */
 function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; } }
 function cleanTitle(t){ return (t||"").replace(/<!\[CDATA\[(.*?)\]\]>/gi,"$1").replace(/\s+/g," ").trim(); }
 async function fetchText(u){ const r=await fetch(u,{cache:"no-store"}); if(!r.ok) throw new Error("fetch "+r.status); return r.text(); }
 async function fetchJSON(u){ const r=await fetch(u,{cache:"no-store"}); if(!r.ok) throw new Error("fetch "+r.status); return r.json(); }
 
-/* ===== LOAD PERSPECTIVES ===== */
+/* Perspectives */
 async function loadPerspectives(){
   try{
     const t = await fetchText(perspUrl);
-    // 1 per line, ignore comments/blank
     const arr = t.split(/\r?\n/).map(s=>s.trim()).filter(s=>s && !s.startsWith("#"));
-    renderPerspectives(arr);
-    return arr;
+    renderPerspectives(arr); return arr;
   }catch(e){
     console.error(e);
     const fallback = ["Business Strategy","Finance & Markets","Policy & Regulation","Science & Technology","AI/ML Applications","Consumer Impact & UX","Operations & Risk"];
-    renderPerspectives(fallback);
-    return fallback;
+    renderPerspectives(fallback); return fallback;
   }
 }
 function renderPerspectives(list){
-  const row = document.getElementById("perspRow");
-  row.innerHTML = "";
+  const row = document.getElementById("perspRow"); row.innerHTML="";
   list.forEach(p=>{
     const lab = document.createElement("label"); lab.className="tag";
-    lab.innerHTML = `<input type="checkbox" value="${p.replace(/"/g,'&quot;')}" checked /> ${p}`;
+    lab.innerHTML = `<input type="checkbox" value="${p.replace(/"/g,'&quot;')}" checked> ${p}`;
     row.appendChild(lab);
   });
 }
-function getSelectedPerspectives(){
+function selectedPerspectives(){
   return [...document.querySelectorAll('#perspRow input[type="checkbox"]:checked')].map(i=>i.value);
 }
 
-/* ===== LOAD ARTICLES ===== */
+/* Articles */
 async function loadArticles(){
   const url = `${WORKER}/summaries?feedsUrl=${encodeURIComponent(feedsUrl)}&limit=60&interval=3600&_t=${Date.now()}`;
   const j = await fetchJSON(url);
@@ -109,19 +119,12 @@ async function loadArticles(){
 }
 
 function renderArticles(items){
-  const root = document.getElementById("articles");
-  root.innerHTML = "";
+  const root = document.getElementById("articles"); root.innerHTML="";
   items.forEach((it, idx)=>{
-    const card = document.createElement("article");
-    card.className = "card article";
+    const card = document.createElement("article"); card.className="card article";
 
-    const h = document.createElement("div");
-    h.className = "title";
-    h.textContent = it.title || "(untitled)";
-    card.appendChild(h);
-
-    const meta = document.createElement("div");
-    meta.className = "meta";
+    const h = document.createElement("div"); h.className="title"; h.textContent = it.title || "(untitled)"; card.appendChild(h);
+    const meta = document.createElement("div"); meta.className="meta";
     meta.innerHTML = `
       <span>${it.host || "unknown"}</span>
       <span>${it.published || ""}</span>
@@ -130,21 +133,13 @@ function renderArticles(items){
     `;
     card.appendChild(meta);
 
-    if (it.summary){
-      const s=document.createElement("div");
-      s.className="summary";
-      s.textContent=it.summary;
-      card.appendChild(s);
-    }
+    if (it.summary){ const s=document.createElement("div"); s.className="summary"; s.textContent=it.summary; card.appendChild(s); }
 
-    // Generate prompts button
     const row=document.createElement("div"); row.className="row";
-    const gen=document.createElement("button"); gen.className="btn"; gen.textContent="AI-generate prompts";
-    const open=document.createElement("a"); open.className="btn"; open.target="_blank"; open.rel="noopener"; open.href="https://chat.openai.com/?temporary-chat=true"; open.textContent="Open ChatGPT";
-    row.appendChild(gen); row.appendChild(open);
-    card.appendChild(row);
+    const gen=document.createElement("button"); gen.className="btn"; gen.textContent="Generate creator prompts";
+    const open=document.createElement("a"); open.className="btn"; open.target="_blank"; open.rel="noopener"; open.href="https://chatgpt.com/"; open.textContent="Open ChatGPT";
+    row.appendChild(gen); row.appendChild(open); card.appendChild(row);
 
-    // Container for prompts
     const box=document.createElement("div"); box.id=`p${idx}`; card.appendChild(box);
 
     gen.onclick = ()=> generatePromptsFor(it, box);
@@ -153,13 +148,18 @@ function renderArticles(items){
   });
 }
 
-/* ===== CALL WORKER /prompts ===== */
+/* Call Worker */
 async function generatePromptsFor(article, container){
-  const perspectives = getSelectedPerspectives();
+  const perspectives = selectedPerspectives();
   if (!perspectives.length){
     container.innerHTML = `<div class="promptBox">Select at least one perspective above.</div>`;
     return;
   }
+  const platform = document.getElementById("platform").value;
+  const tone = document.getElementById("tone").value;
+  const minW = parseInt(document.getElementById("minW").value,10) || 800;
+  const maxW = parseInt(document.getElementById("maxW").value,10) || 1200;
+
   container.innerHTML = `<div class="promptBox">Generating ${perspectives.length} prompt(s)…</div>`;
 
   try{
@@ -170,7 +170,8 @@ async function generatePromptsFor(article, container){
         title: article.title,
         summary: article.summary || "",
         link: article.link || "",
-        perspectives
+        perspectives,
+        platform, tone, minWords:minW, maxWords:maxW
       })
     });
     if(!r.ok) throw new Error("prompts "+r.status);
@@ -186,15 +187,12 @@ function renderPromptResults(list, container){
   container.innerHTML = "";
   list.forEach(rec=>{
     const wrap=document.createElement("div"); wrap.className="promptBox";
-    const pre=document.createElement("pre");
-    pre.textContent = rec.prompt || "(no prompt)";
-    wrap.appendChild(pre);
+    const pre=document.createElement("pre"); pre.textContent = rec.prompt || "(no prompt)"; wrap.appendChild(pre);
     const row=document.createElement("div"); row.className="row";
     const copy=document.createElement("button"); copy.className="btn"; copy.textContent="Copy";
     copy.onclick=async()=>{ await navigator.clipboard.writeText(rec.prompt||""); copy.textContent="Copied"; setTimeout(()=>copy.textContent="Copy",1000); };
-    const open=document.createElement("a"); open.className="btn"; open.target="_blank"; open.rel="noopener"; open.href="https://chat.openai.com/?temporary-chat=true"; open.textContent="Open ChatGPT";
-    row.appendChild(copy); row.appendChild(open);
-    wrap.appendChild(row);
+    const open=document.createElement("a"); open.className="btn"; open.target="_blank"; open.rel="noopener"; open.href="https://chatgpt.com/"; open.textContent="Open ChatGPT";
+    row.appendChild(copy); row.appendChild(open); wrap.appendChild(row);
     container.appendChild(wrap);
   });
 }
