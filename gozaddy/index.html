@@ -2,134 +2,129 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>AI-Generated News Summaries — Analytics</title>
+<title>AI-Generated News Summaries</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
-    --bg:#ffffff; --text:#0b1220; --muted:#667085; --accent:#0f6fff;
-    --card:#ffffff; --border:#e5e7eb; --dash:#eef2f7;
-    --title:22px; --h2:16px; --body:16px; --mono:12px;
+    --bg:#ffffff00;      /* transparent-friendly */
+    --panel:#ffffff;
+    --text:#0b1220;
+    --muted:#667085;
+    --accent:#0f6fff;
+    --border:#e5e7eb;
+    --dash:#eef2f7;
+    --title:28px; --h2:16px; --body:16px; --mono:12px;
   }
-  @media (min-width:1000px){
-    :root{ --title:26px; --h2:18px; --body:17px; }
+  @media (min-width:960px){
+    :root{ --title:32px; --h2:18px; --body:17px; }
   }
   *{box-sizing:border-box}
-  body{ margin:0; background:var(--bg); color:var(--text);
-        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.5; }
-  header{ position:sticky; top:0; z-index:10;
-          background:rgba(255,255,255,.92); backdrop-filter:saturate(140%) blur(6px);
-          border-bottom:1px solid var(--border); }
-  .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
-  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px; }
-  .sub{ font-size:13px; color:var(--muted); margin-top:4px }
-  main{ padding:20px 0 60px }
-  .grid{ display:grid; gap:16px; }
-  @media (min-width:1000px){
-    .grid{ grid-template-columns: 2fr 1fr; }
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    line-height:1.6;
   }
+  header{
+    position:sticky; top:0; z-index:5;
+    background:rgba(255,255,255,.92); backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:1px solid var(--border);
+  }
+  .wrap{ max-width:880px; margin:0 auto; padding:16px; }
+  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px }
+  .meta{ margin-top:6px; color:var(--muted); font-size:13px; display:flex; gap:10px; flex-wrap:wrap }
+
+  main{ padding:20px 0 64px }
+  .list{ display:flex; flex-direction:column; gap:14px; }
+
   .card{
-    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:16px;
   }
-  .split{ display:grid; gap:16px }
-  @media (min-width:1000px){ .split{ grid-template-columns:1fr 1fr } }
-  h2{ margin:0 0 10px; font-size:var(--h2); font-weight:800; letter-spacing:.2px }
-  .metaBar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; color:var(--muted); font-size:13px }
-  .pill{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:#111; background:#f9fafb }
-  .list{ display:flex; flex-direction:column; gap:10px }
-  .barrow{ display:grid; grid-template-columns: 160px 1fr auto; gap:12px; align-items:center; }
-  .barrow .label{ font-weight:600; font-size:14px; color:#0b1220; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-  .barrow .barWrap{ background:#f1f5f9; border-radius:8px; height:10px; position:relative }
-  .barrow .bar{ position:absolute; left:0; top:0; bottom:0; border-radius:8px; background:linear-gradient(90deg,#0f6fff,#5aa3ff) }
-  .barrow .val{ font-size:13px; color:var(--muted) }
-  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono); color:#222 }
-  .table{ width:100%; border-collapse:collapse; font-size:14px }
-  .table th,.table td{ border-bottom:1px dashed var(--dash); padding:8px 0; text-align:left; vertical-align:top }
-  .table th{ font-weight:700; color:#111 }
-  .heat{
-    display:grid; gap:2px; border:1px solid var(--border); border-radius:10px; padding:8px;
-    overflow:auto; max-height:480px; background:#fff;
+  .title{
+    margin:0 0 2px; font-size:20px; line-height:1.35; font-weight:800;
+    word-wrap:break-word;
   }
-  .heat .hdr{ position:sticky; top:0; background:#fff }
-  .heat .cell{ display:flex; align-items:center; justify-content:center; height:26px; border-radius:4px; color:#0b1220; font-size:12px }
-  .heat .lab{ font-size:12px; color:#111; white-space:nowrap }
-  .muted{ color:var(--muted) }
-  .good{ color:#15803d } .warn{ color:#b45309 } .bad{ color:#b91c1c }
-  .blink{ animation:blink .8s ease 1 } @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
-  a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
+  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px }
+  .pill{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 10px; border:1px solid var(--border); border-radius:999px;
+    background:#f9fafb; color:#0b1220; font-size:12px;
+  }
+  .byline{ font-size:13px; color:var(--muted) }
+  .link{ color:var(--accent); text-decoration:none }
+  .link:hover{ text-decoration:underline }
+
+  .body{ margin-top:12px; font-size:var(--body); color:#111 }
+  .body p{ margin:0 0 10px }
+  .body h3{
+    margin:14px 0 6px; font-size:var(--h2); font-weight:800; letter-spacing:.02em;
+  }
+  .body ul, .body ol{ margin:8px 0 12px 20px; padding:0 }
+  .body li{ margin:6px 0 }
+  pre, code, .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono) }
+
+  .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px }
+  .tag{
+    border:1px dashed var(--dash); padding:4px 8px; border-radius:999px;
+    font-size:12px; color:#0b1220; background:#fff;
+  }
+  .divider{ height:1px; background:var(--border); margin:12px 0 8px; }
+
+  .empty{
+    border:1px dashed var(--border); border-radius:12px; padding:18px; color:var(--muted);
+    text-align:center; background:#fff;
+  }
+
+  .blink{ animation:blink .7s ease 1 }
+  @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18) } }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1>AI-Generated News Summaries — Analytics</h1>
-    <div class="metaBar">
-      <span id="lastUpdated" class="muted">Loading…</span>
-      <span class="pill" id="windowPill">Window: 6h</span>
+    <h1>AI-Generated News Summaries</h1>
+    <div class="meta">
+      <span id="status">Loading…</span>
       <span class="pill">Auto-refresh</span>
+      <span class="pill" id="rate"></span>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="grid">
-    <section class="card">
-      <h2>Key Metrics</h2>
-      <div class="split">
-        <div>
-          <div class="list" id="sources"></div>
-        </div>
-        <div>
-          <div class="list" id="keywords"></div>
-        </div>
-      </div>
-      <div class="split" style="margin-top:12px">
-        <div>
-          <h2>Average Confidence by Source</h2>
-          <div class="list" id="confSources"></div>
-        </div>
-        <div>
-          <h2>Snapshot</h2>
-          <table class="table">
-            <tbody id="snapshot"></tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Keyword Correlations</h2>
-      <div class="muted" style="margin-bottom:8px">Co-occurrence across the current window (top terms).</div>
-      <div id="heat"></div>
-    </section>
+  <div id="feed" class="list"></div>
+  <div id="empty" class="empty" style="display:none">
+    No summaries yet. Waiting for the next refresh window…
   </div>
-
-  <section class="card" style="margin-top:16px">
-    <h2>Latest Articles</h2>
-    <table class="table">
-      <thead>
-        <tr><th style="width:40%">Title</th><th>Source</th><th>Confidence</th><th>Top Terms</th></tr>
-      </thead>
-      <tbody id="latest"></tbody>
-    </table>
-  </section>
 </main>
 
 <script>
-/* ===== CONFIG ===== */
-const WORKER_ASCII_URL =
-  "https://gozaddy.aristocles24.workers.dev/ascii?feeds=" +
-  encodeURIComponent("https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://feeds.washingtonpost.com/rss/national,https://www.forbes.com/most-popular/feed/") +
-  "&limit=12&interval=3600"; // server updates ≤ hourly
+/* ============ CONFIG ============ */
+/* Default worker endpoint: override with ?worker=... */
+const DEFAULT_WORKER_ASCII_URL =
+  "https://gozaddy.aristocles24.workers.dev/ascii?limit=40&interval=3600";
 
-const FRONTEND_POLL_MS = 90_000;  // check ~90s
-let WINDOW_HOURS = 6;             // analytics window
-/* ================== */
+/* Runtime controls via URL (persist in localStorage):
+   ?refresh=60000&max=20
+*/
+const qs = new URLSearchParams(location.search);
+const WORKER_ASCII_URL = qs.get("worker") || DEFAULT_WORKER_ASCII_URL;
+let REFRESH_MS = parseInt(qs.get("refresh") || localStorage.getItem("idx.refresh") || "60000", 10);
+if (isNaN(REFRESH_MS) || REFRESH_MS < 10000) REFRESH_MS = 60000;
+let MAX_ITEMS = parseInt(qs.get("max") || localStorage.getItem("idx.max") || "20", 10);
+if (isNaN(MAX_ITEMS) || MAX_ITEMS < 5) MAX_ITEMS = 20;
+document.getElementById("rate").textContent = `Every ${Math.round(REFRESH_MS/1000)}s`;
+/* ================================= */
 
 const $ = (s)=>document.querySelector(s);
-const nowStr = ()=>new Date().toLocaleString();
 
+function hostOf(link){
+  try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; }
+}
 async function fetchText(url){
-  const r = await fetch(url + "&_t=" + Date.now(), { cache:"no-store" });
+  const u = url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now();
+  const r = await fetch(u, { cache:"no-store" });
   if(!r.ok) throw new Error("Fetch failed "+r.status);
   return r.text();
 }
@@ -139,19 +134,18 @@ async function sha(str){
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 }
 
-/* ===== Parse Worker ASCII (robust, no brittle regex) =====
-Expected block:
+/* === Parse the ASCII produced by the worker ===
+Expected per-article block:
   Title | link | published
-  ------------------------   (>=20 dashes)
+  ------------------------       (>=20 dashes)
   BODY...
-  ---------------------------------------------------------- (>=60 dashes)  ← between articles
+  ---------------------------------------------------------- (>=60 dashes)  ← separator
 */
 function parseArticles(txt){
   const lines = txt.split(/\r?\n/);
-  // cut header banner
-  let i=0;
-  while(i<lines.length && (lines[i].startsWith("=") || !lines[i].trim())) i++;
-  // cut footer note "(Updates hourly…)" if present
+  // cut header/banner
+  let i=0; while(i<lines.length && (lines[i].startsWith("=") || !lines[i].trim())) i++;
+  // cut optional footer
   const footIdx = lines.findIndex(L=>/\(Updates hourly/i.test(L));
   const usable = (footIdx>-1 ? lines.slice(i, footIdx) : lines.slice(i));
 
@@ -159,283 +153,174 @@ function parseArticles(txt){
   let idx=0;
   while(idx<usable.length){
     const titleLine = (usable[idx]||"").trim();
-    const dashLine = (usable[idx+1]||"").trim();
-    const isTitleStart = !!titleLine && /^-{20,}$/.test(dashLine);
-    if(!isTitleStart){ idx++; continue; }
+    const dashLine  = (usable[idx+1]||"").trim();
+    const isStart = !!titleLine && /^-{20,}$/.test(dashLine);
+    if(!isStart){ idx++; continue; }
 
-    // title/meta parse: "Title | link | published"
     const parts = titleLine.split("|").map(s=>s.trim());
     let title = parts[0] || "(untitled)";
     let link = ""; let published = "";
     if(parts.length>=2 && /^https?:\/\//i.test(parts[1])) link = parts[1];
     if(parts.length>=3) published = parts.slice(2).join(" | ");
 
-    // body until long dashed separator (>=60) followed by next title start
     const body = [];
     let j = idx+2;
     while(j<usable.length){
       const L = (usable[j]||"").trim();
       const longSep = /^-{60,}$/.test(L);
       const aheadTitle = (usable[j+1]||"").trim();
-      const aheadDash   = (usable[j+2]||"").trim();
-      const nextStart = aheadTitle && /^-{20,}$/.test(aheadDash);
-      if(longSep && nextStart){ j++; break; } // keep index on separator row
+      const aheadDash  = (usable[j+2]||"").trim();
+      const nextStart  = aheadTitle && /^-{20,}$/.test(aheadDash);
+      if(longSep && nextStart){ j++; break; }
       body.push(usable[j]);
       j++;
     }
-    out.push({
-      title, link, published, body: (body.join("\n")).trim(),
-      observedAt: Date.now()
-    });
-    // skip past current block
+    out.push({ title, link, published, body: body.join("\n").trim(), observedAt: Date.now() });
     idx = j+1;
   }
   return out;
 }
 
-/* ===== Keyword extraction ===== */
-const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
-function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]); }
-function findSeoKeywords(text){
-  const m = text.match(/^\s*seo keywords:\s*(.+)$/gim);
-  if(!m) return [];
-  const line = m[m.length-1]; // take last occurrence
-  const list = line.split(":")[1]||"";
-  return list.split(/[;,]/g).map(s=>s.trim()).filter(Boolean);
-}
-function topKeywords(articles, k=20){
-  const freq = new Map();
-  for(const a of articles){
-    let kws = findSeoKeywords(a.body);
-    if(!kws.length){
-      // fallback: naive bag of words
-      kws = words(a.body).filter(w=>!STOP.has(w) && w.length>2).slice(0,80);
-    }
-    for(const kw of kws){
-      const key = kw.toLowerCase();
-      freq.set(key, (freq.get(key)||0)+1);
-    }
-  }
-  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k);
-}
+/* === Transform plaintext body into tidy HTML === */
+function renderBody(text){
+  // Pull perspective & SEO line (optional)
+  let perspective = "";
+  const perspMatch = text.match(/^\s*PERSPECTIVE:\s*(.+)$/mi);
+  if(perspMatch) perspective = perspMatch[1].trim();
 
-/* ===== Confidence / Veracity heuristic (0–100) ===== */
-const POS = new Set("confirm,confirmed,official,approved,announced,launch,launched,records,record,acquires,acquired,sec filing,final,definitive,report,results".split(","));
-const NEG = new Set("may,might,could,reportedly,rumor,alleged,seems,suggests,likely,unverified,investigating,unclear,disputed,questioned,unconfirmed".split(","));
-function confidenceScore(text, sourceHost=""){
-  const bag = words(text);
-  let pos=0, neg=0;
-  for(const w of bag){
-    if(POS.has(w)) pos++;
-    if(NEG.has(w)) neg++;
+  let seo = [];
+  const seoMatch = text.match(/^\s*SEO KEYWORDS:\s*(.+)$/mi);
+  if(seoMatch){
+    seo = (seoMatch[1]||"").split(/[;,]/g).map(s=>s.trim()).filter(Boolean).slice(0,10);
   }
-  let score = 52 + 6*pos - 6*neg;
-  if(/nytimes\.com|washingtonpost\.com|forbes\.com/i.test(sourceHost)) score += 6;
-  return Math.max(0, Math.min(100, score));
-}
+  // Remove SEO line from body
+  text = text.replace(/^\s*SEO KEYWORDS:.*$/gmi, "").trim();
 
-/* ===== Correlations (keyword co-occurrence) ===== */
-function cooccurMatrix(articles, keys){
-  const K = keys.length;
-  const index = new Map(keys.map((k,i)=>[k,i]));
-  const M = Array.from({length:K},()=>Array(K).fill(0));
-  for(const a of articles){
-    let kws = findSeoKeywords(a.body);
-    if(!kws.length){
-      kws = words(a.body).filter(w=>!STOP.has(w) && w.length>2).slice(0,50);
+  // Sectionize:
+  //  - Lines in ALL CAPS (or ending with ':') -> <h3>
+  //  - Bullets starting with -, * -> <ul>
+  //  - Numbered "1. " -> <ol>
+  //  - Otherwise -> paragraphs
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  let mode = null; // "ul" | "ol" | null
+  const flushList = ()=>{
+    if(mode){ out.push(`</${mode}>`); mode=null; }
+  };
+  const isAllCaps = (s)=> /^[A-Z0-9 \-&/()]+$/.test(s) && s.replace(/[^A-Z0-9]/g,"").length >= 3;
+
+  for(let raw of lines){
+    const line = raw.trimRight();
+    if(!line.trim()){
+      flushList();
+      continue;
     }
-    const set = new Set(kws.map(k=>k.toLowerCase()).filter(k=>index.has(k)));
-    const arr = [...set];
-    for(let i=0;i<arr.length;i++){
-      for(let j=i;j<arr.length;j++){
-        const ii = index.get(arr[i]), jj = index.get(arr[j]);
-        M[ii][jj]++; if(ii!==jj) M[jj][ii]++;
-      }
+    if(/^\- |\* /.test(line)){ // unordered
+      if(mode!=="ul"){ flushList(); out.push("<ul>"); mode="ul"; }
+      out.push(`<li>${escapeHtml(line.replace(/^\- |\* /,""))}</li>`);
+      continue;
+    }
+    if(/^\d+\.\s+/.test(line)){ // ordered
+      if(mode!=="ol"){ flushList(); out.push("<ol>"); mode="ol"; }
+      out.push(`<li>${escapeHtml(line.replace(/^\d+\.\s+/,""))}</li>`);
+      continue;
+    }
+    flushList();
+    if (isAllCaps(line) || /:\s*$/.test(line)) {
+      out.push(`<h3>${escapeHtml(line.replace(/:\s*$/,""))}</h3>`);
+    } else {
+      out.push(`<p>${escapeHtml(line)}</p>`);
     }
   }
-  return M;
+  flushList();
+
+  return { html: out.join("\n"), perspective, seo };
 }
 
-/* ===== Tiny UI render helpers ===== */
-function renderBars(containerSel, pairs, cap=10, suffix=""){
-  const root = $(containerSel); root.innerHTML = "";
-  if(!pairs.length){ root.innerHTML = '<div class="muted">No data</div>'; return; }
-  const max = Math.max(...pairs.map(p=>p[1])) || 1;
-  pairs.slice(0,cap).forEach(([label,val])=>{
-    const row = document.createElement("div"); row.className="barrow";
-    const lab = document.createElement("div"); lab.className="label"; lab.textContent=label;
-    const wrap = document.createElement("div"); wrap.className="barWrap";
-    const bar = document.createElement("div"); bar.className="bar"; bar.style.width = (100*val/max).toFixed(1)+"%";
-    const v = document.createElement("div"); v.className="val"; v.textContent = val + (suffix? " "+suffix:"");
-    wrap.appendChild(bar);
-    row.appendChild(lab); row.appendChild(wrap); row.appendChild(v);
-    root.appendChild(row);
-  });
-}
-function hostOf(link){
-  try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; }
-}
-function gradeClass(score){ return score>=70?"good":score>=45?"warn":"bad"; }
-
-/* ===== Heatmap render (CSS grid, no libs) ===== */
-function renderHeat(containerSel, keys, M){
-  const root = $(containerSel); root.innerHTML="";
-  if(!keys.length){ root.innerHTML='<div class="muted">No correlations yet.</div>'; return; }
-  const K = keys.length;
-  const max = Math.max(1, ...M.flat());
-  // grid: +1 row/col for labels
-  root.className = "heat";
-  root.style.gridTemplateColumns = `140px repeat(${K}, minmax(36px, 1fr))`;
-  // header row
-  const blank = document.createElement("div"); blank.className="lab hdr"; root.appendChild(blank);
-  for(let j=0;j<K;j++){
-    const d = document.createElement("div"); d.className="lab hdr"; d.textContent=keys[j]; root.appendChild(d);
-  }
-  // rows
-  for(let i=0;i<K;i++){
-    const lab = document.createElement("div"); lab.className="lab"; lab.textContent=keys[i]; root.appendChild(lab);
-    for(let j=0;j<K;j++){
-      const v = M[i][j];
-      const ratio = v/max;
-      const hue = 210 - Math.round(210*ratio); // blue(210) → red(0)
-      const alpha = 0.15 + 0.65*ratio;
-      const cell = document.createElement("div"); cell.className="cell";
-      cell.style.background = `hsla(${hue}, 85%, 60%, ${alpha.toFixed(2)})`;
-      cell.title = `${keys[i]} × ${keys[j]}: ${v}`;
-      cell.textContent = v? String(v): "";
-      root.appendChild(cell);
-    }
-  }
+function escapeHtml(s){
+  return s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
 }
 
-/* ===== Latest table ===== */
-function renderLatest(list){
-  const tbody = $("#latest"); tbody.innerHTML="";
-  list.forEach(a=>{
-    const tr = document.createElement("tr");
-    const tdT = document.createElement("td");
-    const tdS = document.createElement("td");
-    const tdC = document.createElement("td");
-    const tdK = document.createElement("td");
-    tdT.innerHTML = `<div style="font-weight:700">${a.title}</div>
-                     <div class="mono">${a.published || ""}</div>
-                     ${a.link ? `<a href="${a.link}" target="_blank" rel="noopener">Open source</a>` : ""}`;
-    const host = hostOf(a.link);
-    tdS.textContent = host || "—";
-    const cls = gradeClass(a.confidence);
-    tdC.innerHTML = `<span class="${cls}" style="font-weight:700">${a.confidence}</span>`;
-    tdK.textContent = (a.topTerms||[]).slice(0,6).join(", ");
-    tr.appendChild(tdT); tr.appendChild(tdS); tr.appendChild(tdC); tr.appendChild(tdK);
-    tbody.appendChild(tr);
-  });
+/* === Render one article card === */
+function renderCard(a){
+  const { html, perspective, seo } = renderBody(a.body);
+  const host = hostOf(a.link);
+  const byline = [
+    host || "",
+    a.published || ""
+  ].filter(Boolean).join(" • ");
+
+  const tags = seo.length ? (
+    `<div class="tags">${seo.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>`
+  ) : "";
+
+  const pill = perspective ? `<span class="pill">${escapeHtml(perspective)}</span>` : "";
+
+  return `
+    <article class="card blink">
+      <h2 class="title">${escapeHtml(a.title)}</h2>
+      <div class="row">
+        ${pill}
+        <div class="byline">${escapeHtml(byline)}</div>
+        ${a.link ? `<a class="link" href="${a.link}" target="_blank" rel="noopener">Open source</a>` : ""}
+      </div>
+      <div class="body">${html}</div>
+      ${tags ? `<div class="divider"></div>${tags}` : ""}
+    </article>
+  `;
 }
 
-/* ===== Snapshot ===== */
-function renderSnapshot(articles, kwPairs, sourcePairs){
-  const total = articles.length;
-  const topKW = kwPairs[0]?.[0] || "—";
-  const topSrc = sourcePairs[0]?.[0] || "—";
-  const avgConf = total? Math.round(articles.reduce((s,a)=>s+a.confidence,0)/total) : 0;
-  const rows = [
-    ["Articles in window", String(total)],
-    ["Top keyword", topKW],
-    ["Top source", topSrc],
-    ["Avg confidence", `${avgConf}`],
-    ["Window (hours)", String(WINDOW_HOURS)]
-  ];
-  const tb = $("#snapshot"); tb.innerHTML="";
-  rows.forEach(([k,v])=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML = `<th>${k}</th><td>${v}</td>`;
-    tb.appendChild(tr);
-  });
-}
-
-/* ===== Live loop ===== */
+/* === Live loop === */
 let LAST_HASH = "";
-let CACHE = []; // keep until page reload
+let CACHE = [];
 
-function withinWindow(a){
-  const ageMs = Date.now() - a.observedAt;
-  return ageMs <= WINDOW_HOURS*3600*1000;
+function dedupeKeepLatest(list){
+  const m = new Map();
+  for(const x of list){
+    const key = (x.title + "|" + hostOf(x.link)).toLowerCase();
+    const prev = m.get(key);
+    if(!prev || x.observedAt > prev.observedAt) m.set(key, x);
+  }
+  return [...m.values()];
 }
 
 async function tick(){
   try{
     const txt = await fetchText(WORKER_ASCII_URL);
     const h = await sha(txt);
-    if(h === LAST_HASH) return setTimeout(tick, FRONTEND_POLL_MS);
-
-    const parsed = parseArticles(txt).map(a=>{
-      const host = hostOf(a.link);
-      const conf = confidenceScore(a.body, host);
-      const kws = findSeoKeywords(a.body);
-      const topTerms = (kws.length ? kws : words(a.body).filter(w=>!STOP.has(w)).slice(0,8)).map(w=>w.toLowerCase());
-      return { ...a, host, confidence: conf, topTerms };
-    });
-
-    // keep only unique by title+host to dampen duplicates
-    const uniqKey = (x)=> (x.title + "|" + x.host).toLowerCase();
-    const map = new Map(CACHE.filter(withinWindow).map(a=>[uniqKey(a), a]));
-    parsed.forEach(p=> map.set(uniqKey(p), p));
-    CACHE = [...map.values()].sort((a,b)=>b.observedAt - a.observedAt);
-
-    renderAll();
-    LAST_HASH = h;
-    $("#lastUpdated").textContent = "Last updated " + nowStr();
-    $(".card")?.classList?.add("blink");
-    setTimeout(()=>document.querySelectorAll(".blink").forEach(n=>n.classList.remove("blink")), 900);
+    if(h !== LAST_HASH){
+      const parsed = parseArticles(txt);
+      CACHE = dedupeKeepLatest(parsed).slice(0, MAX_ITEMS);
+      draw();
+      LAST_HASH = h;
+      $("#status").textContent = "Last updated " + new Date().toLocaleString();
+    }
   }catch(e){
     console.error(e);
+    $("#status").textContent = "Error fetching summaries. Retrying…";
   }finally{
-    setTimeout(tick, FRONTEND_POLL_MS);
+    setTimeout(tick, REFRESH_MS);
   }
 }
 
-function renderAll(){
-  const windowed = CACHE.filter(withinWindow);
-
-  // Sources
-  const srcCounts = new Map();
-  windowed.forEach(a=> srcCounts.set(a.host || "unknown", (srcCounts.get(a.host || "unknown")||0)+1));
-  const sourcePairs = [...srcCounts.entries()].sort((a,b)=>b[1]-a[1]);
-
-  // Keywords
-  const kwPairs = topKeywords(windowed, 20);
-
-  // Confidence per source
-  const confMap = new Map(); // host -> [sum, cnt]
-  windowed.forEach(a=>{
-    const k = a.host || "unknown";
-    const acc = confMap.get(k) || [0,0];
-    acc[0]+=a.confidence; acc[1]+=1;
-    confMap.set(k, acc);
-  });
-  const confPairs = [...confMap.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
-
-  // Correlations
-  const keyList = kwPairs.slice(0,12).map(p=>p[0]);
-  const M = cooccurMatrix(windowed, keyList);
-
-  // Render
-  renderBars("#sources", sourcePairs, 8, "articles");
-  renderBars("#keywords", kwPairs, 12, "hits");
-  renderBars("#confSources", confPairs, 8, "conf");
-  renderHeat("#heat", keyList, M);
-  renderLatest(windowed.slice(0,8));
-  renderSnapshot(windowed, kwPairs, sourcePairs);
-  $("#windowPill").textContent = "Window: " + WINDOW_HOURS + "h";
+function draw(){
+  const root = $("#feed");
+  if(!CACHE.length){
+    root.innerHTML = "";
+    $("#empty").style.display = "block";
+    return;
+  }
+  $("#empty").style.display = "none";
+  root.innerHTML = CACHE.map(renderCard).join("\n");
+  // remove blink after a moment
+  setTimeout(()=>document.querySelectorAll(".blink").forEach(n=>n.classList.remove("blink")), 800);
 }
 
 /* Boot */
+localStorage.setItem("idx.refresh", String(REFRESH_MS));
+localStorage.setItem("idx.max", String(MAX_ITEMS));
+draw();
 tick();
-
-/* Optional: allow ?window=1|6|24 to change hours */
-(function(){
-  const q = new URLSearchParams(location.search);
-  const w = parseInt(q.get("window")||"", 10);
-  if(!isNaN(w) && w>0){ WINDOW_HOURS = w; }
-})();
 </script>
 </body>
 </html>
