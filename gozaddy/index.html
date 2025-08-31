@@ -6,320 +6,119 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
-    --bg:#ffffff00;      /* transparent-friendly */
-    --panel:#ffffff;
-    --text:#0b1220;
-    --muted:#667085;
-    --accent:#0f6fff;
-    --border:#e5e7eb;
-    --dash:#eef2f7;
-    --title:28px; --h2:16px; --body:16px; --mono:12px;
-  }
-  @media (min-width:960px){
-    :root{ --title:32px; --h2:18px; --body:17px; }
+    --bg:#fff; --text:#0b1220; --muted:#667085; --border:#e5e7eb; --pill:#f3f4f6; --accent:#0f6fff;
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    line-height:1.6;
-  }
-  header{
-    position:sticky; top:0; z-index:5;
-    background:rgba(255,255,255,.92); backdrop-filter:saturate(140%) blur(6px);
-    border-bottom:1px solid var(--border);
-  }
-  .wrap{ max-width:880px; margin:0 auto; padding:16px; }
-  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px }
-  .meta{ margin-top:6px; color:var(--muted); font-size:13px; display:flex; gap:10px; flex-wrap:wrap }
-
-  main{ padding:20px 0 64px }
-  .list{ display:flex; flex-direction:column; gap:14px; }
-
-  .card{
-    background:var(--panel); border:1px solid var(--border);
-    border-radius:14px; padding:16px;
-  }
-  .title{
-    margin:0 0 2px; font-size:20px; line-height:1.35; font-weight:800;
-    word-wrap:break-word;
-  }
-  .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px }
-  .pill{
-    display:inline-flex; align-items:center; gap:6px;
-    padding:4px 10px; border:1px solid var(--border); border-radius:999px;
-    background:#f9fafb; color:#0b1220; font-size:12px;
-  }
-  .byline{ font-size:13px; color:var(--muted) }
-  .link{ color:var(--accent); text-decoration:none }
-  .link:hover{ text-decoration:underline }
-
-  .body{ margin-top:12px; font-size:var(--body); color:#111 }
-  .body p{ margin:0 0 10px }
-  .body h3{
-    margin:14px 0 6px; font-size:var(--h2); font-weight:800; letter-spacing:.02em;
-  }
-  .body ul, .body ol{ margin:8px 0 12px 20px; padding:0 }
-  .body li{ margin:6px 0 }
-  pre, code, .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono) }
-
-  .tags{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px }
-  .tag{
-    border:1px dashed var(--dash); padding:4px 8px; border-radius:999px;
-    font-size:12px; color:#0b1220; background:#fff;
-  }
-  .divider{ height:1px; background:var(--border); margin:12px 0 8px; }
-
-  .empty{
-    border:1px dashed var(--border); border-radius:12px; padding:18px; color:var(--muted);
-    text-align:center; background:#fff;
-  }
-
-  .blink{ animation:blink .7s ease 1 }
-  @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18) } }
+  body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.6}
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:saturate(140%) blur(6px);border-bottom:1px solid var(--border)}
+  .wrap{max-width:900px;margin:0 auto;padding:16px}
+  h1{margin:0;font-size:26px;font-weight:800}
+  .meta{font-size:13px;color:var(--muted)}
+  main{padding:18px 0 60px}
+  .card{border:1px solid var(--border);border-radius:14px;padding:16px;margin:14px 0;background:#fff}
+  .title{font-size:20px;font-weight:800;margin:0 0 6px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:8px}
+  .pill{display:inline-block;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:var(--pill);color:#111;font-size:12px}
+  .kw{display:inline-block;margin:6px 6px 0 0;padding:4px 8px;border:1px dashed var(--border);border-radius:999px;font-size:12px;color:#0b1220;background:#fff}
+  a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
+  .blink{animation:blink .8s ease 1} @keyframes blink{50%{box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>AI-Generated News Summaries</h1>
-    <div class="meta">
-      <span id="status">Loading…</span>
-      <span class="pill">Auto-refresh</span>
-      <span class="pill" id="rate"></span>
-    </div>
+    <div class="meta" id="status">Loading…</div>
   </div>
 </header>
 
-<main class="wrap">
-  <div id="feed" class="list"></div>
-  <div id="empty" class="empty" style="display:none">
-    No summaries yet. Waiting for the next refresh window…
-  </div>
-</main>
+<main class="wrap" id="list"></main>
 
 <script>
-/* ============ CONFIG ============ */
-/* Default worker endpoint: override with ?worker=... */
-const DEFAULT_WORKER_ASCII_URL =
-  "https://gozaddy.aristocles24.workers.dev/ascii?limit=40&interval=3600";
+/* CONFIG */
+const API_BASE = "https://gozaddy.aristocles24.workers.dev";
+const DEFAULT_FEEDS = [
+  "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+  "https://feeds.washingtonpost.com/rss/national",
+  "https://feeds.reuters.com/reuters/topNews",
+  "https://www.aljazeera.com/xml/rss/all.xml",
+  "https://feeds.npr.org/1001/rss.xml",
+  "https://feeds.bbci.co.uk/news/rss.xml"
+];
+const LIMIT = 18;
+const SERVER_INTERVAL_SEC = 3600; // cache window at Worker
+let REFRESH_MS = 60_000; // default 60s; override via ?refresh=ms
 
-/* Runtime controls via URL (persist in localStorage):
-   ?refresh=60000&max=20
-*/
-const qs = new URLSearchParams(location.search);
-const WORKER_ASCII_URL = qs.get("worker") || DEFAULT_WORKER_ASCII_URL;
-let REFRESH_MS = parseInt(qs.get("refresh") || localStorage.getItem("idx.refresh") || "60000", 10);
-if (isNaN(REFRESH_MS) || REFRESH_MS < 10000) REFRESH_MS = 60000;
-let MAX_ITEMS = parseInt(qs.get("max") || localStorage.getItem("idx.max") || "20", 10);
-if (isNaN(MAX_ITEMS) || MAX_ITEMS < 5) MAX_ITEMS = 20;
-document.getElementById("rate").textContent = `Every ${Math.round(REFRESH_MS/1000)}s`;
-/* ================================= */
-
+/* Helpers */
 const $ = (s)=>document.querySelector(s);
+function host(href){ try{ return new URL(href).hostname.replace(/^www\./,''); }catch{ return ""; } }
+function qs(name){ const u=new URL(location.href); return u.searchParams.get(name); }
 
-function hostOf(link){
-  try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; }
-}
-async function fetchText(url){
-  const u = url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now();
-  const r = await fetch(u, { cache:"no-store" });
-  if(!r.ok) throw new Error("Fetch failed "+r.status);
-  return r.text();
-}
-async function sha(str){
-  const d = new TextEncoder().encode(str);
-  const b = await crypto.subtle.digest("SHA-256", d);
-  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+/* Build URL */
+function buildUrl(){
+  const feeds = qs("feeds") ? qs("feeds").split(",") : DEFAULT_FEEDS;
+  const refresh = parseInt(qs("refresh")||"",10);
+  if(!isNaN(refresh) && refresh>1000) REFRESH_MS = refresh;
+  const f = encodeURIComponent(feeds.join(","));
+  return `${API_BASE}/summaries?feeds=${f}&limit=${LIMIT}&interval=${SERVER_INTERVAL_SEC}`;
 }
 
-/* === Parse the ASCII produced by the worker ===
-Expected per-article block:
-  Title | link | published
-  ------------------------       (>=20 dashes)
-  BODY...
-  ---------------------------------------------------------- (>=60 dashes)  ← separator
-*/
-function parseArticles(txt){
-  const lines = txt.split(/\r?\n/);
-  // cut header/banner
-  let i=0; while(i<lines.length && (lines[i].startsWith("=") || !lines[i].trim())) i++;
-  // cut optional footer
-  const footIdx = lines.findIndex(L=>/\(Updates hourly/i.test(L));
-  const usable = (footIdx>-1 ? lines.slice(i, footIdx) : lines.slice(i));
+/* Render */
+function render(items){
+  const root = $("#list"); root.innerHTML = "";
+  if(!items.length){ root.innerHTML = `<div class="meta">No articles yet.</div>`; return; }
 
-  const out = [];
-  let idx=0;
-  while(idx<usable.length){
-    const titleLine = (usable[idx]||"").trim();
-    const dashLine  = (usable[idx+1]||"").trim();
-    const isStart = !!titleLine && /^-{20,}$/.test(dashLine);
-    if(!isStart){ idx++; continue; }
-
-    const parts = titleLine.split("|").map(s=>s.trim());
-    let title = parts[0] || "(untitled)";
-    let link = ""; let published = "";
-    if(parts.length>=2 && /^https?:\/\//i.test(parts[1])) link = parts[1];
-    if(parts.length>=3) published = parts.slice(2).join(" | ");
-
-    const body = [];
-    let j = idx+2;
-    while(j<usable.length){
-      const L = (usable[j]||"").trim();
-      const longSep = /^-{60,}$/.test(L);
-      const aheadTitle = (usable[j+1]||"").trim();
-      const aheadDash  = (usable[j+2]||"").trim();
-      const nextStart  = aheadTitle && /^-{20,}$/.test(aheadDash);
-      if(longSep && nextStart){ j++; break; }
-      body.push(usable[j]);
-      j++;
-    }
-    out.push({ title, link, published, body: body.join("\n").trim(), observedAt: Date.now() });
-    idx = j+1;
-  }
-  return out;
-}
-
-/* === Transform plaintext body into tidy HTML === */
-function renderBody(text){
-  // Pull perspective & SEO line (optional)
-  let perspective = "";
-  const perspMatch = text.match(/^\s*PERSPECTIVE:\s*(.+)$/mi);
-  if(perspMatch) perspective = perspMatch[1].trim();
-
-  let seo = [];
-  const seoMatch = text.match(/^\s*SEO KEYWORDS:\s*(.+)$/mi);
-  if(seoMatch){
-    seo = (seoMatch[1]||"").split(/[;,]/g).map(s=>s.trim()).filter(Boolean).slice(0,10);
-  }
-  // Remove SEO line from body
-  text = text.replace(/^\s*SEO KEYWORDS:.*$/gmi, "").trim();
-
-  // Sectionize:
-  //  - Lines in ALL CAPS (or ending with ':') -> <h3>
-  //  - Bullets starting with -, * -> <ul>
-  //  - Numbered "1. " -> <ol>
-  //  - Otherwise -> paragraphs
-  const lines = text.split(/\r?\n/);
-  const out = [];
-  let mode = null; // "ul" | "ol" | null
-  const flushList = ()=>{
-    if(mode){ out.push(`</${mode}>`); mode=null; }
-  };
-  const isAllCaps = (s)=> /^[A-Z0-9 \-&/()]+$/.test(s) && s.replace(/[^A-Z0-9]/g,"").length >= 3;
-
-  for(let raw of lines){
-    const line = raw.trimRight();
-    if(!line.trim()){
-      flushList();
-      continue;
-    }
-    if(/^\- |\* /.test(line)){ // unordered
-      if(mode!=="ul"){ flushList(); out.push("<ul>"); mode="ul"; }
-      out.push(`<li>${escapeHtml(line.replace(/^\- |\* /,""))}</li>`);
-      continue;
-    }
-    if(/^\d+\.\s+/.test(line)){ // ordered
-      if(mode!=="ol"){ flushList(); out.push("<ol>"); mode="ol"; }
-      out.push(`<li>${escapeHtml(line.replace(/^\d+\.\s+/,""))}</li>`);
-      continue;
-    }
-    flushList();
-    if (isAllCaps(line) || /:\s*$/.test(line)) {
-      out.push(`<h3>${escapeHtml(line.replace(/:\s*$/,""))}</h3>`);
-    } else {
-      out.push(`<p>${escapeHtml(line)}</p>`);
-    }
-  }
-  flushList();
-
-  return { html: out.join("\n"), perspective, seo };
-}
-
-function escapeHtml(s){
-  return s.replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-}
-
-/* === Render one article card === */
-function renderCard(a){
-  const { html, perspective, seo } = renderBody(a.body);
-  const host = hostOf(a.link);
-  const byline = [
-    host || "",
-    a.published || ""
-  ].filter(Boolean).join(" • ");
-
-  const tags = seo.length ? (
-    `<div class="tags">${seo.map(t=>`<span class="tag">${escapeHtml(t)}</span>`).join("")}</div>`
-  ) : "";
-
-  const pill = perspective ? `<span class="pill">${escapeHtml(perspective)}</span>` : "";
-
-  return `
-    <article class="card blink">
-      <h2 class="title">${escapeHtml(a.title)}</h2>
+  for(const it of items){
+    const card = document.createElement("article");
+    card.className = "card";
+    card.innerHTML = `
+      <h2 class="title">${escapeHTML(it.title || "(untitled)")}</h2>
       <div class="row">
-        ${pill}
-        <div class="byline">${escapeHtml(byline)}</div>
-        ${a.link ? `<a class="link" href="${a.link}" target="_blank" rel="noopener">Open source</a>` : ""}
+        ${it.source ? `<span class="pill">${escapeHTML(it.source)}</span>`: ""}
+        ${it.published ? `<span class="meta">${escapeHTML(it.published)}</span>`: ""}
+        ${it.link ? `<a href="${it.link}" target="_blank" rel="noopener">Open source</a>` : ""}
+        <span class="meta">Confidence: ${it.confidence ?? "—"}</span>
       </div>
-      <div class="body">${html}</div>
-      ${tags ? `<div class="divider"></div>${tags}` : ""}
-    </article>
-  `;
-}
-
-/* === Live loop === */
-let LAST_HASH = "";
-let CACHE = [];
-
-function dedupeKeepLatest(list){
-  const m = new Map();
-  for(const x of list){
-    const key = (x.title + "|" + hostOf(x.link)).toLowerCase();
-    const prev = m.get(key);
-    if(!prev || x.observedAt > prev.observedAt) m.set(key, x);
+      <div class="body">${paraHTML(it.summary || "")}</div>
+      <div class="row" style="margin-top:8px">${(it.keywords||[]).map(k=>`<span class="kw">${escapeHTML(k)}</span>`).join("")}</div>
+    `;
+    root.appendChild(card);
   }
-  return [...m.values()];
+}
+function paraHTML(text){
+  // split into short paragraphs
+  const chunks = (text || "").split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
+  if(!chunks.length) return `<p>${escapeHTML(text)}</p>`;
+  return chunks.map(p=>`<p>${escapeHTML(p)}</p>`).join("");
+}
+function escapeHTML(s){
+  return (s||"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
 }
 
+/* Live loop */
+let LAST_SIG = "";
 async function tick(){
   try{
-    const txt = await fetchText(WORKER_ASCII_URL);
-    const h = await sha(txt);
-    if(h !== LAST_HASH){
-      const parsed = parseArticles(txt);
-      CACHE = dedupeKeepLatest(parsed).slice(0, MAX_ITEMS);
-      draw();
-      LAST_HASH = h;
-      $("#status").textContent = "Last updated " + new Date().toLocaleString();
+    const url = buildUrl();
+    const r = await fetch(url + "&_t=" + Date.now(), { cache: "no-store" });
+    if(!r.ok) throw new Error("Fetch failed " + r.status);
+    const data = await r.json();
+    const items = (data.items || []);
+    const sig = JSON.stringify(items.slice(0, 12).map(x=>x.title));
+    if(sig !== LAST_SIG){
+      render(items);
+      LAST_SIG = sig;
+      $("#list").classList.add("blink");
+      setTimeout(()=>$("#list").classList.remove("blink"), 900);
     }
+    $("#status").textContent = `Updated ${new Date().toLocaleString()} • ${items.length} articles`;
   }catch(e){
+    $("#status").textContent = "Error: " + e;
     console.error(e);
-    $("#status").textContent = "Error fetching summaries. Retrying…";
   }finally{
     setTimeout(tick, REFRESH_MS);
   }
 }
-
-function draw(){
-  const root = $("#feed");
-  if(!CACHE.length){
-    root.innerHTML = "";
-    $("#empty").style.display = "block";
-    return;
-  }
-  $("#empty").style.display = "none";
-  root.innerHTML = CACHE.map(renderCard).join("\n");
-  // remove blink after a moment
-  setTimeout(()=>document.querySelectorAll(".blink").forEach(n=>n.classList.remove("blink")), 800);
-}
-
-/* Boot */
-localStorage.setItem("idx.refresh", String(REFRESH_MS));
-localStorage.setItem("idx.max", String(MAX_ITEMS));
-draw();
 tick();
 </script>
 </body>
