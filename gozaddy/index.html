@@ -5,119 +5,278 @@
 <title>AI-Generated News Summaries</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-  :root { --bg:#0e1117; --fg:#e6e9ef; --muted:#9aa4b2; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial}
-  header{padding:16px 18px;border-bottom:1px solid #1c2333}
-  h1{margin:0;font-size:16px;letter-spacing:.3px}
-  #meta{color:var(--muted);font-size:12px;margin-top:4px}
-  main{padding:14px}
-  pre{white-space:pre-wrap;word-wrap:break-word;background:#0b1018;border:1px solid #20283a;border-radius:8px;padding:12px;font-family:var(--mono);font-size:13px;min-height:40vh}
-  .row{display:flex;gap:8px;align-items:center;margin:8px 0 12px}
-  button{background:#121a2a;border:1px solid #26344f;color:#dfe6fb;border-radius:8px;padding:6px 10px;cursor:pointer}
-  button:hover{border-color:#33507a}
-  a{color:#9fc1ff;text-decoration:none}
+  :root{
+    --bg:#ffffff;
+    --text:#0b1220;
+    --muted:#64748b;
+    --accent:#0f6fff;
+    --card:#ffffff;
+    --border:#e5e7eb;
+    --dash:#e9edf3;
+    --title:28px;
+    --meta:14px;
+    --body:16px;
+  }
+  @media (min-width:900px){
+    :root{ --title:32px; --body:18px; }
+  }
+  *{ box-sizing:border-box }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    line-height:1.55;
+  }
+  header{
+    padding:20px 16px; border-bottom:1px solid var(--border);
+    position:sticky; top:0; background:rgba(255,255,255,.9); backdrop-filter:saturate(140%) blur(6px);
+    z-index:10;
+  }
+  .wrap{ max-width:980px; margin:0 auto; }
+  h1{
+    margin:0; font-size:20px; letter-spacing:.2px; color:#0b1220; font-weight:700;
+  }
+  .metaBar{
+    margin-top:4px; font-size:12px; color:var(--muted);
+  }
+  main{ padding:18px 16px 56px }
+  .articles{ display:flex; flex-direction:column; gap:20px }
+  article{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:18px 18px 16px;
+  }
+  .a-title{
+    margin:0 0 6px 0;
+    font-size:var(--title); line-height:1.2; font-weight:800;
+  }
+  .a-meta{
+    font-size:var(--meta); color:var(--muted); margin-bottom:14px;
+  }
+  .a-meta a{ color:var(--accent); text-decoration:none; }
+  .a-meta a:hover{ text-decoration:underline; }
+  .dash{
+    border-top:1px dashed var(--dash); margin:10px 0 14px 0;
+  }
+  .a-body{
+    font-size:var(--body);
+    white-space:pre-wrap; /* keep paragraphs from ASCII feed */
+  }
+  .footerNote{
+    margin-top:4px; font-size:12px; color:var(--muted);
+  }
+  /* subtle update blink */
+  .blink{ animation: blink .8s ease-in-out 1; }
+  @keyframes blink {
+    0%{ box-shadow:0 0 0 rgba(15,111,255,0) }
+    50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18) }
+    100%{ box-shadow:0 0 0 rgba(15,111,255,0) }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>AI-Generated News Summaries</h1>
-  <div id="meta">Loading…</div>
-</header>
+  <header>
+    <div class="wrap">
+      <h1>AI-Generated News Summaries</h1>
+      <div class="metaBar">
+        Live summaries from your RSS sources. Updates automatically.
+        <span id="lastUpdated"></span>
+      </div>
+    </div>
+  </header>
 
-<main>
-  <div class="row">
-    <button id="refreshBtn" title="Reload now">Refresh</button>
-    <button id="copyBtn" title="Copy all summaries">Copy</button>
-    <span id="countdown" style="color:#9aa4b2;font-size:12px"></span>
-  </div>
-  <pre id="out" aria-live="polite"></pre>
-</main>
+  <main>
+    <div class="wrap">
+      <div id="list" class="articles"></div>
+      <div class="footerNote" id="foot"></div>
+    </div>
+  </main>
 
 <script>
-(function(){
-  // ====== Config (can be overridden via URL params) ======
-  const q = new URLSearchParams(location.search);
-  const WORKER_BASE = q.get("worker") || "https://gozaddy.aristocles24.workers.dev";
-  const FEEDS = q.get("feeds") ||
-    "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://feeds.washingtonpost.com/rss/national";
-  const LIMIT = parseInt(q.get("limit") || "5", 10);
-  const INTERVAL = parseInt(q.get("interval") || "3600", 10); // seconds (1h default)
-  const MODEL = q.get("model") || "gpt-4.1-mini";
-  const AUTO = (q.get("auto") || "1") === "1"; // auto refresh hourly
+/* ================= Config ================= */
+const WORKER_ASCII_URL =
+  // 👉 replace with your Worker endpoint if different:
+  "https://gozaddy.aristocles24.workers.dev/ascii?feeds=" +
+  encodeURIComponent("https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://feeds.washingtonpost.com/rss/national") +
+  "&limit=6&interval=3600"; // Worker caches/generates at most hourly
 
-  const $ = (s)=>document.querySelector(s);
-  const out = $("#out");
-  const meta = $("#meta");
-  const refreshBtn = $("#refreshBtn");
-  const copyBtn = $("#copyBtn");
-  const countdownEl = $("#countdown");
+// How often the FRONT END checks for updates (does not force regeneration)
+// Keep this modest; Worker controls real generation frequency.
+const POLL_MS = 90_000; // 90s
 
-  let nextAt = 0, tickTimer=null, fetchTimer=null;
+/* ============== Helpers ============== */
+const $ = (s) => document.querySelector(s);
+const nowStr = () => new Date().toLocaleString();
+async function getText(u){
+  const r = await fetch(u, { cache: "no-store" });
+  if(!r.ok) throw new Error("Fetch failed: " + r.status);
+  return await r.text();
+}
+async function sha(str){
+  const d = new TextEncoder().encode(str);
+  const b = await crypto.subtle.digest("SHA-256", d);
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+}
 
-  function asciiUrl(){
-    const u = new URL(WORKER_BASE.replace(/\/$/,'') + "/ascii");
-    u.searchParams.set("feeds", FEEDS);
-    u.searchParams.set("limit", String(LIMIT));
-    u.searchParams.set("interval", String(INTERVAL));
-    u.searchParams.set("model", MODEL);
-    return u.toString();
+/* ============== Parser for Worker ASCII ==============
+
+Worker output format (example):
+
+========================
+== AI-GENERATED ... ==
+========================
+Title | link | published
+--------------------------------
+SUMMARY...
+...
+----------------------------------------------
+Title 2 | link2 | published2
+--------------------------------
+SUMMARY...
+(Updates hourly ...)
+
+We:
+1) Drop banner/footer.
+2) Detect article starts where a line (title) is followed by a dashed line (>=20 dashes).
+3) Article body ends at the next long dashed separator (>=60 dashes) OR end of text.
+
+===================================================== */
+function parseArticles(txt){
+  const lines = txt.split(/\r?\n/);
+  // Remove top banner (lines with only '=' and the "== ... ==" line)
+  let i = 0;
+  // Skip initial non-data lines (banner)
+  while(i < lines.length && (lines[i].startsWith("=") || lines[i].startsWith("==") || !lines[i].trim())){
+    i++;
   }
+  // Also detect footer note later
+  const footerIdx = lines.findIndex((L)=>/\(Updates hourly/i.test(L));
+  const usable = (footerIdx > -1 ? lines.slice(i, footerIdx) : lines.slice(i));
 
-  async function load(){
-    meta.textContent = "Fetching summaries…";
-    try{
-      const r = await fetch(asciiUrl(), {cache:"no-store"});
-      const txt = await r.text();
-      out.textContent = txt.trim() ? txt : "(no summaries returned)";
-      const ts = new Date();
-      meta.textContent = `Last updated: ${ts.toLocaleString()} · Source: ${new URL(WORKER_BASE).host}`;
-      nextAt = Date.now() + (INTERVAL*1000);
-      startCountdown();
-      postHeight(); // for iframe auto-size
-    }catch(e){
-      out.textContent = "Error loading summaries:\n" + String(e);
-      meta.textContent = "Load failed.";
-      postHeight();
+  // Scan for articles
+  const out = [];
+  let idx = 0;
+
+  while(idx < usable.length){
+    // find title line where next line is dashed underline
+    const title = usable[idx]?.trim();
+    const next = usable[idx+1] || "";
+    const isDash = /^-{20,}$/.test(next.trim());
+    if(title && isDash){
+      // collect article body until a "long" dashed separator (>=60) that is followed by a non-empty line
+      let j = idx + 2;
+      const bodyLines = [];
+      while(j < usable.length){
+        const L = usable[j];
+        const isLongSep = /^-{60,}$/.test((L || "").trim());
+        const ahead = (usable[j+1] || "").trim();
+        const aheadIsTitle = ahead.length>0 && /^-{20,}$/.test((usable[j+2] || "").trim());
+        if(isLongSep && aheadIsTitle){
+          // Reached inter-article separator
+          break;
+        }
+        bodyLines.push(L);
+        j++;
+      }
+      // Parse meta from title line: maybe "title | link | published"
+      const parts = title.split("|").map(s=>s.trim());
+      let t = parts[0] || "";
+      let link = ""; let pub = "";
+      if(parts.length >= 2){
+        // second may be link or more title
+        const cand = parts[1];
+        if(/^https?:\/\//i.test(cand)) link = cand;
+        else t = title; // fallback keep everything as title
+      }
+      if(parts.length >= 3){
+        pub = parts.slice(2).join(" | ");
+      }
+      out.push({
+        title: t || title,
+        link,
+        published: pub,
+        body: bodyLines.join("\n").trim()
+      });
+      // move idx to after this block; skip one long separator if present
+      idx = j;
+      if(/^-{60,}$/.test((usable[idx]||"").trim())) idx++;
+    }else{
+      idx++; // not a title start; skip
     }
   }
+  return out;
+}
 
-  function startCountdown(){
-    if (tickTimer) clearInterval(tickTimer);
-    tickTimer = setInterval(()=>{
-      const ms = Math.max(0, nextAt - Date.now());
-      const s = Math.floor(ms/1000);
-      const m = Math.floor(s/60);
-      const rem = String(s%60).padStart(2,"0");
-      countdownEl.textContent = `Next auto-refresh in ${m}:${rem}`;
-      if (AUTO && ms === 0){
-        clearInterval(tickTimer);
-        if (fetchTimer) clearTimeout(fetchTimer);
-        fetchTimer = setTimeout(load, 250); // slight delay to avoid thrash
-      }
-    }, 1000);
+/* ============== Render ============== */
+function render(list){
+  const root = $("#list");
+  root.innerHTML = "";
+  list.forEach(item=>{
+    const card = document.createElement("article");
+    const title = document.createElement("h2");
+    title.className = "a-title";
+    title.textContent = item.title || "(untitled)";
+
+    const meta = document.createElement("div");
+    meta.className = "a-meta";
+    const bits = [];
+    if(item.link){
+      const a = document.createElement("a");
+      a.href = item.link; a.target = "_blank"; a.rel = "noopener";
+      a.textContent = new URL(item.link).hostname.replace(/^www\./,'');
+      bits.push(a.outerHTML);
+      bits.push("·");
+    }
+    if(item.published) bits.push(item.published);
+    meta.innerHTML = bits.join(" ");
+
+    const dash = document.createElement("div");
+    dash.className = "dash";
+
+    const body = document.createElement("div");
+    body.className = "a-body";
+    body.textContent = item.body;
+
+    card.appendChild(title);
+    card.appendChild(meta);
+    card.appendChild(dash);
+    card.appendChild(body);
+    root.appendChild(card);
+  });
+  $("#lastUpdated").textContent = " · Last updated " + nowStr();
+}
+
+/* ============== Live update loop ============== */
+let lastHash = "";
+async function tick(){
+  try{
+    const txt = await getText(WORKER_ASCII_URL + "&_t=" + Date.now());
+    const h = await sha(txt);
+    if(h !== lastHash){
+      const items = parseArticles(txt);
+      render(items);
+      highlightOnce();
+      lastHash = h;
+      // optional: show Worker’s footer note
+      const footer = /\(Updates hourly[\s\S]*$/i.exec(txt);
+      $("#foot").textContent = footer ? footer[0] : "";
+    }
+  }catch(e){
+    console.error(e);
+  }finally{
+    setTimeout(tick, POLL_MS);
   }
-
-  refreshBtn.onclick = () => load();
-  copyBtn.onclick = async () => {
-    try {
-      await navigator.clipboard.writeText(out.textContent || "");
-      copyBtn.textContent = "Copied!";
-      setTimeout(()=>copyBtn.textContent="Copy", 1200);
-    } catch {}
-  };
-
-  // Iframe auto-resize (GoDaddy embed)
-  function postHeight(){
-    const h = document.documentElement.scrollHeight;
-    parent.postMessage({ type:"AIRTICLE_HEIGHT", height:h }, "*");
+}
+function highlightOnce(){
+  const first = $("#list article");
+  if(first){
+    first.classList.add("blink");
+    setTimeout(()=>first.classList.remove("blink"), 900);
   }
-  new ResizeObserver(postHeight).observe(document.documentElement);
-  window.addEventListener("load", postHeight);
+}
 
-  // Kick off
-  load();
-})();
+/* boot */
+tick();
 </script>
 </body>
 </html>
