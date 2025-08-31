@@ -7,18 +7,25 @@
 <meta name="color-scheme" content="light dark" />
 <style>
   :root{
-    /* Light theme (default) */
-    --bg: transparent;
-    --panel: #ffffffcc;
-    --text:#0b1220;
-    --muted:#667085;
-    --border:#e5e7eb;
-    --dash:#eef2f7;
-    --accent:#0f6fff;
-    --good:#15803d; --warn:#b45309; --bad:#b91c1c;
-    --card-radius:14px;
-    --title:26px; --h2:18px; --body:16px; --mono:12px;
+  /* ultra light + transparent */
+  --bg: transparent;
+  --panel: #ffffffaa;         /* <- slightly transparent; try #ffffff80 for more */
+  --text:#0b1220;
+  --muted:#667085;
+  --border:#e5e7eb;
+  --dash:#eef2f7;
+  --accent:#0f6fff;
+  --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+  --card-radius:14px;
+  --title:26px; --h2:18px; --body:16px; --mono:12px;
   }
+  .card{
+    background: color-mix(in srgb, var(--panel) 90%, transparent); /* <= keep or reduce to 70% */
+    border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+    border-radius: var(--card-radius);
+    padding: 14px;
+  }
+  
   .dark {
     /* Dark theme */
     --bg:#0d1117;
