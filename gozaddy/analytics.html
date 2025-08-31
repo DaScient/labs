@@ -6,18 +6,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="light dark" />
 <style>
-  :root{
-  /* ultra light + transparent */
-  --bg: transparent;
-  --panel: #ffffff80;         /* <- slightly transparent; try #ffffffaa for less */
-  --text:#0b1220;
-  --muted:#667085;
-  --border:#e5e7eb;
-  --dash:#eef2f7;
-  --accent:#ffffff80;         /*#0f6fff;*/
-  --good:#15803d; --warn:#b45309; --bad:#b91c1c;
-  --card-radius:14px;
-  --title:26px; --h2:18px; --body:16px; --mono:12px;
+  :root {
+    --bg: transparent; /* fully transparent background */
+    --text: #111111;   /* dark text */
+    --muted: #555555;  /* softer gray for secondary text */
+    --accent: #0f6fff; /* accent blue for links/buttons */
+    --card: rgba(255,255,255,0.9); /* light cards with transparency */
+    --border: #e0e0e0; /* light border */
+    --dash: #f0f0f0;   /* dashed separator */
   }
   .card{
     background: color-mix(in srgb, var(--panel) 70%, transparent); /* <= keep or augment to 90% */
