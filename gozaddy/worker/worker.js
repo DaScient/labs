@@ -1,381 +1,401 @@
-/**
- * GoZaddy / DaScient — ASCII News Summaries Worker
- * Endpoints:
- *   GET /ascii?feeds=<comma-urls>&limit=5&interval=3600&model=gpt-4.1-mini
- *
- * Env:
- *   OPENAI_API_KEY  (optional; if unset, uses built-in heuristic summarizer)
- */
+// worker.js — GoZaddy ASCII Summaries API (Cloudflare Workers)
+//
+// Endpoints:
+//   GET /ascii?feeds=<csv_urls>&limit=12&interval=3600&model=gpt-4o-mini
+//     - Returns an ASCII bundle suitable for your UI parser.
+//     - Uses global/cache to avoid recalculating more often than `interval` seconds.
+//   GET /cors?url=https://example.com/…
+//     - Lightweight CORS passthrough for XML/HTML/JSON (text only).
+//   GET /health
+//     - Simple health check.
+//
+// Set OPENAI_API_KEY in Cloudflare → Workers → Settings → Variables.
+// Optional: OPENAI_MODEL default override at env level.
+//
+// NOTE: No secrets are logged or returned. All external errors degrade gracefully.
 
 export default {
   async fetch(req, env, ctx) {
     try {
       const url = new URL(req.url);
-      const path = url.pathname.replace(/\/+$/, "") || "/";
-
-      // CORS preflight
-      if (req.method === "OPTIONS") {
-        return cors(new Response(null, { status: 204 }));
-      }
-
-      if (path === "" || path === "/") {
-        return cors(
-          new Response(
-            "OK\nUse /ascii?feeds=<rss1,rss2>&limit=5&interval=3600\n",
-            { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } }
-          )
-        );
-      }
-
-      if (path === "/ascii") {
-        return cors(await handleAscii(url, env, ctx));
-      }
-
-      return cors(new Response("Not found", { status: 404 }));
-    } catch (err) {
-      console.error("Top-level error:", err);
-      return cors(
-        new Response(`Worker error\n${String(err?.message || err)}`, {
-          status: 500,
-          headers: { "Content-Type": "text/plain; charset=utf-8" },
-        })
-      );
+      if (url.pathname === "/health") return new Response(JSON.stringify({ ok: true, ts: Date.now() }), { headers: json() });
+      if (url.pathname === "/cors")    return handleCors(url);
+      if (url.pathname === "/ascii")   return handleAscii(req, url, env, ctx);
+      return new Response("Not found", { status: 404 });
+    } catch (e) {
+      return new Response("Worker error", { status: 500 });
     }
-  },
+  }
 };
 
-/* ----------------------------- /ascii handler ------------------------------ */
+/* ======================= /ascii ======================= */
 
-const MEMO = new Map(); // cacheKey -> { ts:number, text:string }
+async function handleAscii(req, url, env, ctx) {
+  // Inputs
+  const feedsParam = url.searchParams.get("feeds") || "";
+  const limit = clampInt(url.searchParams.get("limit"), 12, 1, 50);
+  const interval = clampInt(url.searchParams.get("interval"), 3600, 300, 86400); // seconds
+  const model = (url.searchParams.get("model") || env.OPENAI_MODEL || "gpt-4o-mini").trim();
 
-async function handleAscii(url, env, ctx) {
-  const feedsParam =
-    url.searchParams.get("feeds") ||
-    "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://feeds.washingtonpost.com/rss/national";
-  const limit = clampInt(url.searchParams.get("limit"), 1, 20, 5);
-  const intervalSec = clampInt(url.searchParams.get("interval"), 300, 86400, 3600); // default 1h
-  const model = url.searchParams.get("model") || "gpt-4.1-mini";
+  // Build cache key
+  const cacheKey = new Request(`https://ascii.cache.key?feeds=${hashish(feedsParam)}&limit=${limit}&model=${encodeURIComponent(model)}`);
+  const cache = caches.default;
 
-  // Use a cache key that includes params to throttle generation
-  const cacheKey = `ascii|${feedsParam}|${limit}|${intervalSec}|${model}`;
-  const now = Date.now();
-  const cached = MEMO.get(cacheKey);
-  if (cached && now - cached.ts < intervalSec * 1000) {
-    // Serve memoized
-    return textResponse(cached.text, intervalSec);
+  // Try cache first
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  // Parse feed list
+  const feeds = feedsParam.split(",").map(s => s.trim()).filter(Boolean);
+  if (!feeds.length) {
+    // Provide a sane default bundle if caller forgot to pass feeds
+    const fallback = [
+      "AI-GENERATED NEWS SUMMARIES",
+      repeat("=", 64),
+      "No feeds specified. Add ?feeds=https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://www.reuters.com/rssFeed/topNews",
+      "Tip: Pass &interval=3600 to limit summary refresh to hourly.",
+      repeat("-", 80),
+    ].join("\n");
+    return new Response(fallback, { headers: asciiHeaders() });
   }
 
-  // Try Cloudflare cache (shared)
-  const cfCache = caches.default;
-  const reqForCache = new Request(`https://cache-key.example/${encodeURIComponent(cacheKey)}`, {
-    method: "GET",
+  // Collect recent items across feeds
+  let items = [];
+  await Promise.all(
+    feeds.map(async (f) => {
+      try {
+        const xml = await timedFetchText(f, 12000);
+        const parsed = parseRSS(xml).slice(0, limit); // per-feed slice
+        items.push(...parsed);
+      } catch (_e) {
+        // swallow; feed might be blocked or down
+      }
+    })
+  );
+
+  // Sort by published desc then title
+  items.sort((a, b) => (b.publishedTs - a.publishedTs) || (a.title > b.title ? 1 : -1));
+  // Global cap
+  items = items.slice(0, limit);
+
+  // Expand with article text (best effort) and summarize with OpenAI (if key present)
+  const apiKey = (env.OPENAI_API_KEY || "").trim(); // do not log
+  const useAI = !!apiKey;
+
+  // modest concurrency to avoid hammering
+  const summarized = await mapLimit(items, 3, async (it) => {
+    const html = await safeFetchArticle(it.link);
+    const clean = pickReadableText(html) || it.summary || `${it.title} — ${it.link}`;
+    const sum = useAI ? await aiSummarize(apiKey, model, clean, it) : localSummarize(clean, it);
+    return { ...it, ascii: sum };
   });
-  const hit = await cfCache.match(reqForCache);
-  if (hit) {
-    const t = await hit.text();
-    // Also refresh MEMO to keep instances aligned
-    MEMO.set(cacheKey, { ts: now, text: t });
-    return textResponse(t, intervalSec);
-  }
 
-  const feedUrls = feedsParam
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
+  // Bundle to ASCII
+  const body = toAsciiBundle(summarized);
 
-  const allItems = [];
-  for (const u of feedUrls) {
-    try {
-      const xml = await fetchText(u);
-      const items = parseRssItems(xml).slice(0, limit);
-      allItems.push(...items);
-    } catch (e) {
-      console.error("Feed fetch/parse failed for", u, e);
-    }
-  }
-
-  // Dedup by link/title
-  const seen = new Set();
-  const uniq = [];
-  for (const it of allItems) {
-    const key = (it.link || "") + "|" + (it.title || "");
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniq.push(it);
-    }
-    if (uniq.length >= limit) break;
-  }
-
-  if (!uniq.length) {
-    const msg = banner("AI-GENERATED NEWS SUMMARIES") +
-      "\n(no recent items or feeds unavailable)\n";
-    // Cache negative result briefly
-    MEMO.set(cacheKey, { ts: now, text: msg });
-    await putToCfCache(cfCache, reqForCache, msg, 300);
-    return textResponse(msg, Math.min(intervalSec, 300));
-  }
-
-  // Build prompts and summarize each item
-  const summaries = [];
-  for (const it of uniq) {
-    try {
-      const articleText = await safeFetchArticleText(it.link);
-      const base = articleText || it.summary || `${it.title}\n${it.link}`;
-      const sum = await summarize(base, it, env, model);
-      summaries.push(renderOne(it, sum));
-    } catch (e) {
-      console.error("Summarize failed", it.link, e);
-    }
-  }
-
-  const out =
-    banner("AI-GENERATED NEWS SUMMARIES") +
-    "\n" +
-    summaries.join("\n" + "-".repeat(78) + "\n") +
-    "\n" +
-    footerNote();
-
-  // Store in MEMO and CF cache
-  MEMO.set(cacheKey, { ts: now, text: out });
-  await putToCfCache(cfCache, reqForCache, out, intervalSec);
-
-  return textResponse(out, intervalSec);
+  // Cache for `interval` seconds
+  const res = new Response(body, { headers: asciiHeaders(interval) });
+  ctx.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
 }
 
-/* ------------------------------- Utilities -------------------------------- */
+/* ======================= /cors ======================= */
 
-function cors(res) {
-  const h = new Headers(res.headers);
-  h.set("Access-Control-Allow-Origin", "*");
-  h.set("Access-Control-Allow-Methods", "GET,OPTIONS");
-  h.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  return new Response(res.body, { status: res.status, headers: h });
-}
+async function handleCors(url) {
+  const target = url.searchParams.get("url");
+  if (!target) return new Response("Missing url", { status: 400, headers: corsHeaders() });
 
-function textResponse(txt, maxAgeSec = 3600) {
-  return new Response(txt, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": `public, max-age=${Math.max(60, Math.min(maxAgeSec, 86400))}`,
-    },
-  });
-}
-
-async function putToCfCache(cache, req, body, ttlSec) {
+  // Only allow http/https
   try {
-    const res = new Response(body, {
-      headers: {
-        "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": `public, max-age=${Math.max(60, Math.min(ttlSec, 86400))}`,
-      },
-    });
-    await cache.put(req, res);
-  } catch (e) {
-    console.error("Cache put failed", e);
+    const u = new URL(target);
+    if (!/^https?:$/.test(u.protocol)) throw new Error("bad scheme");
+  } catch {
+    return new Response("Invalid url", { status: 400, headers: corsHeaders() });
+  }
+
+  try {
+    const r = await fetch(target, { headers: { "User-Agent": "GoZaddy-CORS/1.0" } });
+    const txt = await r.text();
+    // reflect content-type when reasonable; default text/plain
+    const ct = r.headers.get("content-type") || "text/plain; charset=utf-8";
+    return new Response(txt, { headers: { ...corsHeaders(), "Content-Type": ct } });
+  } catch {
+    return new Response("Fetch failed", { status: 502, headers: corsHeaders() });
   }
 }
 
-function clampInt(v, min, max, def) {
-  const n = parseInt(v, 10);
-  if (Number.isFinite(n)) return Math.max(min, Math.min(max, n));
-  return def;
-}
+/* ======================= Helpers ======================= */
 
-async function fetchText(u) {
-  const r = await fetch(u, {
-    headers: {
-      "User-Agent": "DaScient-GoZaddy-Worker/1.0 (+https://dascient.com)",
-      "Accept": "application/rss+xml, application/xml, text/xml, text/html; charset=utf-8",
-    },
-    cf: { cacheTtl: 600, cacheEverything: true },
-  });
-  if (!r.ok) throw new Error(`Fetch ${u} failed: ${r.status}`);
-  return await r.text();
-}
-
-// Very safe RSS item extractor (no brittle CDATA regex)
-function parseRssItems(xml) {
+// Simple RSS parser (no DOMParser). Extracts title/link/pubDate/summary.
+function parseRSS(xml) {
   const out = [];
 
-  // Grab <item> blocks (RSS) or <entry> (Atom)
-  const items = [...xml.matchAll(/<item[\s\S]*?<\/item>/gi)];
-  const entries = items.length ? [] : [...xml.matchAll(/<entry[\s\S]*?<\/entry>/gi)];
-  const blocks = items.length ? items.map((m) => m[0]) : entries.map((m) => m[0]);
+  // Normalize entities
+  const s = xml.replace(/\r/g, "");
 
-  for (const b of blocks) {
-    const title = decodeEntities(extractTag(b, "title") || "");
-    const link =
-      extractAttr(b, "link", "href") ||
-      decodeEntities(extractTag(b, "link")) ||
-      "";
-    const summary =
-      decodeEntities(extractTag(b, "description") || extractTag(b, "summary") || "");
-    const pub =
-      decodeEntities(extractTag(b, "pubDate") || extractTag(b, "updated") || "");
-    out.push({ title, link: (link || "").trim(), summary, published: pub });
+  // Split by <item>…</item> or <entry>…</entry>
+  const items = s.match(/<item[\s\S]*?<\/item>/gi) || s.match(/<entry[\s\S]*?<\/entry>/gi) || [];
+  for (const block of items) {
+    const title = pickTag(block, "title") || "";
+    const link  = pickLink(block) || "";
+    const date  = pickDate(block) || "";
+    const summary = stripTags(pickTag(block, "description") || pickTag(block, "content") || "");
+
+    const ts = toTs(date);
+    out.push({ title: cleanInline(title), link, published: date, publishedTs: ts, summary });
   }
   return out;
 }
 
-function extractTag(block, tag) {
-  // Handles optional CDATA
-  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
-  const m = block.match(re);
-  if (!m) return "";
-  const inner = m[1] || "";
-  const cdata = inner.match(/<!\[CDATA\[(.*?)\]\]>/s);
-  return cdata ? cdata[1] : inner;
+// Extract first <link>… or href attribute in atom
+function pickLink(block) {
+  const atom = block.match(/<link[^>]*?href=["']([^"']+)["'][^>]*>/i);
+  if (atom && atom[1]) return atom[1].trim();
+  const rss  = block.match(/<link>([\s\S]*?)<\/link>/i);
+  if (rss && rss[1]) return rss[1].trim();
+  return "";
 }
 
-function extractAttr(block, tag, attr) {
-  const re = new RegExp(`<${tag}[^>]*\\s${attr}\\s*=\\s*"(.*?)"[^>]*>`, "i");
+// Extract common date tags
+function pickDate(block) {
+  const m1 = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/i);
+  if (m1) return m1[1].trim();
+  const m2 = block.match(/<updated>([\s\S]*?)<\/updated>/i);
+  if (m2) return m2[1].trim();
+  const m3 = block.match(/<published>([\s\S]*?)<\/published>/i);
+  if (m3) return m3[1].trim();
+  return "";
+}
+
+// Generic tag extractor (first occurrence)
+function pickTag(block, tag) {
+  const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
   const m = block.match(re);
   return m ? m[1] : "";
 }
 
-function decodeEntities(s) {
-  return s
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
-    .replace(/&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim();
+// fetch with timeout -> text
+async function timedFetchText(u, ms = 10000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const r = await fetch(u, { signal: ctrl.signal, headers: { "User-Agent": "GoZaddy-Worker/1.0" } });
+    return await r.text();
+  } finally {
+    clearTimeout(t);
+  }
 }
 
-async function safeFetchArticleText(link) {
-  if (!link) return "";
+// best-effort article fetch (may fail due to paywalls/CORS)
+async function safeFetchArticle(u) {
   try {
-    const r = await fetch(link, {
-      headers: { "User-Agent": "DaScient-GoZaddy-Worker/1.0" },
-      cf: { cacheTtl: 600, cacheEverything: false },
-    });
-    if (!r.ok) return "";
-    const html = await r.text();
-    // naive extraction: strip scripts/styles and pull paragraphs
-    const text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    return text.slice(0, 20000); // keep it bounded
+    const r = await fetch(u, { headers: { "User-Agent": "GoZaddy-Article/1.0" } });
+    return await r.text();
   } catch {
     return "";
   }
 }
 
-/* ------------------------- Summarization pipeline -------------------------- */
+// crude readability: drop scripts/styles and tags; keep paragraphs-ish
+function pickReadableText(html) {
+  if (!html) return "";
+  // Remove script/style/noscript/iframe blocks
+  html = html.replace(/<script[\s\S]*?<\/script>/gi, " ")
+             .replace(/<style[\s\S]*?<\/style>/gi, " ")
+             .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+             .replace(/<iframe[\s\S]*?<\/iframe>/gi, " ");
 
-async function summarize(raw, meta, env, model) {
-  const key = env.OPENAI_API_KEY; // do not log
-  const basePrompt = `
-You are an editorial analyst. Produce a crisp ASCII-only brief for operators.
-Focus on: what happened, why it matters, risks, opportunities, and next steps.
-No fluff. 120–220 words. End with:
-SEO KEYWORDS: kw1; kw2; kw3; kw4; kw5
+  // Convert <p> and <br> to newlines
+  html = html.replace(/<\/p>/gi, "\n")
+             .replace(/<br\s*\/?>/gi, "\n");
 
-TITLE: ${meta.title || "Untitled"}
-LINK: ${meta.link || ""}
-PUBLISHED: ${meta.published || ""}
+  // Strip the rest of tags
+  const txt = stripTags(html);
+  // Collapse whitespace and keep some paragraph breaks
+  return txt.split("\n").map(l => l.trim()).filter(Boolean).join("\n");
+}
 
-SOURCE:
-${raw.substring(0, 6000)}
-`;
+function stripTags(s) {
+  return (s || "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&")
+                  .replace(/&lt;/g, "<").replace(/&gt;/g, ">").trim();
+}
 
-  if (!key) {
-    // Heuristic fallback (never crashes if key missing)
-    return localSummarize(raw, meta);
+function cleanInline(s) {
+  return stripTags(s).replace(/\s+/g, " ").trim();
+}
+
+function toTs(s) {
+  const t = Date.parse(s);
+  return isNaN(t) ? 0 : t;
+}
+
+function clampInt(v, def, min, max) {
+  const n = parseInt(v || "", 10);
+  if (Number.isFinite(n)) return Math.max(min, Math.min(max, n));
+  return def;
+}
+
+function repeat(ch, n) { return Array(n).fill(ch).join(""); }
+
+function asciiHeaders(maxAge = 300) {
+  return {
+    "Content-Type": "text/plain; charset=utf-8",
+    "Cache-Control": `public, max-age=${maxAge}`,
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+  };
+}
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Vary": "Origin",
+  };
+}
+function json() { return { "Content-Type": "application/json; charset=utf-8", ...corsHeaders() }; }
+
+// tiny hash surrogate for cache key variability (non-cryptographic)
+function hashish(s) {
+  let h = 2166136261 >>> 0;
+  for (let i=0; i<s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h += (h<<1) + (h<<4) + (h<<7) + (h<<8) + (h<<24);
   }
+  return (h >>> 0).toString(16);
+}
+
+// control concurrency
+async function mapLimit(arr, limit, fn) {
+  const out = new Array(arr.length);
+  let i = 0;
+  const workers = Array(Math.min(limit, arr.length)).fill(0).map(async () => {
+    while (i < arr.length) {
+      const cur = i++;
+      try { out[cur] = await fn(arr[cur], cur); }
+      catch { out[cur] = null; }
+    }
+  });
+  await Promise.all(workers);
+  return out.filter(Boolean);
+}
+
+/* ======================= Summarization ======================= */
+
+// Local fallback summary (if API key missing)
+function localSummarize(text, meta) {
+  // crude: take first few sentences + bullets + naive keywords
+  const maxChars = 1400;
+  const body = text.replace(/\s+/g, " ").slice(0, maxChars);
+  const points = extractBullets(text, 5);
+  const kws = topKeywords(text, 5);
+
+  return [
+    `${meta.title} | ${meta.link} | ${meta.published || ""}`,
+    repeat("-", 24),
+    toParagraph(`SUMMARY: ${body}`),
+    "",
+    "KEY POINTS:",
+    ...points.map(p => `- ${p}`),
+    "",
+    `SEO KEYWORDS: ${kws.join("; ")}`,
+    repeat("-", 80)
+  ].join("\n");
+}
+
+function extractBullets(text, n=5) {
+  const sents = (text.match(/[^.!?]+[.!?]/g) || []).map(x => x.trim());
+  return sents.slice(0, n);
+}
+
+function topKeywords(text, k=5) {
+  const stop = new Set(("a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would,has,have,had,more,most,less,least,new,news,story").split(","));
+  const words = (text.toLowerCase().match(/[a-z0-9]+/g) || []).filter(w => !stop.has(w) && w.length > 2);
+  const freq = new Map();
+  for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k).map(x=>x[0]);
+}
+
+function toParagraph(s) {
+  // wrap to ~100 cols
+  const out = [];
+  let line = "";
+  for (const tok of s.split(/\s+/)) {
+    if ((line + " " + tok).trimEnd().length > 100) {
+      out.push(line.trimEnd());
+      line = tok + " ";
+    } else {
+      line += tok + " ";
+    }
+  }
+  if (line.trim()) out.push(line.trimEnd());
+  return out.join("\n");
+}
+
+// OpenAI-powered summary
+async function aiSummarize(apiKey, model, text, meta) {
+  // Keep prompt short & deterministic; ask for consistent ASCII block your UI expects
+  const sys = "You are a news desk editor. Write concise, objective summaries with key points and 5 SEO keywords. ASCII only.";
+  const user =
+`Summarize the following article for tech/business readers.
+Hard rules:
+- Keep the body under ~250 words.
+- Add a KEY POINTS list (3-6 bullets).
+- End with "SEO KEYWORDS: kw1; kw2; kw3; kw4; kw5".
+- No emojis, no markdown tables.
+
+TITLE: ${meta.title}
+LINK: ${meta.link}
+PUBLISHED: ${meta.published}
+
+ARTICLE:
+${text.slice(0, 8000)}`;
+
+  const body = JSON.stringify({
+    model,
+    input: [
+      { role: "system", content: sys },
+      { role: "user", content: user }
+    ],
+    temperature: 0.4,
+    max_output_tokens: 700
+  });
 
   try {
-    const resp = await fetch("https://api.openai.com/v1/responses", {
+    const r = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${key}`,
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model,
-        input: basePrompt,
-        max_output_tokens: 600,
-        temperature: 0.4,
-      }),
+      body
     });
-
-    if (!resp.ok) {
-      const t = await resp.text();
-      console.error("OpenAI error", resp.status, t.slice(0, 500));
-      return localSummarize(raw, meta);
-    }
-    const data = await resp.json();
-    const txt =
-      (data.output_text || "").trim() ||
-      (Array.isArray(data.output) ? (data.output.map((o) => o.content || "").join("\n")).trim() : "");
-    return txt || localSummarize(raw, meta);
-  } catch (e) {
-    console.error("OpenAI call failed", e);
-    return localSummarize(raw, meta);
+    if (!r.ok) throw new Error(`OpenAI ${r.status}`);
+    const j = await r.json();
+    const out = (j.output_text || "").trim();
+    const wrapped = toParagraph(out);
+    return [
+      `${meta.title} | ${meta.link} | ${meta.published || ""}`,
+      repeat("-", 24),
+      wrapped,
+      "",
+      repeat("-", 80)
+    ].join("\n");
+  } catch {
+    // fall back silently
+    return localSummarize(text, meta);
   }
 }
 
-function localSummarize(raw, meta) {
-  // Minimal extractive summary + template
-  const sents = (raw || "").split(/(?<=[.!?])\s+/).filter(Boolean).slice(0, 6);
-  const core = sents.join(" ").slice(0, 1200);
-  const kws = topKeywords(raw, 5).join("; ");
-  return (
-    `SUMMARY\n${core}\n\nWHY IT MATTERS\n` +
-    `- Potential operational and regulatory impact.\n- Signals shifts in demand, pricing, or policy.\n` +
-    `- Watch competitive moves and supply dynamics.\n\nNEXT STEPS\n` +
-    `- Validate assumptions with data.\n- Draft a Now/Next/Later action list.\n- Track leading indicators.\n\n` +
-    `SEO KEYWORDS: ${kws}`
-  );
-}
+/* ======================= Bundle ======================= */
 
-function topKeywords(text, k = 5) {
-  if (!text) return ["news analysis", "strategy", "risk", "opportunity", "insight"];
-  const stop = new Set(
-    "the,of,and,to,a,in,for,is,that,on,with,as,are,was,be,by,or,an,from,at,which,it,this,has,have,were,will,its,not,can,also".split(
-      ","
-    )
-  );
-  const freq = Object.create(null);
-  (text.toLowerCase().match(/[a-z0-9]+/g) || []).forEach((w) => {
-    if (w.length < 3 || stop.has(w)) return;
-    freq[w] = (freq[w] || 0) + 1;
-  });
-  return Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, k)
-    .map((x) => x[0]);
-}
+function toAsciiBundle(list) {
+  const head = [
+    "AI-GENERATED NEWS SUMMARIES",
+    repeat("=", 64),
+    `Count: ${list.length}`,
+    "",
+  ].join("\n");
 
-function renderOne(item, summary) {
-  const parts = [];
-  parts.push(item.title ? item.title : "(untitled)");
-  if (item.link) parts.push(item.link);
-  if (item.published) parts.push(item.published);
-  const head = parts.join(" | ");
-  return (
-    head +
-    "\n" +
-    "-".repeat(Math.min(78, Math.max(20, head.length))) +
-    "\n" +
-    summary.trim() +
-    "\n"
-  );
-}
-
-function banner(t) {
-  const line = "=".repeat(Math.max(24, Math.min(78, t.length + 6)));
-  return `${line}\n== ${t} ==\n${line}`;
-}
-
-function footerNote() {
-  return (
-    "\n(Updates hourly · Generated by DaScient/GoZaddy Worker · ASCII only)\n"
-  );
+  const blocks = list.map(x => x.ascii || "");
+  return head + blocks.join("\n");
 }
