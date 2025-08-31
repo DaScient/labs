@@ -6,20 +6,27 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
-    --bg:#fff; --text:#0b1220; --muted:#667085; --border:#e5e7eb; --pill:#f3f4f6; --accent:#0f6fff;
+    --bg:#fff; --text:#0b1220; --muted:#667085; --border:#e5e7eb;
+    --pill:#f6f7f8; --accent:#0f6fff; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.6}
-  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:saturate(140%) blur(6px);border-bottom:1px solid var(--border)}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.6}
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);
+         backdrop-filter:saturate(140%) blur(6px);border-bottom:1px solid var(--border)}
   .wrap{max-width:900px;margin:0 auto;padding:16px}
-  h1{margin:0;font-size:26px;font-weight:800}
+  h1{margin:0;font-size:26px;font-weight:800;letter-spacing:.2px}
   .meta{font-size:13px;color:var(--muted)}
   main{padding:18px 0 60px}
-  .card{border:1px solid var(--border);border-radius:14px;padding:16px;margin:14px 0;background:#fff}
-  .title{font-size:20px;font-weight:800;margin:0 0 6px}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:8px}
-  .pill{display:inline-block;padding:4px 8px;border:1px solid var(--border);border-radius:999px;background:var(--pill);color:#111;font-size:12px}
+  .feed{display:grid;gap:14px}
+  .card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
+  .title{font-size:22px;font-weight:800;margin:0 0 6px;letter-spacing:.2px}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:10px}
+  .pill{display:inline-block;padding:5px 10px;border:1px solid var(--border);border-radius:999px;background:var(--pill);color:#111;font-size:12px}
+  .conf{font-weight:700}
+  .conf.ok{color:var(--ok)} .conf.mid{color:var(--warn)} .conf.low{color:var(--bad)}
   .kw{display:inline-block;margin:6px 6px 0 0;padding:4px 8px;border:1px dashed var(--border);border-radius:999px;font-size:12px;color:#0b1220;background:#fff}
+  .body p{margin:0 0 10px}
   a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
   .blink{animation:blink .8s ease 1} @keyframes blink{50%{box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
 </style>
@@ -32,10 +39,12 @@
   </div>
 </header>
 
-<main class="wrap" id="list"></main>
+<main class="wrap">
+  <section id="feed" class="feed"></section>
+</main>
 
 <script>
-/* CONFIG */
+/* ================== CONFIG ================== */
 const API_BASE = "https://gozaddy.aristocles24.workers.dev";
 const DEFAULT_FEEDS = [
   "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
@@ -46,70 +55,138 @@ const DEFAULT_FEEDS = [
   "https://feeds.bbci.co.uk/news/rss.xml"
 ];
 const LIMIT = 18;
-const SERVER_INTERVAL_SEC = 3600; // cache window at Worker
-let REFRESH_MS = 60_000; // default 60s; override via ?refresh=ms
+const SERVER_INTERVAL_SEC = 3600; // Worker cache interval
+let REFRESH_MS = 60_000;          // ?refresh=ms to override
+/* ============================================ */
 
-/* Helpers */
-const $ = (s)=>document.querySelector(s);
-function host(href){ try{ return new URL(href).hostname.replace(/^www\./,''); }catch{ return ""; } }
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
 function qs(name){ const u=new URL(location.href); return u.searchParams.get(name); }
+function host(href){ try{ return new URL(href).hostname.replace(/^www\./,''); }catch{ return ""; } }
+function escapeHTML(s){ return (s||"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
+function stripCDATA(s){ return (s||"").replace(/^<!\[CDATA\[/,'').replace(/\]\]>$/,''); }
+function decodeEntities(s){
+  // very small decode for &amp; &lt; &gt; &quot; &apos;
+  return (s||"").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
+                 .replace(/&quot;/g,'"').replace(/&apos;/g,"'");
+}
+function prettyTime(ts){ try{ return new Date(ts).toUTCString().replace('GMT','UTC'); }catch{ return ts||''; } }
+function confClass(n){ if(n>=70) return 'ok'; if(n>=45) return 'mid'; return 'low'; }
 
-/* Build URL */
+/* Build the /summaries URL (accept ?feeds & ?refresh) */
 function buildUrl(){
   const feeds = qs("feeds") ? qs("feeds").split(",") : DEFAULT_FEEDS;
   const refresh = parseInt(qs("refresh")||"",10);
-  if(!isNaN(refresh) && refresh>1000) REFRESH_MS = refresh;
+  if(!isNaN(refresh) && refresh>750) REFRESH_MS = refresh;
   const f = encodeURIComponent(feeds.join(","));
   return `${API_BASE}/summaries?feeds=${f}&limit=${LIMIT}&interval=${SERVER_INTERVAL_SEC}`;
 }
 
-/* Render */
+/* ---------- cleaning / enrichment ---------- */
+function splitKeywordsOut(text){
+  // returns { body, keywords[] }
+  if(!text) return { body:"", keywords:[] };
+  const lines = text.split(/\r?\n/);
+  const keep = [];
+  let kw = [];
+  for(const L of lines){
+    const m = L.match(/^\s*SEO KEYWORDS:\s*(.+)\s*$/i);
+    if(m){
+      kw = m[1].split(/[;,]/).map(s=>s.trim()).filter(Boolean);
+    }else{
+      keep.push(L);
+    }
+  }
+  return { body: keep.join("\n").trim(), keywords: kw };
+}
+
+function deDupeTitleFromBody(title, body){
+  if(!title || !body) return body || "";
+  const t = title.toLowerCase().replace(/\s+/g,' ').trim();
+  const lines = body.split(/\r?\n/).map(s=>s.trim());
+  const out = [];
+
+  for(let i=0;i<lines.length;i++){
+    const L = lines[i];
+    if(!L) continue;
+
+    // remove "SUMMARY " prefix once
+    const s = L.replace(/^summary[:\s]*/i,'').trim();
+
+    // if first non-empty paragraph is very similar to title, drop it
+    const isFirst = out.length===0;
+    const sim = similarityRatio(t, s.toLowerCase());
+    if(isFirst && (s.toLowerCase()===t || sim>=0.8)) continue;
+
+    out.push(s);
+  }
+  return out.join("\n");
+}
+
+// cosine-ish similarity on words (quick & robust enough)
+function similarityRatio(a,b){
+  const tok = s => (s.match(/[a-z0-9]+/gi)||[]).map(x=>x.toLowerCase());
+  const A = new Set(tok(a)), B = new Set(tok(b));
+  if(!A.size || !B.size) return 0;
+  let inter=0; A.forEach(w=>{ if(B.has(w)) inter++; });
+  const denom = Math.sqrt(A.size*B.size);
+  return inter/denom;
+}
+
+/* ---------- render ---------- */
+function paraHTML(text){
+  const chunks = (text||"").split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
+  if(!chunks.length) return text ? `<p>${escapeHTML(text)}</p>` : "";
+  return chunks.map(p=>`<p>${escapeHTML(p)}</p>`).join("");
+}
+
 function render(items){
-  const root = $("#list"); root.innerHTML = "";
+  const root = $("#feed"); root.innerHTML = "";
   if(!items.length){ root.innerHTML = `<div class="meta">No articles yet.</div>`; return; }
 
-  for(const it of items){
+  for(const raw of items){
+    // Clean & normalize
+    const cleanTitle = decodeEntities(stripCDATA(raw.title||"")).trim() || "(untitled)";
+    const metaSource = raw.source || host(raw.link) || "";
+    const { body:body0, keywords } = splitKeywordsOut(raw.summary||"");
+    const body = deDupeTitleFromBody(cleanTitle, body0);
+    const conf = Number.isFinite(raw.confidence) ? Math.round(raw.confidence) : null;
+
+    // Card
     const card = document.createElement("article");
     card.className = "card";
     card.innerHTML = `
-      <h2 class="title">${escapeHTML(it.title || "(untitled)")}</h2>
+      <h2 class="title">${escapeHTML(cleanTitle)}</h2>
       <div class="row">
-        ${it.source ? `<span class="pill">${escapeHTML(it.source)}</span>`: ""}
-        ${it.published ? `<span class="meta">${escapeHTML(it.published)}</span>`: ""}
-        ${it.link ? `<a href="${it.link}" target="_blank" rel="noopener">Open source</a>` : ""}
-        <span class="meta">Confidence: ${it.confidence ?? "—"}</span>
+        ${metaSource ? `<span class="pill">${escapeHTML(metaSource)}</span>`:""}
+        ${raw.published ? `<span class="meta">${escapeHTML(prettyTime(raw.published))}</span>`:""}
+        ${raw.link ? `<a href="${raw.link}" target="_blank" rel="noopener">Open source</a>`:""}
+        ${conf!==null ? `<span class="conf ${confClass(conf)}">Confidence: ${conf}</span>`:""}
       </div>
-      <div class="body">${paraHTML(it.summary || "")}</div>
-      <div class="row" style="margin-top:8px">${(it.keywords||[]).map(k=>`<span class="kw">${escapeHTML(k)}</span>`).join("")}</div>
+      <div class="body">${paraHTML(body)}</div>
+      ${keywords.length ? `<div class="row" style="margin-top:8px">${keywords.map(k=>`<span class="kw">${escapeHTML(k)}</span>`).join("")}</div>`:""}
     `;
     root.appendChild(card);
   }
 }
-function paraHTML(text){
-  // split into short paragraphs
-  const chunks = (text || "").split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
-  if(!chunks.length) return `<p>${escapeHTML(text)}</p>`;
-  return chunks.map(p=>`<p>${escapeHTML(p)}</p>`).join("");
-}
-function escapeHTML(s){
-  return (s||"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
-}
 
-/* Live loop */
+/* ---------- live loop ---------- */
 let LAST_SIG = "";
 async function tick(){
   try{
     const url = buildUrl();
-    const r = await fetch(url + "&_t=" + Date.now(), { cache: "no-store" });
+    const r = await fetch(url + "&_t=" + Date.now(), { cache:"no-store" });
     if(!r.ok) throw new Error("Fetch failed " + r.status);
     const data = await r.json();
-    const items = (data.items || []);
-    const sig = JSON.stringify(items.slice(0, 12).map(x=>x.title));
+    const items = (data.items||[]);
+
+    // signature: top titles only
+    const sig = JSON.stringify(items.slice(0, 15).map(x=>x.title));
     if(sig !== LAST_SIG){
       render(items);
       LAST_SIG = sig;
-      $("#list").classList.add("blink");
-      setTimeout(()=>$("#list").classList.remove("blink"), 900);
+      $("#feed").classList.add("blink");
+      setTimeout(()=>$("#feed").classList.remove("blink"), 900);
     }
     $("#status").textContent = `Updated ${new Date().toLocaleString()} • ${items.length} articles`;
   }catch(e){
