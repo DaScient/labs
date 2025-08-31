@@ -6,67 +6,133 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
   :root{
-    --bg:#ffffff; --text:#0b1220; --muted:#667085; --accent:#0f6fff;
-    --card:#ffffff; --border:#e5e7eb; --dash:#eef2f7;
-    --title:22px; --h2:16px; --body:16px; --mono:12px;
+    --bg: #ffffff00;      /* transparent-friendly */
+    --panel: #ffffff;     /* cards */
+    --text:#0b1220;
+    --muted:#667085;
+    --accent:#0f6fff;
+    --border:#e5e7eb;
+    --dash:#eef2f7;
+
+    --title:24px; --h2:17px; --body:16px; --mono:12px;
   }
   @media (min-width:1000px){
-    :root{ --title:26px; --h2:18px; --body:17px; }
+    :root{ --title:28px; --h2:19px; --body:17px; }
   }
   *{box-sizing:border-box}
-  body{ margin:0; background:var(--bg); color:var(--text);
-        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.5; }
-  header{ position:sticky; top:0; z-index:10;
-          background:rgba(255,255,255,.92); backdrop-filter:saturate(140%) blur(6px);
-          border-bottom:1px solid var(--border); }
-  .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
-  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px; }
-  .sub{ font-size:13px; color:var(--muted); margin-top:4px }
-  main{ padding:20px 0 60px }
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    line-height:1.5;
+  }
+  header{
+    position:sticky; top:0; z-index:10;
+    background:rgba(255,255,255,.92); backdrop-filter:saturate(140%) blur(6px);
+    border-bottom:1px solid var(--border);
+  }
+  .wrap{ max-width:1120px; margin:0 auto; padding:14px 16px; }
+  h1{ margin:0 0 4px; font-size:var(--title); font-weight:800; letter-spacing:.2px; }
+  .metaBar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; color:var(--muted); font-size:13px }
+
+  /* Controls */
+  .controls{
+    margin-left:auto; display:flex; gap:8px; align-items:center; flex-wrap:wrap;
+  }
+  .pill{ display:inline-flex; align-items:center; gap:6px;
+         padding:6px 10px; border:1px solid var(--border); border-radius:999px;
+         background:#fff; color:#111; font-size:12px; }
+  .select, .input{
+    border:1px solid var(--border); background:#fff; color:#111;
+    font-size:12px; border-radius:999px; padding:6px 10px; outline:none;
+  }
+  .btn{
+    border:1px solid var(--border); background:#fff; color:var(--text);
+    font-size:12px; border-radius:999px; padding:6px 10px; cursor:pointer;
+  }
+  .btn:hover{ border-color:#d1d5db }
+
+  main{ padding:18px 0 64px }
   .grid{ display:grid; gap:16px; }
   @media (min-width:1000px){
     .grid{ grid-template-columns: 2fr 1fr; }
   }
   .card{
-    background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px;
+    background:var(--panel); border:1px solid var(--border);
+    border-radius:14px; padding:16px;
   }
+  h2{ margin:0 0 10px; font-size:var(--h2); font-weight:800; letter-spacing:.2px }
   .split{ display:grid; gap:16px }
   @media (min-width:1000px){ .split{ grid-template-columns:1fr 1fr } }
-  h2{ margin:0 0 10px; font-size:var(--h2); font-weight:800; letter-spacing:.2px }
-  .metaBar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; color:var(--muted); font-size:13px }
-  .pill{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:#111; background:#f9fafb }
+
   .list{ display:flex; flex-direction:column; gap:10px }
   .barrow{ display:grid; grid-template-columns: 160px 1fr auto; gap:12px; align-items:center; }
   .barrow .label{ font-weight:600; font-size:14px; color:#0b1220; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
   .barrow .barWrap{ background:#f1f5f9; border-radius:8px; height:10px; position:relative }
   .barrow .bar{ position:absolute; left:0; top:0; bottom:0; border-radius:8px; background:linear-gradient(90deg,#0f6fff,#5aa3ff) }
   .barrow .val{ font-size:13px; color:var(--muted) }
+
   .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono); color:#222 }
+  .muted{ color:var(--muted) }
+  .good{ color:#15803d } .warn{ color:#b45309 } .bad{ color:#b91c1c }
+  a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
+
   .table{ width:100%; border-collapse:collapse; font-size:14px }
   .table th,.table td{ border-bottom:1px dashed var(--dash); padding:8px 0; text-align:left; vertical-align:top }
   .table th{ font-weight:700; color:#111 }
+
   .heat{
     display:grid; gap:2px; border:1px solid var(--border); border-radius:10px; padding:8px;
-    overflow:auto; max-height:480px; background:#fff;
+    overflow:auto; max-height:520px; background:#fff;
   }
   .heat .hdr{ position:sticky; top:0; background:#fff }
   .heat .cell{ display:flex; align-items:center; justify-content:center; height:26px; border-radius:4px; color:#0b1220; font-size:12px }
   .heat .lab{ font-size:12px; color:#111; white-space:nowrap }
-  .muted{ color:var(--muted) }
-  .good{ color:#15803d } .warn{ color:#b45309 } .bad{ color:#b91c1c }
+
   .blink{ animation:blink .8s ease 1 } @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
-  a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
+  .note{ font-size:12px; color:var(--muted); margin-top:6px }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1>AI-Generated News Summaries — Analytics</h1>
-    <div class="metaBar">
-      <span id="lastUpdated" class="muted">Loading…</span>
-      <span class="pill" id="windowPill">Window: 6h</span>
-      <span class="pill">Auto-refresh</span>
+    <div style="display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap">
+      <div>
+        <h1>AI-Generated News Summaries — Analytics</h1>
+        <div class="metaBar">
+          <span id="lastUpdated" class="muted">Loading…</span>
+          <span id="windowPill" class="pill">Window: 6h</span>
+          <span class="pill">Auto-refresh</span>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <label class="pill">Refresh
+          <select id="refreshSel" class="select">
+            <option value="15000">15s</option>
+            <option value="30000">30s</option>
+            <option value="45000" selected>45s</option>
+            <option value="60000">60s</option>
+            <option value="120000">2m</option>
+            <option value="300000">5m</option>
+          </select>
+        </label>
+
+        <label class="pill">Window
+          <select id="windowSel" class="select">
+            <option value="3">3h</option>
+            <option value="6" selected>6h</option>
+            <option value="12">12h</option>
+            <option value="24">24h</option>
+            <option value="48">48h</option>
+          </select>
+        </label>
+
+        <button id="applyBtn" class="btn">Apply</button>
+      </div>
     </div>
+    <div class="note">Tip: You can also set <code>?refresh=45000&window=12</code> in the URL. Settings persist.</div>
   </div>
 </header>
 
@@ -115,21 +181,56 @@
 </main>
 
 <script>
-/* ===== CONFIG ===== */
-const WORKER_ASCII_URL =
+/* ========= CONFIG (edit the WORKER url if needed) ========= */
+const DEFAULT_WORKER_ASCII_URL =
   "https://gozaddy.aristocles24.workers.dev/ascii?feeds=" +
-  encodeURIComponent("https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml,https://feeds.washingtonpost.com/rss/national,https://www.forbes.com/most-popular/feed/") +
-  "&limit=12&interval=3600"; // server updates ≤ hourly
-
-const FRONTEND_POLL_MS = 90_000;  // check ~90s
-let WINDOW_HOURS = 6;             // analytics window
-/* ================== */
+  encodeURIComponent([
+    // U.S.
+    "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+    "https://feeds.washingtonpost.com/rss/national",
+    "https://www.npr.org/rss/rss.php?id=1001",
+    "https://www.reutersagency.com/feed/?taxonomy=best-sectors&post_type=best",
+    // Global
+    "https://www.aljazeera.com/xml/rss/all.xml",
+    "https://www.theguardian.com/world/rss",
+    "https://feeds.bbci.co.uk/news/world/rss.xml",
+    "https://www.dw.com/en/top-stories/s-9097?maca=en-rss-en-all-1573-rdf",
+    "https://www.apnews.com/apf-topnews?format=atom"
+  ].join(",")) +
+  "&limit=80&interval=3600"; // server updates ≤ hourly
+/* ========================================================= */
 
 const $ = (s)=>document.querySelector(s);
 const nowStr = ()=>new Date().toLocaleString();
 
+function getStored(key, fallback){ try{ const v = localStorage.getItem(key); return v!=null ? v : fallback; }catch(_){ return fallback; } }
+function setStored(key, val){ try{ localStorage.setItem(key, String(val)); }catch(_){} }
+
+const qs = new URLSearchParams(location.search);
+const WORKER_ASCII_URL = qs.get("worker") || DEFAULT_WORKER_ASCII_URL;
+
+// Customizable refresh + window (persisted)
+let FRONTEND_POLL_MS = parseInt(qs.get("refresh") || getStored("analytics.refresh", "45000"), 10);
+if (isNaN(FRONTEND_POLL_MS) || FRONTEND_POLL_MS < 5000) FRONTEND_POLL_MS = 45000;
+
+let WINDOW_HOURS = parseInt(qs.get("window") || getStored("analytics.window", "6"), 10);
+if (isNaN(WINDOW_HOURS) || WINDOW_HOURS < 1) WINDOW_HOURS = 6;
+
+// Initialize controls
+$("#refreshSel").value = String(FRONTEND_POLL_MS);
+$("#windowSel").value = String(WINDOW_HOURS);
+$("#applyBtn").onclick = ()=>{
+  const r = parseInt($("#refreshSel").value, 10);
+  const w = parseInt($("#windowSel").value, 10);
+  if(!isNaN(r) && r >= 5000) { FRONTEND_POLL_MS = r; setStored("analytics.refresh", r); }
+  if(!isNaN(w) && w > 0)     { WINDOW_HOURS = w; setStored("analytics.window", w); $("#windowPill").textContent = "Window: " + w + "h"; }
+  // force a tick soon
+  scheduleNextTick(200);
+};
+
 async function fetchText(url){
-  const r = await fetch(url + "&_t=" + Date.now(), { cache:"no-store" });
+  const u = url + (url.includes("?") ? "&" : "?") + "_t=" + Date.now();
+  const r = await fetch(u, { cache:"no-store" });
   if(!r.ok) throw new Error("Fetch failed "+r.status);
   return r.text();
 }
@@ -139,8 +240,8 @@ async function sha(str){
   return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
 }
 
-/* ===== Parse Worker ASCII (robust, no brittle regex) =====
-Expected block:
+/* ===== Parse Worker ASCII (robust) =====
+Expected block per article:
   Title | link | published
   ------------------------   (>=20 dashes)
   BODY...
@@ -149,12 +250,10 @@ Expected block:
 function parseArticles(txt){
   const lines = txt.split(/\r?\n/);
   // cut header banner
-  let i=0;
-  while(i<lines.length && (lines[i].startsWith("=") || !lines[i].trim())) i++;
+  let i=0; while(i<lines.length && (lines[i].startsWith("=") || !lines[i].trim())) i++;
   // cut footer note "(Updates hourly…)" if present
   const footIdx = lines.findIndex(L=>/\(Updates hourly/i.test(L));
   const usable = (footIdx>-1 ? lines.slice(i, footIdx) : lines.slice(i));
-
   const out = [];
   let idx=0;
   while(idx<usable.length){
@@ -179,7 +278,7 @@ function parseArticles(txt){
       const aheadTitle = (usable[j+1]||"").trim();
       const aheadDash   = (usable[j+2]||"").trim();
       const nextStart = aheadTitle && /^-{20,}$/.test(aheadDash);
-      if(longSep && nextStart){ j++; break; } // keep index on separator row
+      if(longSep && nextStart){ j++; break; } // stop before next title block
       body.push(usable[j]);
       j++;
     }
@@ -187,36 +286,51 @@ function parseArticles(txt){
       title, link, published, body: (body.join("\n")).trim(),
       observedAt: Date.now()
     });
-    // skip past current block
     idx = j+1;
   }
   return out;
 }
 
-/* ===== Keyword extraction ===== */
-const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
+/* ===== Keyword extraction (uni+bi) ===== */
+const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would,do,does,did,have,has,had`.split(","));
 function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]); }
+function tokenizeWithBigrams(text) {
+  const w = words(text).filter(x=>!STOP.has(x) && x.length>2);
+  const uni = w;
+  const bi = [];
+  for (let i=0;i<w.length-1;i++){
+    const a=w[i], b=w[i+1];
+    if (!STOP.has(a) && !STOP.has(b)) bi.push(`${a} ${b}`);
+  }
+  return {uni, bi};
+}
 function findSeoKeywords(text){
   const m = text.match(/^\s*seo keywords:\s*(.+)$/gim);
   if(!m) return [];
-  const line = m[m.length-1]; // take last occurrence
+  const line = m[m.length-1];
   const list = line.split(":")[1]||"";
   return list.split(/[;,]/g).map(s=>s.trim()).filter(Boolean);
 }
-function topKeywords(articles, k=20){
+function topKeywords(articles, k=24){
   const freq = new Map();
   for(const a of articles){
     let kws = findSeoKeywords(a.body);
     if(!kws.length){
-      // fallback: naive bag of words
-      kws = words(a.body).filter(w=>!STOP.has(w) && w.length>2).slice(0,80);
+      const {uni, bi} = tokenizeWithBigrams(a.body);
+      kws = [...bi.slice(0,60), ...uni.slice(0,40)];
     }
     for(const kw of kws){
       const key = kw.toLowerCase();
       freq.set(key, (freq.get(key)||0)+1);
     }
   }
-  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k);
+  const entries = [...freq.entries()].sort((a,b)=>{
+    if (b[1] !== a[1]) return b[1]-a[1];
+    const bigramB = b[0].includes(" ");
+    const bigramA = a[0].includes(" ");
+    return (bigramB?1:0) - (bigramA?1:0);
+  });
+  return entries.slice(0,k);
 }
 
 /* ===== Confidence / Veracity heuristic (0–100) ===== */
@@ -230,7 +344,7 @@ function confidenceScore(text, sourceHost=""){
     if(NEG.has(w)) neg++;
   }
   let score = 52 + 6*pos - 6*neg;
-  if(/nytimes\.com|washingtonpost\.com|forbes\.com/i.test(sourceHost)) score += 6;
+  if(/nytimes\.com|washingtonpost\.com|forbes\.com|reuters/i.test(sourceHost)) score += 6;
   return Math.max(0, Math.min(100, score));
 }
 
@@ -240,15 +354,20 @@ function cooccurMatrix(articles, keys){
   const index = new Map(keys.map((k,i)=>[k,i]));
   const M = Array.from({length:K},()=>Array(K).fill(0));
   for(const a of articles){
+    const present = new Set();
     let kws = findSeoKeywords(a.body);
     if(!kws.length){
-      kws = words(a.body).filter(w=>!STOP.has(w) && w.length>2).slice(0,50);
+      const {uni, bi} = tokenizeWithBigrams(a.body);
+      kws = [...bi.slice(0,60), ...uni.slice(0,40)];
     }
-    const set = new Set(kws.map(k=>k.toLowerCase()).filter(k=>index.has(k)));
-    const arr = [...set];
+    for(const kw of kws){
+      const t = kw.toLowerCase();
+      if(index.has(t)) present.add(t);
+    }
+    const arr = [...present].map(k=>index.get(k));
     for(let i=0;i<arr.length;i++){
       for(let j=i;j<arr.length;j++){
-        const ii = index.get(arr[i]), jj = index.get(arr[j]);
+        const ii=arr[i], jj=arr[j];
         M[ii][jj]++; if(ii!==jj) M[jj][ii]++;
       }
     }
@@ -256,7 +375,7 @@ function cooccurMatrix(articles, keys){
   return M;
 }
 
-/* ===== Tiny UI render helpers ===== */
+/* ===== UI render helpers ===== */
 function renderBars(containerSel, pairs, cap=10, suffix=""){
   const root = $(containerSel); root.innerHTML = "";
   if(!pairs.length){ root.innerHTML = '<div class="muted">No data</div>'; return; }
@@ -277,27 +396,23 @@ function hostOf(link){
 }
 function gradeClass(score){ return score>=70?"good":score>=45?"warn":"bad"; }
 
-/* ===== Heatmap render (CSS grid, no libs) ===== */
 function renderHeat(containerSel, keys, M){
   const root = $(containerSel); root.innerHTML="";
   if(!keys.length){ root.innerHTML='<div class="muted">No correlations yet.</div>'; return; }
   const K = keys.length;
   const max = Math.max(1, ...M.flat());
-  // grid: +1 row/col for labels
   root.className = "heat";
   root.style.gridTemplateColumns = `140px repeat(${K}, minmax(36px, 1fr))`;
-  // header row
   const blank = document.createElement("div"); blank.className="lab hdr"; root.appendChild(blank);
   for(let j=0;j<K;j++){
     const d = document.createElement("div"); d.className="lab hdr"; d.textContent=keys[j]; root.appendChild(d);
   }
-  // rows
   for(let i=0;i<K;i++){
     const lab = document.createElement("div"); lab.className="lab"; lab.textContent=keys[i]; root.appendChild(lab);
     for(let j=0;j<K;j++){
       const v = M[i][j];
       const ratio = v/max;
-      const hue = 210 - Math.round(210*ratio); // blue(210) → red(0)
+      const hue = 210 - Math.round(210*ratio); // blue→red
       const alpha = 0.15 + 0.65*ratio;
       const cell = document.createElement("div"); cell.className="cell";
       cell.style.background = `hsla(${hue}, 85%, 60%, ${alpha.toFixed(2)})`;
@@ -308,7 +423,6 @@ function renderHeat(containerSel, keys, M){
   }
 }
 
-/* ===== Latest table ===== */
 function renderLatest(list){
   const tbody = $("#latest"); tbody.innerHTML="";
   list.forEach(a=>{
@@ -330,7 +444,6 @@ function renderLatest(list){
   });
 }
 
-/* ===== Snapshot ===== */
 function renderSnapshot(articles, kwPairs, sourcePairs){
   const total = articles.length;
   const topKW = kwPairs[0]?.[0] || "—";
@@ -353,47 +466,50 @@ function renderSnapshot(articles, kwPairs, sourcePairs){
 
 /* ===== Live loop ===== */
 let LAST_HASH = "";
-let CACHE = []; // keep until page reload
+let CACHE = []; // kept across polls
 
 function withinWindow(a){
   const ageMs = Date.now() - a.observedAt;
   return ageMs <= WINDOW_HOURS*3600*1000;
 }
 
+let TICK_HANDLE = null;
+function scheduleNextTick(ms){ if(TICK_HANDLE) clearTimeout(TICK_HANDLE); TICK_HANDLE = setTimeout(tick, ms); }
+
 async function tick(){
   try{
     const txt = await fetchText(WORKER_ASCII_URL);
     const h = await sha(txt);
-    if(h === LAST_HASH) return setTimeout(tick, FRONTEND_POLL_MS);
+    if(h !== LAST_HASH){
+      const parsed = parseArticles(txt).map(a=>{
+        const host = hostOf(a.link);
+        const conf = confidenceScore(a.body, host);
+        const kws = findSeoKeywords(a.body);
+        const topTerms = (kws.length ? kws : words(a.body).filter(w=>!STOP.has(w)).slice(0,8)).map(w=>w.toLowerCase());
+        return { ...a, host, confidence: conf, topTerms };
+      });
 
-    const parsed = parseArticles(txt).map(a=>{
-      const host = hostOf(a.link);
-      const conf = confidenceScore(a.body, host);
-      const kws = findSeoKeywords(a.body);
-      const topTerms = (kws.length ? kws : words(a.body).filter(w=>!STOP.has(w)).slice(0,8)).map(w=>w.toLowerCase());
-      return { ...a, host, confidence: conf, topTerms };
-    });
+      // dedupe by title+host
+      const uniqKey = (x)=> (x.title + "|" + x.host).toLowerCase();
+      const map = new Map(CACHE.filter(withinWindow).map(a=>[uniqKey(a), a]));
+      parsed.forEach(p=> map.set(uniqKey(p), p));
+      CACHE = [...map.values()].sort((a,b)=>b.observedAt - a.observedAt);
 
-    // keep only unique by title+host to dampen duplicates
-    const uniqKey = (x)=> (x.title + "|" + x.host).toLowerCase();
-    const map = new Map(CACHE.filter(withinWindow).map(a=>[uniqKey(a), a]));
-    parsed.forEach(p=> map.set(uniqKey(p), p));
-    CACHE = [...map.values()].sort((a,b)=>b.observedAt - a.observedAt);
-
-    renderAll();
-    LAST_HASH = h;
-    $("#lastUpdated").textContent = "Last updated " + nowStr();
-    $(".card")?.classList?.add("blink");
-    setTimeout(()=>document.querySelectorAll(".blink").forEach(n=>n.classList.remove("blink")), 900);
+      renderAll();
+      LAST_HASH = h;
+      $("#lastUpdated").textContent = "Last updated " + nowStr();
+      document.querySelectorAll(".card").forEach(n=>{ n.classList.add("blink"); setTimeout(()=>n.classList.remove("blink"), 900); });
+    }
   }catch(e){
     console.error(e);
+    $("#lastUpdated").textContent = "Error fetching data. Retrying…";
   }finally{
-    setTimeout(tick, FRONTEND_POLL_MS);
+    scheduleNextTick(FRONTEND_POLL_MS);
   }
 }
 
 function renderAll(){
-  const windowed = CACHE.filter(withinWindow);
+  const windowed = CACHE.filter(withinWindow).filter(a => a.body && a.body.split(/\s+/).length > 40);
 
   // Sources
   const srcCounts = new Map();
@@ -401,10 +517,10 @@ function renderAll(){
   const sourcePairs = [...srcCounts.entries()].sort((a,b)=>b[1]-a[1]);
 
   // Keywords
-  const kwPairs = topKeywords(windowed, 20);
+  const kwPairs = topKeywords(windowed, 24);
 
   // Confidence per source
-  const confMap = new Map(); // host -> [sum, cnt]
+  const confMap = new Map();
   windowed.forEach(a=>{
     const k = a.host || "unknown";
     const acc = confMap.get(k) || [0,0];
@@ -414,28 +530,21 @@ function renderAll(){
   const confPairs = [...confMap.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
 
   // Correlations
-  const keyList = kwPairs.slice(0,12).map(p=>p[0]);
+  const keyList = kwPairs.slice(0,16).map(p=>p[0]);
   const M = cooccurMatrix(windowed, keyList);
 
   // Render
-  renderBars("#sources", sourcePairs, 8, "articles");
+  renderBars("#sources", sourcePairs, 10, "articles");
   renderBars("#keywords", kwPairs, 12, "hits");
-  renderBars("#confSources", confPairs, 8, "conf");
+  renderBars("#confSources", confPairs, 10, "conf");
   renderHeat("#heat", keyList, M);
-  renderLatest(windowed.slice(0,8));
-  renderSnapshot(windowed, kwPairs, sourcePairs);
+  renderLatest(windowed.slice(0,16));
   $("#windowPill").textContent = "Window: " + WINDOW_HOURS + "h";
 }
 
 /* Boot */
+renderAll();
 tick();
-
-/* Optional: allow ?window=1|6|24 to change hours */
-(function(){
-  const q = new URLSearchParams(location.search);
-  const w = parseInt(q.get("window")||"", 10);
-  if(!isNaN(w) && w>0){ WINDOW_HOURS = w; }
-})();
 </script>
 </body>
 </html>
