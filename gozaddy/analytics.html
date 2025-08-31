@@ -4,124 +4,65 @@
 <meta charset="utf-8" />
 <title>AI-Generated News Summaries — Analytics</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="color-scheme" content="light dark"/>
 <style>
   :root{
-    /* Light */
-    --bg: transparent;        /* allows white/transparent embedding */
-    --panel:#ffffffcc;
-    --card:#ffffff;
-    --text:#0b1220;
-    --muted:#667085;
-    --accent:#0f6fff;
-    --border:#e5e7eb;
-    --dash:#eef2f7;
-    --good:#15803d; --warn:#b45309; --bad:#b91c1c;
-
-    --title:28px; --h2:18px; --body:16px; --mono:12px;
-    --shadow: 0 8px 30px rgba(2,6,23,.06);
-  }
-  @media (min-width:1100px){
-    :root{ --title:30px; --h2:19px; --body:17px; --mono:12px; }
+    --bg:#ffffff; --text:#0b1220; --muted:#667085; --accent:#0f6fff;
+    --card:#ffffff; --border:#e5e7eb; --dash:#eef2f7;
   }
   *{box-sizing:border-box}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    line-height:1.5; -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-  }
-  header{
-    position:sticky; top:0; z-index:10;
-    background:var(--panel); backdrop-filter:saturate(140%) blur(8px);
-    border-bottom:1px solid var(--border);
-  }
+  body{ margin:0; background:var(--bg); color:var(--text);
+        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.55; }
+  header{ position:sticky; top:0; z-index:10; background:rgba(255,255,255,.92);
+          backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border); }
   .wrap{ max-width:1200px; margin:0 auto; padding:16px; }
-  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px; }
-  .sub{ font-size:13px; color:var(--muted); margin-top:4px }
-  .controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px }
-  .pill{
-    display:inline-flex; align-items:center; gap:8px; padding:6px 10px;
-    border:1px solid var(--border); border-radius:999px; background:#fff; color:#111; font-size:13px;
-  }
-  .pill input, .pill select{ border:0; outline:0; background:transparent; font-size:13px; color:#111; }
-  .btn{ cursor:pointer; border:1px solid var(--border); background:#fff; padding:6px 10px; border-radius:999px; font-size:13px }
-  .btn:hover{ border-color:#cfd7e3 }
-
-  main{ padding:20px 0 60px }
+  h1{ margin:0; font-size:24px; font-weight:800; letter-spacing:.2px; }
+  .toolbar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:#111; background:#f8fafc }
+  .btn{ padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
+  .btn:hover{ border-color:#cbd5e1 }
+  main{ padding:18px 0 60px }
   .grid{ display:grid; gap:16px; }
-  @media (min-width:1100px){ .grid{ grid-template-columns: 2.1fr 1.2fr; } }
-
-  .card{
-    background:var(--card); border:1px solid var(--border);
-    border-radius:14px; padding:16px; box-shadow:var(--shadow);
-  }
-  h2{ margin:0 0 10px; font-size:var(--h2); font-weight:800; letter-spacing:.2px }
-  .split{ display:grid; gap:16px }
-  @media (min-width:1100px){ .split{ grid-template-columns:1fr 1fr } }
-
+  @media (min-width:1000px){ .grid{ grid-template-columns: 2fr 1fr; } }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; }
+  h2{ margin:0 0 10px; font-size:16px; font-weight:800 }
   .list{ display:flex; flex-direction:column; gap:10px }
-  .barrow{ display:grid; grid-template-columns: 160px 1fr auto; gap:12px; align-items:center; }
+  .barrow{ display:grid; grid-template-columns: 180px 1fr auto; gap:12px; align-items:center; }
   .barrow .label{ font-weight:600; font-size:14px; color:#0b1220; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
   .barrow .barWrap{ background:#f1f5f9; border-radius:8px; height:10px; position:relative }
-  .barrow .bar{ position:absolute; left:0; top:0; bottom:0; border-radius:8px;
-                background:linear-gradient(90deg,#0f6fff,#5aa3ff) }
+  .barrow .bar{ position:absolute; left:0; top:0; bottom:0; border-radius:8px; background:linear-gradient(90deg,#0f6fff,#5aa3ff) }
   .barrow .val{ font-size:13px; color:var(--muted) }
-
   .table{ width:100%; border-collapse:collapse; font-size:14px }
   .table th,.table td{ border-bottom:1px dashed var(--dash); padding:8px 0; text-align:left; vertical-align:top }
-  .table th{ font-weight:700; color:#111 }
-  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono); color:#222 }
-  .muted{ color:var(--muted) }
-  .good{ color:var(--good) } .warn{ color:var(--warn) } .bad{ color:var(--bad) }
-  a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
-
-  /* Heatmap grid */
-  .heat{
-    display:grid; gap:2px; border:1px solid var(--border); border-radius:10px; padding:8px;
-    overflow:auto; max-height:520px; background:#fff;
-  }
+  .heat{ display:grid; gap:2px; border:1px solid var(--border); border-radius:10px; padding:8px; overflow:auto; max-height:480px; background:#fff; }
   .heat .hdr{ position:sticky; top:0; background:#fff }
-  .heat .cell{ display:flex; align-items:center; justify-content:center; height:26px;
-               border-radius:4px; color:#0b1220; font-size:12px }
+  .heat .cell{ display:flex; align-items:center; justify-content:center; height:26px; border-radius:4px; color:#0b1220; font-size:12px }
   .heat .lab{ font-size:12px; color:#111; white-space:nowrap }
-
-  /* Charts */
-  .chart{ width:100%; height:220px; border:1px solid var(--border); border-radius:10px; background:#fff; overflow:hidden }
-  .legend{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:12px; color:#555; margin-top:8px }
-  .dot{ display:inline-block; width:10px; height:10px; border-radius:999px; margin-right:6px }
-
-  .cluster{ border:1px dashed var(--dash); border-radius:10px; padding:10px; background:#fff }
-  details summary{ cursor:pointer; font-weight:700 }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:12px; color:#222 }
+  .good{ color:#15803d } .warn{ color:#b45309 } .bad{ color:#b91c1c }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>AI-Generated News Summaries — Analytics</h1>
-    <div class="sub">Live decision signals from your AI summaries (keywords, momentum, confidence, clusters).</div>
-    <div class="controls">
-      <span class="pill">Last updated: <span id="lastUpdated">—</span></span>
-      <span class="pill">Window:
-        <select id="windowSel">
-          <option value="1">1h</option>
+    <div class="toolbar">
+      <span id="last" class="pill">Last updated: …</span>
+      <label class="pill">Window:
+        <select id="winSel" style="border:none;background:transparent;outline:0">
           <option value="3">3h</option>
           <option value="6" selected>6h</option>
           <option value="12">12h</option>
           <option value="24">24h</option>
         </select>
-      </span>
-      <span class="pill">Refresh:
-        <select id="refreshSel">
+      </label>
+      <label class="pill">Refresh:
+        <select id="refSel" style="border:none;background:transparent;outline:0">
           <option value="60000">60s</option>
           <option value="90000" selected>90s</option>
           <option value="180000">3m</option>
-          <option value="300000">5m</option>
         </select>
-      </span>
-      <button id="refreshBtn" class="btn">Refresh Now</button>
-      <span class="pill"><label style="display:flex;align-items:center;gap:8px">
-        <input id="autoChk" type="checkbox" checked/> Auto
-      </label></span>
+      </label>
+      <button id="refresh" class="btn">Refresh now</button>
     </div>
   </div>
 </header>
@@ -130,16 +71,11 @@
   <div class="grid">
     <section class="card">
       <h2>Key Metrics</h2>
-      <div class="split">
-        <div>
-          <div class="list" id="sources"></div>
-        </div>
-        <div>
-          <div class="list" id="keywords"></div>
-        </div>
+      <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr">
+        <div class="list" id="sources"></div>
+        <div class="list" id="keywords"></div>
       </div>
-
-      <div class="split" style="margin-top:14px">
+      <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;margin-top:12px">
         <div>
           <h2>Average Confidence by Source</h2>
           <div class="list" id="confSources"></div>
@@ -149,52 +85,30 @@
           <table class="table"><tbody id="snapshot"></tbody></table>
         </div>
       </div>
-
-      <div class="split" style="margin-top:14px">
-        <div>
-          <h2>Activity (articles / 10-min) — interactive</h2>
-          <div id="tsChart" class="chart"></div>
-          <div class="legend"><span class="dot" style="background:#0f6fff"></span>Articles</div>
-        </div>
-        <div>
-          <h2>Source Share — interactive</h2>
-          <div id="donutChart" class="chart"></div>
-          <div id="donutLegend" class="legend"></div>
-        </div>
-      </div>
-
-      <div class="split" style="margin-top:14px">
+      <div style="display:grid;gap:16px;grid-template-columns:1fr 1fr;margin-top:12px">
         <div>
           <h2>Emerging Keywords (Momentum)</h2>
           <div class="list" id="momentum"></div>
         </div>
         <div>
           <h2>Confidence Delta (Last 3 polls)</h2>
-          <div class="list" id="confDelta"><div class="muted">No deltas yet.</div></div>
+          <div class="mono" id="confDelta">Loading…</div>
         </div>
       </div>
     </section>
 
     <section class="card">
       <h2>Keyword Correlations (Co-occurrence)</h2>
-      <div class="muted" style="margin-bottom:8px">Across the selected time window.</div>
+      <div class="mono" style="color:#667085;margin-bottom:8px">Across the selected time window.</div>
       <div id="heat"></div>
     </section>
   </div>
 
   <section class="card" style="margin-top:16px">
-    <h2>Event Clusters (by shared keyword)</h2>
-    <div id="clusters"></div>
-    <div class="muted" style="margin-top:10px">
-      • Window interval and model fallbacks reflect Worker settings.
-    </div>
-  </section>
-
-  <section class="card" style="margin-top:16px">
     <h2>Latest Articles</h2>
     <table class="table">
       <thead>
-        <tr><th style="width:42%">Title</th><th>Source</th><th>Confidence</th><th>Top Terms</th></tr>
+        <tr><th style="width:40%">Title</th><th>Source</th><th>Confidence</th><th>Top Terms</th></tr>
       </thead>
       <tbody id="latest"></tbody>
     </table>
@@ -202,431 +116,252 @@
 </main>
 
 <script>
-/* ========================== CONFIG ========================== */
-const DEFAULT_FEEDS = [
-  // A rich global baseline; can be overridden via ?feeds=
-  "https://feeds.reuters.com/reuters/topNews",
-  "https://feeds.reuters.com/Reuters/worldNews",
-  "https://www.aljazeera.com/xml/rss/all.xml",
-  "https://feeds.bbci.co.uk/news/rss.xml",
-  "https://rss.dw.com/rdf/rss-en-all",
-  "https://news.un.org/feed/subscribe/en/news/all/rss.xml",
-  "https://www.npr.org/rss/rss.php?id=1001",
-  "https://www.theguardian.com/world/rss",
-  "https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml"
-];
+const WORKER = "https://gozaddy.aristocles24.workers.dev";
+const FEEDS_URL_DEFAULT = "https://raw.githubusercontent.com/DaScient/labs/main/gozaddy/feeds.txt";
+const q = new URLSearchParams(location.search);
+let WINDOW_HOURS = parseInt(q.get("window")||"6",10);
+let REFRESH_MS   = Math.max(30_000, parseInt(q.get("refresh")||"90000",10));
+const feedsUrl   = q.get("feedsUrl") || FEEDS_URL_DEFAULT;
 
-const Q = new URLSearchParams(location.search);
-const FRONTEND_POLL_MS = parseInt(Q.get("refresh")||"90000",10);
-const WINDOW_HOURS_DEFAULT = parseInt(Q.get("window")||"6",10);
-const FEEDS = (Q.get("feeds")||"").trim()
-  ? Q.get("feeds").split(",").map(s=>s.trim()).filter(Boolean)
-  : DEFAULT_FEEDS;
+// UI defaults
+document.getElementById("winSel").value = String(WINDOW_HOURS);
+document.getElementById("refSel").value = String(REFRESH_MS);
 
-const WORKER_BASE = Q.get("worker") || "https://gozaddy.aristocles24.workers.dev";
-const LIMIT = parseInt(Q.get("limit")||"80",10);     // request more to fill charts
-const INTERVAL = parseInt(Q.get("interval")||"3600",10); // Worker cache window (secs)
-/* ============================================================ */
-
-const $ = (s)=>document.querySelector(s);
-const nowStr = ()=>new Date().toLocaleString();
-function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return "unknown"; } }
-
-function encodeFeeds(arr){ return encodeURIComponent(arr.join(",")); }
-function summariesUrl(){
-  const feedsCsv = encodeFeeds(FEEDS);
-  return `${WORKER_BASE}/summaries?feeds=${feedsCsv}&limit=${LIMIT}&interval=${INTERVAL}`;
-}
-
-/* ----------- Fetch + normalize ----------- */
-async function loadSummaries(){
-  const r = await fetch(summariesUrl() + "&_t=" + Date.now(), {cache:"no-store"});
-  if(!r.ok) throw new Error("Fetch failed: "+r.status);
-  const j = await r.json();
-  // expected: [{title, link, published, summary, keywords?, confidence?}, ...]
-  return (j.items || j || []).map(x=>{
-    const title = (x.title || "").replace(/<!\[CDATA\[(.*?)\]\]>/g, "$1").trim();
-    const published = x.published || "";
-    const link = x.link || "";
-    const summary = (x.summary || "").trim();
-    const keywords = (x.keywords || x.seo || []).map(s=>String(s).toLowerCase());
-    const source = hostOf(link);
-    const confidence = typeof x.confidence==="number" ? x.confidence : estimateConfidence(summary, source);
-    return { title, published, link, summary, keywords, source, confidence, observedAt: Date.now() };
-  });
-}
-
-/* --- Heuristic confidence (fallback) --- */
-const POS = new Set("confirm,confirmed,official,approved,announced,launch,launched,records,record,acquires,acquired,sec filing,final,definitive,report,results".split(","));
-const NEG = new Set("may,might,could,reportedly,rumor,alleged,seems,suggests,likely,unverified,investigating,unclear,disputed,questioned,unconfirmed".split(","));
-function words(t){ return (String(t).toLowerCase().match(/[a-z0-9]+/g)||[]); }
-function estimateConfidence(text, source=""){
-  const bag = words(text);
-  let pos=0, neg=0; for(const w of bag){ if(POS.has(w))pos++; if(NEG.has(w))neg++; }
-  let score = 52 + 6*pos - 6*neg;
-  if(/reuters\.com|bbc\.co\.uk|bbc\.com|nytimes\.com|apnews\.com|npr\.org|theguardian\.com/i.test(source)) score += 6;
-  return Math.max(0, Math.min(100, score));
-}
-
-/* ----------- Keyword helpers ----------- */
-const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
-function ensureKeywords(a){
-  if(a.keywords?.length) return a.keywords;
-  const bag = words((a.summary||"")+" "+(a.title||""));
-  return bag.filter(w=>!STOP.has(w)&&w.length>2).slice(0,10);
-}
-
-/* ----------- State ----------- */
-let WINDOW_HOURS = WINDOW_HOURS_DEFAULT;
-let POLL_MS = FRONTEND_POLL_MS;
-let AUTO = true;
-let CACHE = [];           // recent articles
-let LAST_SERIES = [];     // rolling 3 series for confidence delta
-
-/* ----------- Rendering helpers ----------- */
-function renderBars(containerSel, pairs, cap=10, suffix=""){
-  const root = $(containerSel); root.innerHTML = "";
-  if(!pairs.length){ root.innerHTML = '<div class="muted">No data</div>'; return; }
-  const max = Math.max(...pairs.map(p=>p[1])) || 1;
-  pairs.slice(0,cap).forEach(([label,val])=>{
-    const row = document.createElement("div"); row.className="barrow";
-    const lab = document.createElement("div"); lab.className="label"; lab.textContent=label;
-    const wrap = document.createElement("div"); wrap.className="barWrap";
-    const bar = document.createElement("div"); bar.className="bar"; bar.style.width = (100*val/max).toFixed(1)+"%";
-    const v = document.createElement("div"); v.className="val"; v.textContent = val + (suffix? " "+suffix:"");
-    wrap.appendChild(bar);
-    row.appendChild(lab); row.appendChild(wrap); row.appendChild(v);
-    root.appendChild(row);
-  });
-}
+const SUM_URL = WORKER + "/summaries?feedsUrl=" + encodeURIComponent(feedsUrl) + "&limit=120&interval=3600";
+const $ = s => document.querySelector(s);
+function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; } }
 function gradeClass(score){ return score>=70?"good":score>=45?"warn":"bad"; }
+function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]); }
+const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
 
-/* ----------- Heatmap ----------- */
-function topKeywords(articles, k=16){
+let LAST_HASH = "";
+let CACHE = [];
+let CONF_HISTORY = []; // array of avg confidence
+
+function uniq(items){
+  const seen=new Set(), out=[];
+  for(const a of items){
+    const k=((a.link||"") + "|" + (a.title||"")).toLowerCase();
+    if(seen.has(k)) continue; seen.add(k); out.push(a);
+  }
+  return out;
+}
+async function sha(str){
+  const d = new TextEncoder().encode(str);
+  const b = await crypto.subtle.digest("SHA-256", d);
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+async function fetchJSON(url){
+  const r = await fetch(url + "&_t=" + Date.now(), { cache:"no-store" });
+  if(!r.ok) throw new Error("Fetch failed: " + r.status);
+  return r.json();
+}
+
+function findKeywords(a){
+  if (a.keywords?.length) return a.keywords;
+  return words((a.summary||a.title||"")).filter(w=>!STOP.has(w)&&w.length>2).slice(0,8);
+}
+
+function topKeywords(articles, k=20){
   const freq = new Map();
   for(const a of articles){
-    const kws = ensureKeywords(a);
-    for(const kw of kws){ const key=kw.toLowerCase(); freq.set(key,(freq.get(key)||0)+1); }
+    for(const kw of findKeywords(a)){
+      const key = kw.toLowerCase();
+      freq.set(key, (freq.get(key)||0)+1);
+    }
   }
   return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k);
 }
+
 function cooccurMatrix(articles, keys){
   const K = keys.length;
   const index = new Map(keys.map((k,i)=>[k,i]));
   const M = Array.from({length:K},()=>Array(K).fill(0));
   for(const a of articles){
-    const set = new Set(ensureKeywords(a).map(k=>k.toLowerCase()).filter(k=>index.has(k)));
+    const set = new Set(findKeywords(a).map(k=>k.toLowerCase()).filter(k=>index.has(k)));
     const arr = [...set];
     for(let i=0;i<arr.length;i++){
       for(let j=i;j<arr.length;j++){
-        const ii = index.get(arr[i]), jj = index.get(arr[j]);
+        const ii=index.get(arr[i]), jj=index.get(arr[j]);
         M[ii][jj]++; if(ii!==jj) M[jj][ii]++;
       }
     }
   }
   return M;
 }
+
+function renderBars(sel, pairs, cap=10, suffix=""){
+  const root = $(sel); root.innerHTML="";
+  if(!pairs.length){ root.innerHTML='<div class="mono">No data</div>'; return; }
+  const max = Math.max(...pairs.map(p=>p[1])) || 1;
+  pairs.slice(0,cap).forEach(([lab,val])=>{
+    const row=document.createElement("div"); row.className="barrow";
+    row.innerHTML = `
+      <div class="label">${lab}</div>
+      <div class="barWrap"><div class="bar" style="width:${(100*val/max).toFixed(1)}%"></div></div>
+      <div class="mono">${val}${suffix?(" "+suffix):""}</div>`;
+    root.appendChild(row);
+  });
+}
+
 function renderHeat(containerSel, keys, M){
   const root = $(containerSel); root.innerHTML="";
-  if(!keys.length){ root.innerHTML='<div class="muted">No correlations yet.</div>'; return; }
+  if(!keys.length){ root.innerHTML='<div class="mono">No correlations yet.</div>'; return; }
   const K = keys.length;
   const max = Math.max(1, ...M.flat());
   root.className = "heat";
-  root.style.gridTemplateColumns = `140px repeat(${K}, minmax(28px, 1fr))`;
-  const blank = document.createElement("div"); blank.className="lab hdr"; root.appendChild(blank);
+  root.style.gridTemplateColumns = `140px repeat(${K}, minmax(36px, 1fr))`;
+  const blank=document.createElement("div"); blank.className="lab hdr"; root.appendChild(blank);
   for(let j=0;j<K;j++){ const d=document.createElement("div"); d.className="lab hdr"; d.textContent=keys[j]; root.appendChild(d); }
   for(let i=0;i<K;i++){
     const lab=document.createElement("div"); lab.className="lab"; lab.textContent=keys[i]; root.appendChild(lab);
     for(let j=0;j<K;j++){
-      const v=M[i][j]; const ratio=v/max;
-      const hue = 210 - Math.round(210*ratio);
-      const alpha = 0.15 + 0.65*ratio;
+      const v=M[i][j], ratio=v/max, hue=210-Math.round(210*ratio), alpha=0.15+0.65*ratio;
       const cell=document.createElement("div"); cell.className="cell";
       cell.style.background=`hsla(${hue},85%,60%,${alpha.toFixed(2)})`;
-      cell.title=`${keys[i]} × ${keys[j]}: ${v}`;
-      cell.textContent=v? String(v):"";
+      cell.title=`${keys[i]} × ${keys[j]}: ${v}`; cell.textContent=v?String(v):"";
       root.appendChild(cell);
     }
   }
 }
 
-/* ----------- Tables ----------- */
 function renderLatest(list){
-  const tbody = $("#latest"); tbody.innerHTML="";
+  const tbody=$("#latest"); tbody.innerHTML="";
   list.forEach(a=>{
     const tr=document.createElement("tr");
     const tdT=document.createElement("td");
     const tdS=document.createElement("td");
     const tdC=document.createElement("td");
     const tdK=document.createElement("td");
-    tdT.innerHTML = `<div style="font-weight:700">${a.title||"(untitled)"}</div>
-                     <div class="mono">${a.published||""}</div>
-                     ${a.link? `<a href="${a.link}" target="_blank" rel="noopener">Open source</a>`:""}`;
-    tdS.textContent = a.source || "—";
-    tdC.innerHTML = `<span class="${gradeClass(a.confidence)}" style="font-weight:700">${a.confidence}</span>`;
-    tdK.textContent = ensureKeywords(a).slice(0,6).join(", ");
+    tdT.innerHTML = `<div style="font-weight:700">${a.title}</div>
+                     <div class="mono">${a.published || ""}</div>
+                     ${a.link?`<a href="${a.link}" target="_blank" rel="noopener">Open source</a>`:""}`;
+    const host = hostOf(a.link);
+    tdS.textContent = host || "—";
+    const cls = gradeClass(Math.round(a.confidence||0));
+    tdC.innerHTML = `<span class="${cls}" style="font-weight:700">${Math.round(a.confidence||0)}</span>`;
+    tdK.textContent = (findKeywords(a)||[]).slice(0,6).join(", ");
     tr.appendChild(tdT); tr.appendChild(tdS); tr.appendChild(tdC); tr.appendChild(tdK);
     tbody.appendChild(tr);
   });
 }
+
 function renderSnapshot(articles, kwPairs, sourcePairs){
-  const total = articles.length;
-  const topKW = kwPairs[0]?.[0] || "—";
-  const topSrc = sourcePairs[0]?.[0] || "—";
-  const avgConf = total? Math.round(articles.reduce((s,a)=>s+a.confidence,0)/total) : 0;
-  const rows = [
+  const total=articles.length;
+  const avgConf= total? Math.round(articles.reduce((s,a)=>s+(a.confidence||0),0)/total) : 0;
+  const rows=[
     ["Articles in window", String(total)],
-    ["Top keyword", topKW],
-    ["Top source", topSrc],
-    ["Avg confidence", `${avgConf}`],
+    ["Top keyword", kwPairs[0]?.[0] || "—"],
+    ["Top source", sourcePairs[0]?.[0] || "—"],
+    ["Avg confidence", String(avgConf)],
     ["Window (hours)", String(WINDOW_HOURS)]
   ];
   const tb=$("#snapshot"); tb.innerHTML="";
-  rows.forEach(([k,v])=>{ const tr=document.createElement("tr"); tr.innerHTML=`<th>${k}</th><td>${v}</td>`; tb.appendChild(tr); });
+  rows.forEach(([k,v])=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<th>${k}</th><td>${v}</td>`;
+    tb.appendChild(tr);
+  });
+
+  // Track average confidence trend
+  CONF_HISTORY.push(avgConf);
+  if (CONF_HISTORY.length>3) CONF_HISTORY = CONF_HISTORY.slice(-3);
+  $("#confDelta").textContent = (CONF_HISTORY.length>=2)
+    ? `Last: ${CONF_HISTORY[CONF_HISTORY.length-1]} | Δ: ${CONF_HISTORY[CONF_HISTORY.length-1]-CONF_HISTORY[0]}`
+    : "Collecting…";
 }
 
-/* ----------- Momentum (sparklines) ----------- */
-function trendSpark(values, width=120, height=24){
-  if(!values.length) return "";
-  const max = Math.max(...values), min = Math.min(...values);
-  const xs = values.map((_,i)=> Math.round(i*(width-6)/(values.length-1))+3);
-  const ys = values.map(v=>{
-    if(max===min) return Math.round(height/2);
-    const t=(v-min)/(max-min); return Math.round(height-4 - t*(height-8))+2;
-  });
-  const path = xs.map((x,i)=>`${i?'L':'M'}${x},${ys[i]}`).join(" ");
-  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none">
-            <path d="${path}" fill="none" stroke="#0f6fff" stroke-width="2"/>
-          </svg>`;
-}
-function renderMomentum(articles){
-  // count keyword hits per poll tick (approx) via observedAt buckets
-  const now=Date.now(), winMs=WINDOW_HOURS*3600*1000;
-  const start = now - winMs;
-  const step = Math.max(10*60*1000, Math.floor(winMs/24)); // ~24 buckets
-  const series = new Map(); // kw -> [counts...]
-  for(let t=start; t<now; t+=step){
-    const t2=t+step;
-    const inBin = articles.filter(a=> a.observedAt>=t && a.observedAt<t2);
-    const bag = new Map();
-    inBin.forEach(a=> ensureKeywords(a).forEach(k=> bag.set(k,(bag.get(k)||0)+1)));
-    for(const [k,v] of bag){ const arr=series.get(k)||[]; arr.push(v); series.set(k,arr); }
-    // also push zeros for keywords not present this bin
-    for(const [k,arr] of series.entries()) if(arr.length<Math.round((t-start)/step)+1) arr.push(0);
+function momentumKeywords(prevPairs, currPairs){
+  const prev = new Map(prevPairs);
+  const out = [];
+  for(const [k,v] of currPairs){
+    const delta = v - (prev.get(k)||0);
+    if(delta>0) out.push([k, delta]);
   }
-  const totals=[...series.entries()].map(([k,arr])=>[k, arr.reduce((s,x)=>s+x,0), arr]);
-  const top = totals.sort((a,b)=>b[1]-a[1]).slice(0,6);
-  const root=$("#momentum"); root.innerHTML="";
-  top.forEach(([k,total,arr])=>{
-    const row=document.createElement("div"); row.className="barrow";
-    const lab=document.createElement("div"); lab.className="label"; lab.textContent=k;
-    const spark=document.createElement("div"); spark.innerHTML = trendSpark(arr);
-    const val=document.createElement("div"); val.className="val"; val.textContent = `${total} (+${(arr.slice(-1)[0]||0)})`;
-    row.appendChild(lab); row.appendChild(spark); row.appendChild(val);
-    root.appendChild(row);
-  });
+  return out.sort((a,b)=>b[1]-a[1]).slice(0,8);
 }
 
-/* ----------- Interactive charts (SVG) ----------- */
-function renderTimeSeries(articles){
-  const node = $("#tsChart"); node.innerHTML="";
-  const w = node.clientWidth||560, h = node.clientHeight||220;
-  const now=Date.now(), winMs=WINDOW_HOURS*3600*1000, start=now-winMs;
-  const step = 10*60*1000; // 10 min bins
-  const bins=[]; for(let t=start;t<=now;t+=step){ bins.push({t, n:0}); }
-  for(const a of articles){
-    const idx = Math.min(bins.length-1, Math.max(0, Math.floor((a.observedAt-start)/step)));
-    bins[idx].n++;
-  }
-  const max = Math.max(1, ...bins.map(b=>b.n));
-  const xs=bins.map((b,i)=> Math.round(i*(w-16)/(bins.length-1))+8);
-  const ys=bins.map(b=> Math.round(h-12 - (b.n/max)*(h-24)) + 4);
-  const path = xs.map((x,i)=>`${i?'L':'M'}${x},${ys[i]}`).join(" ");
-  const area = `${path} L ${xs.at(-1)},${h-8} L ${xs[0]},${h-8} Z`;
+/* live loop */
+let PREV_KW = [];
+let TIMER;
 
-  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("width", w); svg.setAttribute("height", h);
-  const grad = document.createElementNS(svg.namespaceURI,"linearGradient");
-  grad.setAttribute("id","g1"); grad.setAttribute("x1","0"); grad.setAttribute("y1","0"); grad.setAttribute("x2","0"); grad.setAttribute("y2","1");
-  grad.innerHTML = `<stop offset="0%" stop-color="#0f6fff" stop-opacity=".35"/><stop offset="100%" stop-color="#0f6fff" stop-opacity="0"/>`;
-  const defs = document.createElementNS(svg.namespaceURI,"defs"); defs.appendChild(grad); svg.appendChild(defs);
-
-  const grid = document.createElementNS(svg.namespaceURI,"g");
-  for(let i=0;i<6;i++){
-    const y = 8 + i*(h-16)/5;
-    const line = document.createElementNS(svg.namespaceURI,"line");
-    line.setAttribute("x1","8"); line.setAttribute("x2",String(w-8)); line.setAttribute("y1",String(y)); line.setAttribute("y2",String(y));
-    line.setAttribute("stroke","#eef2f7"); line.setAttribute("stroke-width","1");
-    grid.appendChild(line);
-  }
-  svg.appendChild(grid);
-
-  const aPath = document.createElementNS(svg.namespaceURI,"path");
-  aPath.setAttribute("d", area); aPath.setAttribute("fill","url(#g1)");
-  const lPath = document.createElementNS(svg.namespaceURI,"path");
-  lPath.setAttribute("d", path); lPath.setAttribute("stroke","#0f6fff"); lPath.setAttribute("fill","none"); lPath.setAttribute("stroke-width","2");
-
-  svg.appendChild(aPath); svg.appendChild(lPath);
-
-  // Tooltip
-  const tip = document.createElement("div");
-  Object.assign(tip.style,{position:"absolute",pointerEvents:"none",background:"#111",color:"#fff",
-    padding:"4px 6px",borderRadius:"6px",fontSize:"12px",transform:"translate(-50%,-140%)",display:"none"});
-  node.style.position="relative";
-  node.appendChild(svg); node.appendChild(tip);
-
-  svg.addEventListener("mousemove",(e)=>{
-    const rect=svg.getBoundingClientRect();
-    const x = e.clientX-rect.left;
-    const i = Math.min(xs.length-1, Math.max(0, xs.findIndex(xx=>xx>=x)));
-    const date = new Date(bins[i].t).toLocaleTimeString();
-    tip.style.left = xs[i]+"px"; tip.style.top = ys[i]+"px"; tip.style.display="block";
-    tip.textContent = `${bins[i].n} articles @ ${date}`;
-  });
-  svg.addEventListener("mouseleave",()=> tip.style.display="none");
-}
-function renderDonut(sourcePairs){
-  const node=$("#donutChart"); const legend=$("#donutLegend");
-  node.innerHTML=""; legend.innerHTML="";
-  const total = sourcePairs.reduce((s,[,v])=>s+v,0)||1;
-  const w=node.clientWidth||560, h=node.clientHeight||220; const r=Math.min(w,h)*0.42;
-  const cx=w/2, cy=h/2;
-  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.setAttribute("width",w); svg.setAttribute("height",h);
-  let a0=-Math.PI/2;
-  const colors=(i)=>`hsl(${(i*59)%360} 80% 55%)`;
-  sourcePairs.forEach(([name,val],i)=>{
-    const frac=val/total; const a1=a0+frac*2*Math.PI;
-    const big = (a1-a0)>Math.PI?1:0;
-    const p0=[cx+r*Math.cos(a0), cy+r*Math.sin(a0)];
-    const p1=[cx+r*Math.cos(a1), cy+r*Math.sin(a1)];
-    const path=`M ${p0[0]} ${p0[1]} A ${r} ${r} 0 ${big} 1 ${p1[0]} ${p1[1]} L ${cx} ${cy} Z`;
-    const seg=document.createElementNS(svg.namespaceURI,"path");
-    seg.setAttribute("d",path); seg.setAttribute("fill",colors(i)); seg.setAttribute("stroke","#fff"); seg.setAttribute("stroke-width","1");
-    seg.setAttribute("opacity","0.9");
-    seg.addEventListener("mouseenter",()=> seg.setAttribute("opacity","1"));
-    seg.addEventListener("mouseleave",()=> seg.setAttribute("opacity","0.9"));
-    svg.appendChild(seg);
-
-    const key=document.createElement("div"); key.className="legend";
-    key.innerHTML=`<span class="dot" style="background:${colors(i)}"></span>${name} — ${val}`;
-    legend.appendChild(key);
-    a0=a1;
-  });
-  node.appendChild(svg);
-}
-
-/* ----------- Clusters ----------- */
-function renderClusters(articles){
-  // group by most-frequent keyword per article
-  const groups=new Map();
-  for(const a of articles){
-    const kws=ensureKeywords(a);
-    const key=kws[0]||"(other)";
-    const arr=groups.get(key)||[]; arr.push(a); groups.set(key,arr);
-  }
-  const top=[...groups.entries()].sort((a,b)=>b[1].length-a[1].length).slice(0,8);
-  const root=$("#clusters"); root.innerHTML="";
-  top.forEach(([kw,list])=>{
-    const det=document.createElement("details"); det.className="cluster"; det.open=false;
-    const sum=document.createElement("summary"); sum.textContent=`${kw} (${list.length})`;
-    det.appendChild(sum);
-    const ul=document.createElement("ul");
-    ul.style.margin="8px 0 0"; ul.style.padding="0 0 0 16px";
-    list.slice(0,8).forEach(a=>{
-      const li=document.createElement("li");
-      li.innerHTML = `<a href="${a.link||'#'}" target="_blank" rel="noopener">${a.title||"(untitled)"}</a>
-                      <span class="mono" style="margin-left:8px;color:#475467">[${a.source||"—"} | conf ${a.confidence}]</span>`;
-      ul.appendChild(li);
-    });
-    det.appendChild(ul);
-    root.appendChild(det);
-  });
-}
-
-/* ----------- Main render ----------- */
-function withinWindow(a){ return (Date.now()-a.observedAt) <= WINDOW_HOURS*3600*1000; }
-
-function renderAll(){
-  const windowed = CACHE.filter(withinWindow);
-
-  // Sources
-  const srcCounts=new Map(); windowed.forEach(a=> srcCounts.set(a.source,(srcCounts.get(a.source)||0)+1));
-  const sourcePairs=[...srcCounts.entries()].sort((a,b)=>b[1]-a[1]);
-
-  // Keywords
-  const kwPairs=topKeywords(windowed, 16);
-
-  // Confidence per source
-  const confMap=new Map();
-  windowed.forEach(a=>{
-    const k=a.source; const acc=confMap.get(k)||[0,0]; acc[0]+=a.confidence; acc[1]+=1; confMap.set(k,acc);
-  });
-  const confPairs=[...confMap.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
-
-  renderBars("#sources", sourcePairs, 10, "articles");
-  renderBars("#keywords", kwPairs, 12, "hits");
-  renderBars("#confSources", confPairs, 8, "conf");
-
-  // Time series & donut
-  renderTimeSeries(windowed);
-  renderDonut(sourcePairs);
-
-  // Heatmap
-  const keyList=kwPairs.slice(0,10).map(p=>p[0]);
-  const M=cooccurMatrix(windowed, keyList);
-  renderHeat("#heat", keyList, M);
-
-  // Momentum + snapshot + clusters + latest
-  renderMomentum(windowed);
-  renderSnapshot(windowed, kwPairs, sourcePairs);
-  renderClusters(windowed);
-
-  renderLatest(windowed.slice(0,12));
-}
-
-/* ----------- Poll loop + deltas ----------- */
-let timer=null;
-async function tick(force=false){
+async function tick(){
   try{
-    const items=await loadSummaries();
-    // Unique by title+source to reduce dupes
-    const key=(x)=> (x.title+"|"+x.source).toLowerCase();
-    const map=new Map(CACHE.map(a=>[key(a),a]));
-    items.forEach(it=> map.set(key(it), {...it, observedAt: Date.now()}));
-    CACHE=[...map.values()].sort((a,b)=>b.observedAt-a.observedAt);
+    const j = await fetchJSON(SUM_URL);
+    const items = uniq(j.items||[]).map(a=>({ ...a, observedAt: Date.now() }));
+    // windowing by observed time
+    const windowed = items; // payload already time-ordered; client refresh drives "window"
 
-    // Track confidence deltas (avg window)
-    const win=CACHE.filter(withinWindow);
-    const avg = win.length? Math.round(win.reduce((s,a)=>s+a.confidence,0)/win.length):0;
-    LAST_SERIES.push(avg); if(LAST_SERIES.length>3) LAST_SERIES.shift();
-    const deltaBox=$("#confDelta");
-    if(LAST_SERIES.length>=2){
-      const d = LAST_SERIES[LAST_SERIES.length-1]-LAST_SERIES[LAST_SERIES.length-2];
-      deltaBox.innerHTML = `<div><strong>Window avg:</strong> ${avg} <span class="${gradeClass(avg)}">(${d>=0?'+':''}${d})</span></div>`;
-    }
+    // keep a rolling cache by time
+    const now = Date.now();
+    CACHE = CACHE.concat(items)
+      .filter(a => now - a.observedAt <= WINDOW_HOURS*3600*1000);
 
-    $("#lastUpdated").textContent = nowStr();
     renderAll();
+    $("#last").textContent = "Last updated: " + new Date().toLocaleString();
   }catch(e){
     console.error(e);
   }finally{
-    if(AUTO){
-      clearTimeout(timer);
-      timer=setTimeout(()=>tick(), POLL_MS);
-    }
+    TIMER = setTimeout(tick, REFRESH_MS);
   }
 }
 
-/* ----------- Controls ----------- */
-$("#windowSel").value = String(WINDOW_HOURS);
-$("#refreshSel").value = String(POLL_MS);
-$("#refreshBtn").onclick = ()=> tick(true);
-$("#windowSel").onchange = (e)=>{ WINDOW_HOURS = parseInt(e.target.value,10)||6; renderAll(); };
-$("#refreshSel").onchange = (e)=>{ POLL_MS = parseInt(e.target.value,10)||90000; if(AUTO){ clearTimeout(timer); timer=setTimeout(()=>tick(), POLL_MS); } };
-$("#autoChk").onchange = (e)=>{ AUTO = !!e.target.checked; if(AUTO){ tick(true);} else { clearTimeout(timer);} };
+function renderAll(){
+  const windowed = CACHE.slice().sort((a,b)=> (b.publishedTs||0)-(a.publishedTs||0));
 
-/* ----------- Boot ----------- */
+  // sources
+  const srcCounts = new Map();
+  windowed.forEach(a=> srcCounts.set(hostOf(a.link)||"unknown", (srcCounts.get(hostOf(a.link)||"unknown")||0)+1));
+  const sourcePairs = [...srcCounts.entries()].sort((a,b)=>b[1]-a[1]);
+
+  // keywords
+  const kwPairs = topKeywords(windowed, 20);
+
+  // confidence by source
+  const confMap = new Map();
+  windowed.forEach(a=>{
+    const k = hostOf(a.link)||"unknown";
+    const acc = confMap.get(k)||[0,0]; acc[0]+=(a.confidence||0); acc[1]++; confMap.set(k, acc);
+  });
+  const confPairs = [...confMap.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
+
+  // correlations
+  const keyList = kwPairs.slice(0,12).map(p=>p[0]);
+  const M = cooccurMatrix(windowed, keyList);
+
+  // momentum
+  const momentum = momentumKeywords(PREV_KW, kwPairs);
+  PREV_KW = kwPairs;
+
+  // render
+  renderBars("#sources", sourcePairs, 8, "articles");
+  renderBars("#keywords", kwPairs, 12, "hits");
+  renderBars("#confSources", confPairs, 8, "conf");
+  renderHeat("#heat", keyList, M);
+  renderLatest(windowed.slice(0,12));
+  renderSnapshot(windowed, kwPairs, sourcePairs);
+
+  // momentum list
+  const mom = document.getElementById("momentum");
+  mom.innerHTML = "";
+  if (!momentum.length) { mom.innerHTML = '<div class="mono">No deltas yet.</div>'; }
+  momentum.forEach(([k, d])=>{
+    const row=document.createElement("div"); row.className="barrow";
+    row.innerHTML = `<div class="label">${k}</div>
+      <div class="barWrap"><div class="bar" style="width:${Math.min(100, d*25)}%"></div></div>
+      <div class="mono">+${d}</div>`;
+    mom.appendChild(row);
+  });
+}
+
+/* controls */
+document.getElementById("refresh").onclick = ()=>{ clearTimeout(TIMER); tick(); };
+document.getElementById("winSel").onchange = (e)=>{ WINDOW_HOURS=parseInt(e.target.value,10); renderAll(); };
+document.getElementById("refSel").onchange = (e)=>{
+  REFRESH_MS = parseInt(e.target.value,10);
+  clearTimeout(TIMER); tick();
+};
+
 tick();
 </script>
 </body>
