@@ -1,0 +1,12 @@
+name = "gozaddy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+MODEL_PREFS = "gpt-4.1-mini,gpt-4o-mini,gpt-4o"
+
+# Set your OpenAI key (do this with: wrangler secret put OPENAI_API_KEY)
+# OPENAI_API_KEY is a secret, not a plain var.
+
+[observability]
+enabled = true
