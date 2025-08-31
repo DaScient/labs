@@ -4,214 +4,182 @@
 <meta charset="utf-8" />
 <title>AI-Generated News Summaries</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Real-time AI news summaries from global sources. Clean titles, concise takeaways, host labels, confidence signal, and quick actions.">
 <style>
   :root{
-    --bg: transparent;
-    --text:#0b1220;
-    --muted:#667085;
-    --accent:#0f6fff;
-    --card:#ffffff;
-    --border:#e5e7eb;
-    --soft:#f8fafc;
-    --title:28px;
+    --bg:#ffffff; --text:#0b1220; --muted:#667085; --accent:#0f6fff;
+    --card:#ffffff; --border:#e5e7eb;
   }
-  *{ box-sizing:border-box }
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-    line-height:1.55;
-  }
-  header{
-    position:sticky; top:0; z-index:5;
-    background:rgba(255,255,255,.92);
-    backdrop-filter:saturate(140%) blur(6px);
-    border-bottom:1px solid var(--border);
-  }
-  .wrap{ max-width:960px; margin:0 auto; padding:16px; }
-  h1{ margin:0; font-size:var(--title); letter-spacing:.2px }
-  .controls{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; color:var(--muted); font-size:13px; align-items:center }
-  .pill{ display:inline-flex; gap:6px; align-items:center; padding:6px 10px; border:1px solid var(--border); border-radius:999px; background:#fff }
-  .btn{
-    display:inline-flex; align-items:center; gap:8px;
-    padding:8px 12px; border:1px solid var(--border); border-radius:10px;
-    background:#fff; color:#0b1220; cursor:pointer;
-  }
+  *{box-sizing:border-box}
+  body{ margin:0; background:var(--bg); color:var(--text);
+        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.55; }
+  header{ position:sticky; top:0; z-index:10; background:rgba(255,255,255,.92);
+          backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border); }
+  .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
+  h1{ margin:0; font-size:24px; font-weight:800; letter-spacing:.2px; }
+  .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
+  .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:#111; background:#f8fafc }
+  .btn{ padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
   .btn:hover{ border-color:#cbd5e1 }
-  main{ padding:20px 0 60px }
-  .list{ display:flex; flex-direction:column; gap:14px }
-  .card{
-    background:var(--card); border:1px solid var(--border); border-radius:16px; padding:14px 14px 16px;
-    box-shadow: 0 6px 18px rgba(15,23,42,.05);
-  }
-  .title{
-    margin:0 0 6px; font-size:21px; font-weight:800; letter-spacing:.2px;
-  }
-  .meta{
-    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
-    color:var(--muted); font-size:13px; margin-bottom:10px;
-  }
-  .host{ display:inline-block; padding:4px 10px; background:var(--soft); border:1px solid var(--border); border-radius:999px; color:#0b1220; font-weight:600; }
-  .conf{ font-weight:800 }
-  .conf.good{ color:#14803a } .conf.mid{ color:#b45309 } .conf.low{ color:#b91c1c }
-  .summary{ font-size:16px }
+  main{ padding:18px 0 60px }
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin:12px 0; }
+  .title{ font-weight:800; font-size:22px; margin-bottom:6px; line-height:1.25 }
+  .meta{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--muted); }
+  .host{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:#f9fafb; color:#0b1220; font-weight:600 }
+  .summary{ margin-top:12px; font-size:16px }
+  .keywords{ margin-top:8px; color:#555; font-size:13px }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px }
   a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
-  .empty{ color:var(--muted); padding:18px; border:1px dashed var(--border); border-radius:12px; background:#fff }
-  .fine{ font-size:12px; color:var(--muted) }
+  .good{ color:#15803d } .warn{ color:#b45309 } .bad{ color:#b91c1c }
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>AI-Generated News Summaries</h1>
-    <div class="controls">
-      <span id="status" class="pill">Loading…</span>
-      <span id="refreshPill" class="pill">Refresh: —</span>
-      <button id="refreshBtn" class="btn" type="button">Refresh now</button>
+    <div class="toolbar">
+      <span id="last" class="pill">Last updated: …</span>
+      <span id="ref" class="pill">Refresh: 60s</span>
+      <button id="refresh" class="btn">Refresh now</button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div id="feed" class="list"></div>
-  <div class="fine" style="margin-top:18px">Powered by GoZaddy Worker · Caches server-side to avoid over-clocking.</div>
+  <div id="list"></div>
 </main>
 
 <script>
-/* ---------- Config (override via query) ---------- */
-const DEFAULT_WORKER = "https://gozaddy.aristocles24.workers.dev";
-const params = new URLSearchParams(location.search);
-const WORKER_BASE = (params.get("worker") || DEFAULT_WORKER).replace(/\/+$/,"");
-const LIMIT   = parseInt(params.get("limit")||"30",10);
-const INTERVAL= parseInt(params.get("interval")||"3600",10);   // server cache seconds
-const REFRESH = parseInt(params.get("refresh") || "180000",10); // 3min frontend poll (server still cached)
-const FEEDS   = params.get("feeds") || ""; // optional CSV; otherwise worker default set
+const WORKER = "https://gozaddy.aristocles24.workers.dev";
+const FEEDS_URL_DEFAULT = "https://raw.githubusercontent.com/DaScient/labs/main/gozaddy/feeds.txt";
 
-/* ---------- DOM helpers ---------- */
-const $ = s => document.querySelector(s);
-function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,""); }catch{ return ""; } }
-function clsForConf(c){ return c>=70?"good":c>=55?"mid":"low"; }
-function fmtDate(s){
-  if(!s) return "";
-  // Try parse RFC or ISO strings safely
-  const d = new Date(s);
-  if (isNaN(d.getTime())) return s;
-  return d.toUTCString().replace("GMT","UTC");
-}
-function dedupeSummary(title, summary){
-  if(!summary) return "";
-  const t = (title||"").toLowerCase().replace(/[^\w\s]+/g," ").replace(/\s+/g," ").trim();
-  let s = String(summary);
-  // remove leading "SUMMARY " or similar boilerplate
-  s = s.replace(/^\s*(summary|abstract|lede)\s*[:\-–]\s*/i,"");
-  // drop exact title line at start if present
-  const sHead = s.slice(0, Math.min(140, s.length)).toLowerCase().replace(/[^\w\s]+/g," ").replace(/\s+/g," ").trim();
-  if (t && (sHead.startsWith(t) || t.startsWith(sHead))) {
-    // remove first line
-    s = s.replace(/^.*?\n+/, "").trim();
-  }
-  return s;
-}
+const q = new URLSearchParams(location.search);
+const refreshMs = Math.max(20_000, parseInt(q.get("refresh")||"60000",10));
+const feedsUrl = q.get("feedsUrl") || FEEDS_URL_DEFAULT;
+document.getElementById("ref").textContent = "Refresh: " + Math.round(refreshMs/1000) + "s";
 
-/* ---------- Render ---------- */
-function render(items){
-  const root = $("#feed");
-  root.innerHTML = "";
-  if(!items || !items.length){
-    root.innerHTML = '<div class="empty">No articles available yet. Check back shortly.</div>';
-    return;
-  }
+const SUM_URL = WORKER + "/summaries?feedsUrl=" + encodeURIComponent(feedsUrl) + "&limit=50&interval=3600";
+
+function hostOf(link){
+  try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; }
+}
+function gradeClass(score){ return score>=70?"good":score>=45?"warn":"bad"; }
+function uniq(items){
+  const seen=new Set(), out=[];
   for(const a of items){
-    const card = document.createElement("article");
-    card.className = "card";
-    const confCls = clsForConf(a.confidence||0);
-    const host = a.source || hostOf(a.link) || "—";
-    const summary = dedupeSummary(a.title, a.summary);
+    const k=((a.link||"") + "|" + (a.title||"")).toLowerCase();
+    if(seen.has(k)) continue; seen.add(k); out.push(a);
+  }
+  return out;
+}
+function cleanTitle(t){ return (t||"").replace(/<!\[CDATA\[(.*?)\]\]>/gi,"$1").replace(/\s+/g," ").trim(); }
 
-    card.innerHTML = `
-      <h2 class="title">${escapeHtml(a.title||"(untitled)")}</h2>
-      <div class="meta">
-        <span class="host">${escapeHtml(host)}</span>
-        ${a.published ? `<span>${escapeHtml(fmtDate(a.published))}</span>` : ""}
-        ${a.link ? `<a href="${a.link}" target="_blank" rel="noopener">Open source</a>` : ""}
-        <span>Confidence: <span class="conf ${confCls}">${a.confidence ?? "—"}</span></span>
-      </div>
-      ${summary ? `<div class="summary">${escapeHtml(summary)}</div>` : ""}
-      ${a.keywords?.length ? `<div class="fine" style="margin-top:8px">Top terms: ${a.keywords.slice(0,8).join(", ")}</div>` : ""}
-      <div class="actions">
-        <button class="btn btn-copy" type="button">Copy</button>
-        <a class="btn" href="${promptUrl(a)}" target="_blank" rel="noopener">Generate prompt</a>
-        <a class="btn" href="${chatgptUrl(a)}" target="_blank" rel="noopener">Open ChatGPT</a>
-      </div>
+async function load(){
+  try{
+    const r = await fetch(SUM_URL + "&_t=" + Date.now(), { cache:"no-store" });
+    if(!r.ok) throw new Error("Fetch failed: "+r.status);
+    const j = await r.json();
+    const items = uniq(j.items||[]);
+    render(items);
+    document.getElementById("last").textContent = "Last updated: " + new Date().toLocaleString();
+  }catch(e){
+    console.error(e);
+  }finally{
+    setTimeout(load, refreshMs);
+  }
+}
+
+function render(items){
+  const root = document.getElementById("list");
+  root.innerHTML = "";
+  for(const it of items){
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const title = cleanTitle(it.title);
+    const link = it.link || "";
+    const h = document.createElement("div");
+    h.className = "title";
+    h.textContent = title;
+    card.appendChild(h);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const host = hostOf(link);
+    const conf = Math.round(it.confidence || 0);
+    const confCls = gradeClass(conf);
+    meta.innerHTML = `
+      <span class="host">${host||"unknown"}</span>
+      <span>${it.published || ""}</span>
+      ${link ? `<a href="${link}" target="_blank" rel="noopener">Open source</a>` : ""}
+      <span>Confidence: <span class="${confCls}">${conf}</span></span>
+      ${it.model ? `<span>Model: ${it.model}</span>` : ""}
     `;
-    // copy
-    card.querySelector(".btn-copy").onclick = async () => {
-      const text = `${a.title}\n${a.link||""}\n\n${summary}`;
-      try{ await navigator.clipboard.writeText(text); }catch(_){}
-      const btn = card.querySelector(".btn-copy"); const old=btn.textContent; btn.textContent="Copied"; setTimeout(()=>btn.textContent=old,900);
+    card.appendChild(meta);
+
+    if (it.summary) {
+      const s = document.createElement("div");
+      s.className = "summary";
+      s.textContent = it.summary;
+      card.appendChild(s);
+    }
+
+    if (it.keywords && it.keywords.length){
+      const k = document.createElement("div");
+      k.className = "keywords";
+      k.textContent = "Top terms: " + it.keywords.slice(0,8).join(", ");
+      card.appendChild(k);
+    }
+
+    // actions
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    // Copy
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "btn";
+    copyBtn.textContent = "Copy";
+    copyBtn.onclick = async ()=>{
+      const text = `${title}\n\n${it.summary || ""}\n\n${link}`;
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = "Copied";
+      setTimeout(()=>copyBtn.textContent="Copy", 1200);
     };
+    actions.appendChild(copyBtn);
+
+    // Generate prompt (client-side)
+    const promptBtn = document.createElement("button");
+    promptBtn.className = "btn";
+    promptBtn.textContent = "Generate prompt";
+    promptBtn.onclick = ()=>{
+      const prompt = [
+        `You are an expert analyst. Use the headline and brief to craft a 5-bullet executive summary + 3 action items.`,
+        `Headline: ${title}`,
+        `Brief: ${it.summary || "(none)"}`,
+        `Source: ${it.link || "(none)"}`,
+        `Constraints: concise, factual, neutral tone.`,
+      ].join("\n");
+      navigator.clipboard.writeText(prompt);
+      promptBtn.textContent = "Prompt copied";
+      setTimeout(()=>promptBtn.textContent="Generate prompt", 1200);
+    };
+    actions.appendChild(promptBtn);
+
+    // Open ChatGPT
+    const chatBtn = document.createElement("a");
+    chatBtn.className = "btn";
+    chatBtn.target = "_blank";
+    chatBtn.rel = "noopener";
+    chatBtn.href = "https://chat.openai.com/?temporary-chat=true";
+    chatBtn.textContent = "Open ChatGPT";
+    actions.appendChild(chatBtn);
+
+    card.appendChild(actions);
     root.appendChild(card);
   }
 }
 
-function escapeHtml(s){
-  return String(s)
-    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;").replaceAll("'","&#39;");
-}
-function promptUrl(a){
-  const u = new URL((params.get("promptPage") || "prompt.html"), location.href);
-  u.searchParams.set("title", a.title||"");
-  if (a.link) u.searchParams.set("link", a.link);
-  return u.toString();
-}
-function chatgptUrl(a){
-  // Plain link to ChatGPT with a seed message in the query
-  const seed = `Summarize and analyze: ${a.title}${a.link? " — " + a.link : ""}`;
-  const u = new URL("https://chat.openai.com/");
-  u.searchParams.set("q", seed);
-  return u.toString();
-}
-
-/* ---------- Data fetch ---------- */
-async function fetchSummaries(){
-  const url = new URL(WORKER_BASE + "/summaries");
-  if (FEEDS) url.searchParams.set("feeds", FEEDS);
-  url.searchParams.set("limit", String(LIMIT));
-  url.searchParams.set("interval", String(INTERVAL));
-  url.searchParams.set("_t", String(Date.now())); // bust any intermediary caches (worker still caches internally)
-
-  const r = await fetch(url.toString(), { cache:"no-store" });
-  if (!r.ok) throw new Error("HTTP "+r.status);
-  const data = await r.json();
-  if (!data || !Array.isArray(data.items)) throw new Error("Bad payload");
-  return data.items;
-}
-
-/* ---------- Loop ---------- */
-let timer=null;
-async function tick(){
-  try{
-    $("#status").textContent = "Refreshing…";
-    const items = await fetchSummaries();
-    render(items);
-    const ts = new Date().toLocaleString();
-    $("#status").textContent = "Last updated: " + ts;
-  }catch(e){
-    console.error(e);
-    $("#status").textContent = "Error fetching data";
-    if(!$("#feed").innerHTML) $("#feed").innerHTML = '<div class="empty">Unable to load articles right now.</div>';
-  }finally{
-    if (timer) clearTimeout(timer);
-    timer = setTimeout(tick, REFRESH);
-  }
-}
-$("#refreshBtn").onclick = ()=>{ if(timer) clearTimeout(timer); tick(); };
-$("#refreshPill").textContent = "Refresh: " + Math.round(REFRESH/1000) + "s";
-
-/* ---------- Boot ---------- */
-tick();
+document.getElementById("refresh").onclick = ()=>load();
+load();
 </script>
 </body>
 </html>
