@@ -1,3 +1,120 @@
-https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
+# =========================================
+# GLOBAL / TOP WIRES
+# =========================================
+https://feeds.reuters.com/reuters/topNews
+https://feeds.reuters.com/Reuters/worldNews
+https://www.aljazeera.com/xml/rss/all.xml
+https://feeds.bbci.co.uk/news/rss.xml
+https://rss.dw.com/rdf/rss-en-all
+https://news.un.org/feed/subscribe/en/news/all/rss.xml
+https://apnews.com/hub/ap-top-news?utm_source=apnews.com&utm_medium=referral&utm_campaign=ap_rss
+https://www.npr.org/rss/rss.php?id=1001
+https://www.theguardian.com/world/rss
+https://www.wsj.com/xml/rss/3_7085.xml     # WSJ World (paywall on click, but headlines OK)
+
+# =========================================
+# AMERICAS
+# =========================================
+https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml
+https://www.nytimes.com/services/xml/rss/nyt/World.xml
 https://feeds.washingtonpost.com/rss/national
+https://feeds.washingtonpost.com/rss/world
+https://www.latimes.com/world/rss2.0.xml
+https://www.miamiherald.com/news/nation-world/?widgetName=rssfeed&widgetContentId=710&getXmlFeed=true
+https://www.theglobeandmail.com/arc/outboundfeeds/rss/?outputType=xml
+https://globalnews.ca/feed/
+https://www.mercopress.com/rss      # South Atlantic/Latin America wire
+https://english.elpais.com/rss/
+
+# =========================================
+# EUROPE
+# =========================================
+https://www.spiegel.de/international/index.rss
+https://www.lemonde.fr/en/rss/full.xml
+https://www.thetimes.co.uk/environment/climate-change/rss   # often accessible
+https://www.ft.com/?format=rss                               # FT (many items paywalled)
+https://www.politico.eu/feed/
+https://www.euronews.com/rss?level=theme&name=News
+
+# =========================================
+# AFRICA / MIDDLE EAST
+# =========================================
+https://feeds.bbci.co.uk/news/world/africa/rss.xml
+https://www.africanews.com/feed/
+https://www.middleeasteye.net/rss.xml
+https://www.haaretz.com/cmlink/1.1470009          # Haaretz English (may rotate)
+https://english.alarabiya.net/.mrss/en.xml
+
+# =========================================
+# ASIA-PACIFIC
+# =========================================
+https://www3.nhk.or.jp/rss/news/catenglish.xml
+https://www.scmp.com/rss/91/feed
+https://www.straitstimes.com/news/world/rss.xml
+https://www.thehindu.com/news/national/?service=rss
+https://www.thehindu.com/news/international/?service=rss
+https://www.smh.com.au/rss/feed.xml
+https://www.abc.net.au/news/feed/51120/rss.xml
+
+# =========================================
+# BUSINESS / MARKETS / ECONOMY
+# =========================================
+https://feeds.reuters.com/reuters/businessNews
+https://feeds.reuters.com/reuters/UKTopNews
+https://www.cnbc.com/id/100003114/device/rss/rss.html
+https://www.marketwatch.com/feeds/topstories
+https://finance.yahoo.com/news/rss
+https://www.bloomberg.com/feed/podcast/etf-report.xml        # (Bloomberg has limited public RSS)
+https://www.imf.org/external/rss/whatsnewRss.aspx
+https://www.worldbank.org/en/news/all?format=rss
+https://www.federalreserve.gov/feeds/press_all.xml
+https://www.sec.gov/rss/news/pressreleases.xml
+https://www.oecd.org/newsroom/rss.xml
+
+# =========================================
+# POLICY / POLITICS
+# =========================================
+https://www.politico.com/rss/politics-news.xml
+https://thehill.com/rss/syndicator/19110
+https://www.whitehouse.gov/briefing-room/feed/
+https://www.congress.gov/rss/most-viewed
+https://www.parliament.uk/business/news/rss.xml    # UK Parliament news
+https://www.europarl.europa.eu/news/en/headlines/rss.xml
+
+# =========================================
+# SCIENCE / HEALTH / CLIMATE
+# =========================================
+https://www.who.int/feeds/entity/mediacentre/news/en/rss.xml
+https://www.science.org/rss/news_current.xml
+https://www.nature.com/nature.rss
+https://www.nasa.gov/rss/dyn/breaking_news.rss
+https://www.noaa.gov/rss.rss
+https://www.economist.com/science-and-technology/rss.xml
+https://www.carbonbrief.org/feed/
+
+# =========================================
+# TECHNOLOGY / AI
+# =========================================
+https://www.theverge.com/rss/index.xml
+https://techcrunch.com/feed/
+https://feeds.arstechnica.com/arstechnica/index
+https://www.wired.com/feed/rss
+https://www.theregister.com/headlines.atom
+https://github.blog/feed/
+https://ai.googleblog.com/feeds/posts/default
+https://hnrss.org/frontpage
+
+# =========================================
+# BUSINESS/STRATEGY MAGAZINES (select)
+# =========================================
+https://www.economist.com/the-world-this-week/rss.xml
+https://hbr.org/feed
+https://www.fastcompany.com/feed
 https://www.forbes.com/most-popular/feed/
+
+# =========================================
+# REGIONAL TV/RADIO (useful for breaking)
+# =========================================
+https://abcnews.go.com/abcnews/topstories    # US (Atom-like)
+https://www.skynews.com.au/rss
+https://www.rte.ie/rss/news.xml              # Ireland
