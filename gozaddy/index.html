@@ -2,201 +2,227 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>AI-Generated News Summaries</title>
+<title>🔮 GoZaddy.ai | News Summaries 📰</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="AI-Generated News Summaries from worldwide sources with model cycling, real-time updates, and executive-ready formatting." />
 <style>
   :root{
-    --bg:#fff; --text:#0b1220; --muted:#667085; --border:#e5e7eb;
-    --pill:#f6f7f8; --accent:#0f6fff; --ok:#15803d; --warn:#b45309; --bad:#b91c1c;
+    --bg:#fff; --text:#0b1220; --muted:#667085; --border:#e5e7eb; --accent:#0f6fff; --chip:#f3f4f6;
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);
-       font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.6}
-  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.94);
-         backdrop-filter:saturate(140%) blur(6px);border-bottom:1px solid var(--border)}
-  .wrap{max-width:900px;margin:0 auto;padding:16px}
-  h1{margin:0;font-size:26px;font-weight:800;letter-spacing:.2px}
-  .meta{font-size:13px;color:var(--muted)}
+  body{margin:0;background:transparent;color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;line-height:1.55}
+  header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:saturate(140%) blur(8px);border-bottom:1px solid var(--border)}
+  .wrap{max-width:1100px;margin:0 auto;padding:16px}
+  h1{margin:0;font-size:28px;font-weight:800;letter-spacing:.2px}
+  .meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-top:6px}
+  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;border:1px solid var(--border);background:#fff;border-radius:999px;padding:6px 10px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  select{border:1px solid var(--border);border-radius:10px;padding:8px 10px;background:#fff;color:#0b1220}
   main{padding:18px 0 60px}
-  .feed{display:grid;gap:14px}
-  .card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff}
-  .title{font-size:22px;font-weight:800;margin:0 0 6px;letter-spacing:.2px}
-  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:10px}
-  .pill{display:inline-block;padding:5px 10px;border:1px solid var(--border);border-radius:999px;background:var(--pill);color:#111;font-size:12px}
-  .conf{font-weight:700}
-  .conf.ok{color:var(--ok)} .conf.mid{color:var(--warn)} .conf.low{color:var(--bad)}
-  .kw{display:inline-block;margin:6px 6px 0 0;padding:4px 8px;border:1px dashed var(--border);border-radius:999px;font-size:12px;color:#0b1220;background:#fff}
-  .body p{margin:0 0 10px}
+  .card{border:1px solid var(--border);border-radius:14px;padding:16px;background:#fff;margin:10px 0}
+  .title{font-size:22px;font-weight:800;margin:0 0 6px}
+  .sub{display:flex;gap:12px;align-items:center;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  .badge{display:inline-block;background:var(--chip);border:1px solid var(--border);border-radius:999px;padding:3px 8px;font-size:12px}
+  .summary{margin-top:12px;font-size:17px}
+  .kw{margin-top:10px;font-size:13px;color:#334155}
   a{color:var(--accent);text-decoration:none} a:hover{text-decoration:underline}
-  .blink{animation:blink .8s ease 1} @keyframes blink{50%{box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .copy{cursor:pointer;border:1px solid var(--border);background:#fff;border-radius:10px;padding:6px 10px;font-size:12px}
+  .good{color:#15803d} .warn{color:#b45309} .bad{color:#b91c1c}
+  .fade{animation:fade .6s ease 1}@keyframes fade{from{opacity:.4}to{opacity:1}}
 </style>
 </head>
 <body>
 <header>
   <div class="wrap">
-    <h1>AI-Generated News Summaries</h1>
-    <div class="meta" id="status">Loading…</div>
+    <h1>🔮 GoZaddy.ai | News Summaries 📰</h1>
+    <div class="meta">
+      <span id="status">Loading…</span>
+      <span class="pill">Model cycling: <strong>auto</strong></span>
+      <span class="pill">Refresh: <strong>~5 min</strong></span>
+    </div>
+    <div class="controls">
+      <label>Style
+        <select id="styleSel">
+          <option value="strategic">Strategic (default)</option>
+          <option value="neutral">Neutral</option>
+          <option value="bullet">Bulleted</option>
+          <option value="editorial">Editorial</option>
+        </select>
+      </label>
+      <label>Length
+        <select id="lengthSel">
+          <option value="short">Short</option>
+          <option value="medium">Medium</option>
+          <option value="long">Long</option>
+        </select>
+      </label>
+      <label>Model
+        <select id="modelSel">
+          <option value="auto">Auto (cycle)</option>
+          <option value="gpt-4o-mini">gpt-4o-mini</option>
+          <option value="gpt-4.1-mini">gpt-4.1-mini</option>
+          <option value="gpt-4o">gpt-4o</option>
+          <option value="gpt-4.1">gpt-4.1</option>
+        </select>
+      </label>
+    </div>
   </div>
 </header>
 
 <main class="wrap">
-  <section id="feed" class="feed"></section>
+  <div id="list"></div>
 </main>
 
 <script>
-/* ================== CONFIG ================== */
-const API_BASE = "https://gozaddy.aristocles24.workers.dev";
+/* ===== Config (override via URL query if you want) ===== */
+const WORKER_BASE = "https://gozaddy.aristocles24.workers.dev";
 const DEFAULT_FEEDS = [
   "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
-  "https://feeds.washingtonpost.com/rss/national",
-  "https://feeds.reuters.com/reuters/topNews",
+  "https://feeds.bbci.co.uk/news/rss.xml",
   "https://www.aljazeera.com/xml/rss/all.xml",
-  "https://feeds.npr.org/1001/rss.xml",
-  "https://feeds.bbci.co.uk/news/rss.xml"
-];
-const LIMIT = 18;
-const SERVER_INTERVAL_SEC = 3600; // Worker cache interval
-let REFRESH_MS = 60_000;          // ?refresh=ms to override
-/* ============================================ */
+  "https://www.npr.org/rss/rss.php?id=1001",
+  "https://www.reuters.com/rss/worldNews"
+].join(",");
+const FRONTEND_POLL_MS = 300_000; // ~5 mins
+/* ======================================================= */
 
-/* ---------- helpers ---------- */
-const $ = s => document.querySelector(s);
-function qs(name){ const u=new URL(location.href); return u.searchParams.get(name); }
-function host(href){ try{ return new URL(href).hostname.replace(/^www\./,''); }catch{ return ""; } }
-function escapeHTML(s){ return (s||"").replace(/[&<>"]/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c])); }
-function stripCDATA(s){ return (s||"").replace(/^<!\[CDATA\[/,'').replace(/\]\]>$/,''); }
-function decodeEntities(s){
-  // very small decode for &amp; &lt; &gt; &quot; &apos;
-  return (s||"").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>')
-                 .replace(/&quot;/g,'"').replace(/&apos;/g,"'");
-}
-function prettyTime(ts){ try{ return new Date(ts).toUTCString().replace('GMT','UTC'); }catch{ return ts||''; } }
-function confClass(n){ if(n>=70) return 'ok'; if(n>=45) return 'mid'; return 'low'; }
+const $ = (s)=>document.querySelector(s);
+const listEl = $("#list");
+const styleSel = $("#styleSel");
+const lengthSel = $("#lengthSel");
+const modelSel = $("#modelSel");
 
-/* Build the /summaries URL (accept ?feeds & ?refresh) */
-function buildUrl(){
-  const feeds = qs("feeds") ? qs("feeds").split(",") : DEFAULT_FEEDS;
-  const refresh = parseInt(qs("refresh")||"",10);
-  if(!isNaN(refresh) && refresh>750) REFRESH_MS = refresh;
-  const f = encodeURIComponent(feeds.join(","));
-  return `${API_BASE}/summaries?feeds=${f}&limit=${LIMIT}&interval=${SERVER_INTERVAL_SEC}`;
-}
+const q = new URLSearchParams(location.search);
+if (q.get("style")) styleSel.value = q.get("style");
+if (q.get("length")) lengthSel.value = q.get("length");
+if (q.get("model")) modelSel.value = q.get("model");
 
-/* ---------- cleaning / enrichment ---------- */
-function splitKeywordsOut(text){
-  // returns { body, keywords[] }
-  if(!text) return { body:"", keywords:[] };
-  const lines = text.split(/\r?\n/);
-  const keep = [];
-  let kw = [];
-  for(const L of lines){
-    const m = L.match(/^\s*SEO KEYWORDS:\s*(.+)\s*$/i);
-    if(m){
-      kw = m[1].split(/[;,]/).map(s=>s.trim()).filter(Boolean);
-    }else{
-      keep.push(L);
-    }
-  }
-  return { body: keep.join("\n").trim(), keywords: kw };
-}
+styleSel.addEventListener("change", reload);
+lengthSel.addEventListener("change", reload);
+modelSel.addEventListener("change", reload);
 
-function deDupeTitleFromBody(title, body){
-  if(!title || !body) return body || "";
-  const t = title.toLowerCase().replace(/\s+/g,' ').trim();
-  const lines = body.split(/\r?\n/).map(s=>s.trim());
-  const out = [];
+let lastHash = "";
 
-  for(let i=0;i<lines.length;i++){
-    const L = lines[i];
-    if(!L) continue;
+async function reload() {
+  $("#status").textContent = "Updating…";
+  try {
+    const url = new URL(WORKER_BASE + "/summaries");
+    url.searchParams.set("feeds", q.get("feeds") || DEFAULT_FEEDS);
+    url.searchParams.set("limit", q.get("limit") || "18");
+    url.searchParams.set("interval", q.get("interval") || "3600");
+    url.searchParams.set("style", styleSel.value);
+    url.searchParams.set("length", lengthSel.value);
+    url.searchParams.set("model", modelSel.value);
 
-    // remove "SUMMARY " prefix once
-    const s = L.replace(/^summary[:\s]*/i,'').trim();
-
-    // if first non-empty paragraph is very similar to title, drop it
-    const isFirst = out.length===0;
-    const sim = similarityRatio(t, s.toLowerCase());
-    if(isFirst && (s.toLowerCase()===t || sim>=0.8)) continue;
-
-    out.push(s);
-  }
-  return out.join("\n");
-}
-
-// cosine-ish similarity on words (quick & robust enough)
-function similarityRatio(a,b){
-  const tok = s => (s.match(/[a-z0-9]+/gi)||[]).map(x=>x.toLowerCase());
-  const A = new Set(tok(a)), B = new Set(tok(b));
-  if(!A.size || !B.size) return 0;
-  let inter=0; A.forEach(w=>{ if(B.has(w)) inter++; });
-  const denom = Math.sqrt(A.size*B.size);
-  return inter/denom;
-}
-
-/* ---------- render ---------- */
-function paraHTML(text){
-  const chunks = (text||"").split(/\n{2,}/).map(s=>s.trim()).filter(Boolean);
-  if(!chunks.length) return text ? `<p>${escapeHTML(text)}</p>` : "";
-  return chunks.map(p=>`<p>${escapeHTML(p)}</p>`).join("");
-}
-
-function render(items){
-  const root = $("#feed"); root.innerHTML = "";
-  if(!items.length){ root.innerHTML = `<div class="meta">No articles yet.</div>`; return; }
-
-  for(const raw of items){
-    // Clean & normalize
-    const cleanTitle = decodeEntities(stripCDATA(raw.title||"")).trim() || "(untitled)";
-    const metaSource = raw.source || host(raw.link) || "";
-    const { body:body0, keywords } = splitKeywordsOut(raw.summary||"");
-    const body = deDupeTitleFromBody(cleanTitle, body0);
-    const conf = Number.isFinite(raw.confidence) ? Math.round(raw.confidence) : null;
-
-    // Card
-    const card = document.createElement("article");
-    card.className = "card";
-    card.innerHTML = `
-      <h2 class="title">${escapeHTML(cleanTitle)}</h2>
-      <div class="row">
-        ${metaSource ? `<span class="pill">${escapeHTML(metaSource)}</span>`:""}
-        ${raw.published ? `<span class="meta">${escapeHTML(prettyTime(raw.published))}</span>`:""}
-        ${raw.link ? `<a href="${raw.link}" target="_blank" rel="noopener">Open source</a>`:""}
-        ${conf!==null ? `<span class="conf ${confClass(conf)}">Confidence: ${conf}</span>`:""}
-      </div>
-      <div class="body">${paraHTML(body)}</div>
-      ${keywords.length ? `<div class="row" style="margin-top:8px">${keywords.map(k=>`<span class="kw">${escapeHTML(k)}</span>`).join("")}</div>`:""}
-    `;
-    root.appendChild(card);
-  }
-}
-
-/* ---------- live loop ---------- */
-let LAST_SIG = "";
-async function tick(){
-  try{
-    const url = buildUrl();
-    const r = await fetch(url + "&_t=" + Date.now(), { cache:"no-store" });
-    if(!r.ok) throw new Error("Fetch failed " + r.status);
+    const r = await fetch(url.toString(), { cache: "no-store" });
+    if (!r.ok) throw new Error("Fetch failed " + r.status);
     const data = await r.json();
-    const items = (data.items||[]);
 
-    // signature: top titles only
-    const sig = JSON.stringify(items.slice(0, 15).map(x=>x.title));
-    if(sig !== LAST_SIG){
-      render(items);
-      LAST_SIG = sig;
-      $("#feed").classList.add("blink");
-      setTimeout(()=>$("#feed").classList.remove("blink"), 900);
+    const h = await sha(JSON.stringify(data.items.map(x => x.id)));
+    if (h !== lastHash) {
+      renderList(data.items);
+      lastHash = h;
     }
-    $("#status").textContent = `Updated ${new Date().toLocaleString()} • ${items.length} articles`;
-  }catch(e){
-    $("#status").textContent = "Error: " + e;
+    $("#status").textContent = "Last updated " + new Date().toLocaleString();
+  } catch (e) {
     console.error(e);
-  }finally{
-    setTimeout(tick, REFRESH_MS);
+    $("#status").textContent = "Update failed";
+  } finally {
+    setTimeout(reload, FRONTEND_POLL_MS);
   }
 }
-tick();
+
+function renderList(items) {
+  listEl.innerHTML = "";
+  for (const a of items) {
+    const card = document.createElement("article");
+    card.className = "card fade";
+
+    const title = document.createElement("h2");
+    title.className = "title";
+    title.textContent = stripCdata(a.title);
+
+    const sub = document.createElement("div");
+    sub.className = "sub";
+    if (a.host) sub.appendChild(badge(a.host));
+    if (a.published) sub.appendChild(document.createTextNode(" " + a.published));
+    if (a.link) {
+      const link = document.createElement("a");
+      link.href = a.link;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Open source";
+      sub.appendChild(document.createTextNode(" "));
+      sub.appendChild(link);
+    }
+    const conf = document.createElement("span");
+    conf.className = "badge";
+    conf.innerHTML = `Confidence: <strong class="${grade(a.confidence)}">${a.confidence}</strong>`;
+    sub.appendChild(conf);
+
+    const model = document.createElement("span");
+    model.className = "badge";
+    model.textContent = `Model: ${a.model}${a.cached ? " (cached)" : ""}`;
+    sub.appendChild(model);
+
+    const rt = document.createElement("span");
+    rt.className = "badge";
+    rt.textContent = `~${readTime(a.summary)} sec read`;
+    sub.appendChild(rt);
+
+    const body = document.createElement("div");
+    body.className = "summary";
+    body.textContent = a.summary;
+
+    const kw = (a.keywords || []).slice(0, 8);
+    if (kw.length) {
+      const k = document.createElement("div");
+      k.className = "kw";
+      k.textContent = "SEO: " + kw.join(", ");
+      body.appendChild(document.createElement("br"));
+      body.appendChild(k);
+    }
+
+    const row = document.createElement("div");
+    row.className = "row";
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy";
+    copyBtn.textContent = "Copy summary";
+    copyBtn.onclick = async () => {
+      await navigator.clipboard.writeText(`${a.title}\n${a.summary}\n${a.link||""}`);
+      copyBtn.textContent = "Copied";
+      setTimeout(()=>copyBtn.textContent="Copy summary", 1200);
+    };
+    row.appendChild(copyBtn);
+
+    card.appendChild(title);
+    card.appendChild(sub);
+    card.appendChild(body);
+    card.appendChild(row);
+    listEl.appendChild(card);
+  }
+}
+
+function badge(t) {
+  const b = document.createElement("span");
+  b.className = "badge";
+  b.textContent = t;
+  return b;
+}
+
+function grade(n){ return n>=70?"good":n>=45?"warn":"bad"; }
+function readTime(t){ const w=(t||"").split(/\s+/).length; return Math.max(10, Math.round(w/3)); }
+function stripCdata(s){ return (s||"").replace(/<!\[CDATA\[(.*?)\]\]>/gis, "$1"); }
+
+async function sha(str){
+  const d=new TextEncoder().encode(str);
+  const b=await crypto.subtle.digest("SHA-256", d);
+  return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,"0")).join("");
+}
+
+// boot
+reload();
 </script>
 </body>
 </html>
