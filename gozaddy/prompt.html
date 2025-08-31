@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Prompt Generator — Perspectives</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg: transparent;         /* embeds nicely on white sites */
+    --surface:#ffffff;
+    --text:#0b1220; --muted:#667085; --accent:#0f6fff;
+    --border:#e5e7eb; --dash:#eef2f7;
+    --title:26px; --h2:18px; --body:16px; --mono:12px;
+  }
+  @media (min-width:1100px){
+    :root{ --title:30px; --h2:20px; --body:17px; }
+  }
+  *{ box-sizing:border-box }
+  body{ margin:0; background:var(--bg); color:var(--text);
+        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.5 }
+  header{ position:sticky; top:0; z-index:5; background:rgba(255,255,255,.92);
+          backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border) }
+  .wrap{ max-width:1100px; margin:0 auto; padding:16px }
+  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px }
+  .sub{ font-size:13px; color:var(--muted); margin-top:4px }
+
+  main{ padding:18px 0 60px }
+  .grid{ display:grid; gap:16px }
+  @media (min-width:1100px){ .grid{ grid-template-columns: 1.2fr 1fr } }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px }
+  h2{ margin:0 0 10px; font-size:var(--h2); font-weight:800 }
+
+  textarea,input,select,button{
+    font:inherit; font-size:var(--body);
+    border:1px solid var(--border); border-radius:10px; outline:none;
+    padding:10px 12px; background:#fff; color:#0b1220
+  }
+  textarea{ width:100%; min-height:120px; resize:vertical }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center }
+  .muted{ color:var(--muted); font-size:14px }
+  .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--border);
+         border-radius:999px; background:#f9fafb; color:#101828; font-size:12px }
+
+  .list{ display:flex; flex-direction:column; gap:8px; max-height:340px; overflow:auto; border:1px dashed var(--dash); border-radius:12px; padding:10px; background:#fff }
+  .chk{ display:flex; align-items:center; gap:10px }
+  .chk input{ width:16px; height:16px }
+
+  .out{ display:flex; flex-direction:column; gap:12px }
+  .promptCard{ border:1px solid var(--border); border-radius:12px; padding:12px; background:#fff }
+  .promptCard h3{ margin:0 0 6px; font-size:16px }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono); color:#1f2937 }
+  pre{ margin:0; white-space:pre-wrap; word-break:break-word }
+
+  .btnRow{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap }
+  .btn{ cursor:pointer }
+  .link{ color:var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:6px }
+  .link:hover{ text-decoration:underline }
+
+  .badge{ font-size:12px; color:#0b1220; background:#eef2ff; border:1px solid #dbe5ff; padding:2px 8px; border-radius:999px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Prompt Generator — Perspectives</h1>
+    <div class="sub">Craft smart prompts from your article titles using <span class="badge">perspectives.txt</span>.</div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <!-- LEFT: INPUTS -->
+    <section class="card">
+      <h2>1) Source Titles</h2>
+      <div class="muted" style="margin-bottom:8px">Paste one or more titles (one per line). Optional: add a short context after " — ".</div>
+      <textarea id="titles" placeholder="Example:
+New battery breakthrough promises 2x EV range — lab results, early-stage
+India announces new digital payment policy
+US jobs report beats expectations while wages cool"></textarea>
+
+      <div class="row" style="margin-top:10px">
+        <button class="btn" id="loadLatest">Add latest from Worker</button>
+        <span class="muted">Pulls a handful of most recent titles from your summaries feed.</span>
+      </div>
+
+      <h2 style="margin-top:16px">2) Perspectives</h2>
+      <div class="row" style="margin-bottom:8px">
+        <button class="btn" id="selAll">Select all</button>
+        <button class="btn" id="selNone">Clear</button>
+        <span id="perspStatus" class="muted">Loading perspectives…</span>
+      </div>
+      <div id="perspList" class="list"></div>
+
+      <h2 style="margin-top:16px">3) Prompt Settings</h2>
+      <div class="row">
+        <label> Tone
+          <select id="tone">
+            <option>Analytical</option>
+            <option>Neutral</option>
+            <option>Advisory</option>
+            <option>Bold</option>
+            <option>Investor-grade</option>
+            <option>Technical</option>
+            <option>Policy Brief</option>
+          </select>
+        </label>
+        <label> Audience
+          <select id="audience">
+            <option>Executives</option>
+            <option>Product Leaders</option>
+            <option>Engineers</option>
+            <option>Analysts</option>
+            <option>Policy Makers</option>
+            <option>General</option>
+          </select>
+        </label>
+        <label> Length
+          <select id="length">
+            <option>Short (200–400 words)</option>
+            <option selected>Medium (600–900 words)</option>
+            <option>Long (1200–1600 words)</option>
+          </select>
+        </label>
+        <label> Format
+          <select id="format">
+            <option>Brief with bullets</option>
+            <option>Executive memo</option>
+            <option>Q&A</option>
+            <option>Outline + Actions</option>
+            <option>Press-release style</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <label class="chk"><input type="checkbox" id="includeRisks" checked/>Include risks</label>
+        <label class="chk"><input type="checkbox" id="includeMetrics" checked/>Include metrics/KPIs</label>
+        <label class="chk"><input type="checkbox" id="includeCounterfactuals" />Include counterfactuals</label>
+        <label class="chk"><input type="checkbox" id="asciiOnly" checked/>ASCII-only</label>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <input id="seo" placeholder="Optional SEO terms (comma-separated)" style="flex:1" />
+      </div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="btn" id="gen">Generate Prompts</button>
+        <button class="btn" id="clearOut">Clear Output</button>
+      </div>
+    </section>
+
+    <!-- RIGHT: OUTPUTS -->
+    <section class="card">
+      <h2>Generated Prompts</h2>
+      <div id="out" class="out">
+        <div class="muted">Your prompts will appear here. Each card has a Copy button and a link to open ChatGPT in a new tab.</div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* ===== CONFIG ===== */
+const PERSPECTIVES_URL = "https://raw.githubusercontent.com/DaScient/labs/main/gozaddy/perspectives.txt";
+
+/* Optional: pull some recent titles from your Worker ASCII feed */
+const WORKER_ASCII_URL =
+  "https://gozaddy.aristocles24.workers.dev/ascii?feeds=" +
+  encodeURIComponent([
+    "https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+    "https://feeds.washingtonpost.com/rss/national",
+    "https://www.forbes.com/most-popular/feed/",
+    "https://www.aljazeera.com/xml/rss/all.xml",
+    "https://www.reuters.com/rssFeed/topNews",
+    "https://feeds.npr.org/1001/rss.xml"
+  ].join(",")) + "&limit=12&interval=3600";
+
+/* ===== Helpers ===== */
+const $ = (s)=>document.querySelector(s);
+function cleanTitle(t){
+  if(!t) return "(untitled)";
+  t = t.replace(/^<!\[CDATA\[/i,'').replace(/\]\]>$/,'').trim();
+  if(/^seo keywords:/i.test(t)) return "(untitled)";
+  return t.replace(/\s+/g,' ').trim();
+}
+function parseAsciiTitles(text){
+  const lines = text.split(/\r?\n/);
+  const out = [];
+  for(let i=0;i<lines.length-1;i++){
+    const a = lines[i].trim(), b = lines[i+1].trim();
+    if(a && /^-{20,}$/.test(b)){ // header line is a title, followed by dashes
+      const parts = a.split("|").map(s=>s.trim());
+      out.push(cleanTitle(parts[0]));
+    }
+  }
+  // unique + filter junk
+  return [...new Set(out)].filter(x=>x && x !== "(untitled)");
+}
+async function copy(txt){
+  try{ await navigator.clipboard.writeText(txt); return true; }
+  catch(_){ return false; }
+}
+
+/* ===== Perspectives ===== */
+let PERSPECTIVES = [
+  // Fallback list if fetch fails
+  "Business Strategy","Finance & Markets","Analytics & Data","Science & Technology",
+  "Forward-Thinking (Futures)","Profitability & Unit Economics","Commerce & Go-To-Market",
+  "AI/ML Applications","Generative AI (GenAI)","Policy, Regulation & Ethics","Consumer Impact & UX"
+];
+async function loadPerspectives(){
+  try{
+    const r = await fetch(PERSPECTIVES_URL, {cache:"no-cache"});
+    if(r.ok){
+      const t = (await r.text()).split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+      if(t.length) PERSPECTIVES = t;
+      $("#perspStatus").textContent = `Loaded ${PERSPECTIVES.length}`;
+    }else{
+      $("#perspStatus").textContent = `Using fallback (${PERSPECTIVES.length})`;
+    }
+  }catch(e){
+    $("#perspStatus").textContent = `Using fallback (${PERSPECTIVES.length})`;
+  }
+  renderPerspList();
+}
+function renderPerspList(){
+  const box = $("#perspList"); box.innerHTML="";
+  PERSPECTIVES.forEach((p,i)=>{
+    const id = "p"+i;
+    const row = document.createElement("label");
+    row.className = "chk";
+    row.innerHTML = `<input type="checkbox" id="${id}" data-persp="${p}" checked /> <span>${p}</span>`;
+    box.appendChild(row);
+  });
+}
+
+/* ===== Titles from Worker (optional) ===== */
+$("#loadLatest").addEventListener("click", async ()=>{
+  try{
+    const r = await fetch(WORKER_ASCII_URL + "&_t=" + Date.now(), {cache:"no-store"});
+    if(!r.ok) throw new Error("feed fail "+r.status);
+    const t = await r.text();
+    const titles = parseAsciiTitles(t);
+    if(!titles.length) return;
+    const existing = $("#titles").value.trim();
+    const merged = [...new Set([ ...existing.split(/\r?\n/).filter(Boolean), ...titles ])].filter(Boolean);
+    $("#titles").value = merged.join("\n");
+  }catch(e){
+    alert("Could not fetch recent titles from Worker.");
+  }
+});
+
+/* ===== Perspective selection helpers ===== */
+$("#selAll").addEventListener("click", ()=>{
+  $("#perspList").querySelectorAll('input[type="checkbox"]').forEach(c=>c.checked=true);
+});
+$("#selNone").addEventListener("click", ()=>{
+  $("#perspList").querySelectorAll('input[type="checkbox"]').forEach(c=>c.checked=false);
+});
+
+/* ===== Prompt Factory ===== */
+function lengthToWords(len){
+  if(len.startsWith("Short")) return "200–400";
+  if(len.startsWith("Medium")) return "600–900";
+  return "1200–1600";
+}
+function buildPrompt(titleLine, perspective, opts){
+  // Allow optional " — context" after the title
+  const [title, context=""] = titleLine.split(" — ");
+  const words = lengthToWords(opts.length);
+  const seo = (opts.seo||"").trim();
+  const sections = [
+    "SUMMARY (2–4 sentences)",
+    "KEY SIGNALS (bulleted)",
+    opts.includeMetrics ? "METRICS & KPIs (bulleted)" : null,
+    "IMPLICATIONS (bulleted)",
+    opts.includeRisks ? "RISKS & COUNTERMEASURES (bulleted)" : null,
+    "RECOMMENDATIONS (Now / Next / Later)"
+  ].filter(Boolean);
+
+  const constraints = [
+    opts.asciiOnly ? "ASCII only (no emoji, no tables)" : null,
+    "No long quotes; paraphrase and add original analysis",
+    "Avoid repetition of the title inside the body"
+  ].filter(Boolean);
+
+  const extras = [];
+  if(opts.includeCounterfactuals) extras.push("Add one COUNTERFACTUAL: what if the premise is wrong?");
+
+  const seoLine = seo ? `SEO FOCUS: ${seo}` : "SEO FOCUS: pick 3–5 precise long-tail terms.";
+
+  return [
+`SYSTEM: You are an expert in ${perspective}. Write for ${opts.audience} in a ${opts.tone.toLowerCase()} tone.`,
+`TASK: Produce an ORIGINAL analysis based on this item.
+TITLE: ${title.trim()}
+CONTEXT: ${context.trim() || "(none)"}
+TARGET LENGTH: ${words} words
+FORMAT: ${opts.format}
+SECTIONS: ${sections.join(" | ")}
+${extras.length ? "EXTRAS: " + extras.join(" | ") : ""}
+CONSTRAINTS: ${constraints.join(" | ")}
+${seoLine}
+OUTPUT: Clear headers in ALL CAPS, concise bullets, decisive language. End with: "SEO KEYWORDS: kw1; kw2; kw3; kw4; kw5".`
+  ].join("\n\n");
+}
+
+/* ===== Render & Actions ===== */
+function selectedPerspectives(){
+  return [...$("#perspList").querySelectorAll('input[type="checkbox"]:checked')].map(c=>c.getAttribute("data-persp"));
+}
+function createPromptCard(title, perspective, promptText){
+  const card = document.createElement("div");
+  card.className = "promptCard";
+  const h = document.createElement("h3");
+  h.textContent = `${perspective} — ${title}`;
+  const pre = document.createElement("pre");
+  pre.className = "mono";
+  pre.textContent = promptText;
+
+  const actions = document.createElement("div");
+  actions.className = "btnRow";
+  const copyBtn = document.createElement("button");
+  copyBtn.className = "btn";
+  copyBtn.textContent = "Copy";
+  copyBtn.onclick = async ()=>{
+    const ok = await copy(promptText);
+    copyBtn.textContent = ok ? "Copied!" : "Copy failed";
+    setTimeout(()=>copyBtn.textContent="Copy", 900);
+  };
+
+  const a = document.createElement("a");
+  a.href = "https://chat.openai.com/";   // opens a private ChatGPT session
+  a.target = "_blank";
+  a.rel = "noopener";
+  a.className = "link";
+  a.textContent = "Open ChatGPT";
+  a.onclick = async ()=>{
+    // copy first for convenience
+    await copy(promptText);
+  };
+
+  actions.appendChild(copyBtn);
+  actions.appendChild(a);
+
+  card.appendChild(h);
+  card.appendChild(pre);
+  card.appendChild(actions);
+  return card;
+}
+
+$("#gen").addEventListener("click", ()=>{
+  const titles = $("#titles").value.split(/\r?\n/).map(t=>t.trim()).filter(Boolean);
+  if(!titles.length){ alert("Please paste one or more titles."); return; }
+  const perspectives = selectedPerspectives();
+  if(!perspectives.length){ alert("Select at least one perspective."); return; }
+
+  const opts = {
+    tone: $("#tone").value,
+    audience: $("#audience").value,
+    length: $("#length").value,
+    format: $("#format").value,
+    includeRisks: $("#includeRisks").checked,
+    includeMetrics: $("#includeMetrics").checked,
+    includeCounterfactuals: $("#includeCounterfactuals").checked,
+    asciiOnly: $("#asciiOnly").checked,
+    seo: $("#seo").value
+  };
+
+  const out = $("#out"); out.innerHTML = "";
+  for(const t of titles){
+    const clean = cleanTitle(t);
+    for(const p of perspectives){
+      const txt = buildPrompt(clean, p, opts);
+      out.appendChild( createPromptCard(clean, p, txt) );
+    }
+  }
+});
+
+$("#clearOut").addEventListener("click", ()=>{ $("#out").innerHTML=""; });
+
+/* Boot */
+loadPerspectives();
+</script>
+</body>
+</html>
