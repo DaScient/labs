@@ -173,7 +173,6 @@ const WORKER_URL = (new URLSearchParams(location.search).get("worker")) ||
   "https://gozaddy.aristocles24.workers.dev/summaries";
 
 const DEFAULT_FEEDS = [
-  // (Short curated list; your Worker already supports many more)
   "https://feeds.reuters.com/reuters/topNews",
   "https://feeds.reuters.com/Reuters/worldNews",
   "https://www.aljazeera.com/xml/rss/all.xml",
@@ -323,9 +322,10 @@ function spark(values, w=160, h=36, pad=4){
 /* ===== State ===== */
 let FRONTEND_POLL_MS = parseInt(refSel.value,10);
 let WINDOW_HOURS = parseInt(winSel.value,10);
-let CACHE = []; // merged window articles
-let POLL_HISTORY = []; // last N polls, each {ts, mentionsByTheme:{sym:count}}
+let CACHE = [];             // merged window articles
+let POLL_HISTORY = [];      // last N polls, each {ts, mentionsByTheme:{sym:count}}
 let LAST_ETAG = "";
+const SENTIMENT_CACHE = new Map(); // symbol -> { ts, data }
 
 /* ===== Fetch & parse ===== */
 async function loadSummaries(){
@@ -337,7 +337,6 @@ async function loadSummaries(){
 }
 
 function normalizeArticles(jsonList){
-  // Worker returns array of [{title, link, published, summary, body, host, confidence, topTerms}] or similar
   return (jsonList||[]).map(x=>{
     const title = String(x.title||"").replace(/<!\[CDATA\[|\]\]>/g,"").trim();
     const body = String(x.summary||x.body||"").trim();
@@ -349,6 +348,37 @@ function normalizeArticles(jsonList){
       uniq((seoKeywords(body).length? seoKeywords(body): words(body).filter(w=>!STOP.has(w)).slice(0,8)).map(w=>w.toLowerCase()));
     return { title, link, host, published, body, confidence, topTerms, observedAt: Date.now() };
   });
+}
+
+/* ===== Sentiment (GLD / CVX / RCI) ===== */
+const SENT_API = "https://stocks.aristocles24.workers.dev/api/sentiment?symbol=";
+const SENT_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+async function fetchSentiment(symbol){
+  const cached = SENTIMENT_CACHE.get(symbol);
+  const now = Date.now();
+  if(cached && (now - cached.ts) < SENT_TTL_MS) return cached.data;
+
+  try{
+    const r = await fetch(SENT_API + encodeURIComponent(symbol), { cache:"no-store" });
+    if(!r.ok) throw new Error("sentiment "+symbol+" "+r.status);
+    const data = await r.json();
+    // Expected shape (defensive):
+    // { symbol, score ([-1..1] or [0..1]), label, updated, history:[numbers] }
+    SENTIMENT_CACHE.set(symbol, { ts: now, data });
+    return data;
+  }catch(e){
+    console.warn("Sentiment fetch failed:", symbol, e);
+    const fallback = { symbol, score: null, label: "No signal", updated: null, history: [] };
+    SENTIMENT_CACHE.set(symbol, { ts: now, data: fallback });
+    return fallback;
+  }
+}
+
+async function loadAllSentiments(){
+  const entries = await Promise.all(WATCH.map(w => fetchSentiment(w.symbol)));
+  const map = new Map(entries.map(e => [e.symbol, e]));
+  return map;
 }
 
 /* ===== Render helpers ===== */
@@ -413,7 +443,16 @@ function renderLatest(list){
   });
 }
 
-/* Commodity Watch render */
+/* Commodity Watch render (with sentiment) */
+let LAST_SENT_MAP = new Map();
+function fmtSentScore(sc){
+  if(sc==null || isNaN(sc)) return "—";
+  // Try to map [-1..1] → percentage; if already [0..1], it still looks fine.
+  const pct = Math.round((sc+1)/2*100);
+  if(sc>=0.15) return `<span class="good" style="font-weight:700">${pct}% Bullish</span>`;
+  if(sc<=-0.15) return `<span class="bad" style="font-weight:700">${pct}% Bearish</span>`;
+  return `<span class="warn" style="font-weight:700">${pct}% Neutral</span>`;
+}
 function renderWatch(windowed){
   const root = $("#watchList"); root.innerHTML="";
   // Build counts across window and last few polls for spark
@@ -430,21 +469,45 @@ function renderWatch(windowed){
     const freq = new Map();
     hits.forEach(a=> (a.topTerms||[]).forEach(t=>freq.set(t,(freq.get(t)||0)+1)));
     const topCo = [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,6).map(x=>x[0]);
-    return { ...w, count:hits.length, heat:Math.round(heat), delta, z:Math.round(z*10)/10, series, samples, co:topCo };
+
+    const sent = LAST_SENT_MAP.get(w.symbol) || { score:null, label:"No signal", history:[], updated:null };
+    const sentSeries = Array.isArray(sent.history) ? sent.history.slice(-14) : [];
+    const combinedEdge = (z||0) * ((sent.score==null)?1:(1 + sent.score)); // simple blend
+
+    return { ...w, count:hits.length, heat:Math.round(heat), delta, z:Math.round(z*10)/10, series, samples, co:topCo,
+             sentScore: sent.score, sentLabel: sent.label, sentUpdated: sent.updated, sentSeries, edge: Math.round(combinedEdge*100)/100 };
   });
 
   themeData.forEach(t=>{
     const alert = t.z>=1.25 ? `<span class="badge" style="border-color:#ffe8b3;background:#fff7db;color:#8a5a00">Anomaly z=${t.z}</span>` : "";
+    const sentBadge = t.sentScore==null
+      ? `<span class="badge muted">Sentiment: No signal</span>`
+      : `<span class="badge">Sentiment: ${t.sentLabel||"—"} · ${fmtSentScore(t.sentScore)}</span>`;
+    const updated = t.sentUpdated ? `<span class="mono muted"> · ${new Date(t.sentUpdated).toLocaleString()}</span>` : "";
+
     const el = document.createElement("div"); el.className="ticker";
     el.innerHTML = `
-      <h3 class="rowBetween"><span>${t.label} <span class="badge mono">${t.symbol}</span></span> ${alert}</h3>
-      <div class="rowBetween">
+      <h3 class="rowBetween">
+        <span>${t.label} <span class="badge mono">${t.symbol}</span></span>
+        <span>${sentBadge}${updated}</span>
+      </h3>
+      <div class="rowBetween" style="margin-top:6px">
         <div><div class="muted">Mentions</div><div class="big">${t.count}</div></div>
         <div><div class="muted">Δ (prev poll)</div><div class="${t.delta>=0?'good':'bad'}" style="font-weight:700">${t.delta>=0?'+':''}${t.delta}</div></div>
         <div><div class="muted">Heat Index</div><div class="big">${t.heat}</div></div>
+        <div><div class="muted">Edge (z × sentiment)</div><div class="big">${t.edge}</div></div>
       </div>
-      ${spark(t.series)}
-      <div class="muted" style="margin:6px 0 4px">Co-mentions</div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px">
+        <div>
+          <div class="muted" style="margin:4px 0">Mentions trend</div>
+          ${spark(t.series)}
+        </div>
+        <div>
+          <div class="muted" style="margin:4px 0">Sentiment trend</div>
+          ${spark(t.sentSeries.length ? t.sentSeries : [0])}
+        </div>
+      </div>
+      <div class="muted" style="margin:8px 0 4px">Co-mentions</div>
       <div>${t.co.map(c=>`<span class="chip">${c}</span>`).join(" ")||'<span class="muted">—</span>'}</div>
       <div class="muted" style="margin:10px 0 4px">Recent headlines</div>
       <ul style="margin:0;padding-left:18px">${t.samples.map(s=>`<li>${s}</li>`).join("")||'<li class="muted">No samples</li>'}</ul>
@@ -455,13 +518,11 @@ function renderWatch(windowed){
 
 /* Phrases Δ render */
 function renderPhrases(windowed){
-  // Current freq
   const cur = new Map();
   windowed.forEach(a=>{
     const {bi,tri} = bigramsAndTrigrams(a.body+" "+a.title);
     [...bi,...tri].forEach(p=> cur.set(p, (cur.get(p)||0)+1));
   });
-  // Previous aggregate (from prior polls but outside current window, light approximation)
   const prev = new Map();
   (POLL_HISTORY.slice(0,-1)).forEach(p=>{
     Object.entries(p.ngrams||{}).forEach(([k,v])=> prev.set(k, (prev.get(k)||0)+v));
@@ -506,18 +567,15 @@ function renderAll(){
   const filtered = !filt ? windowed :
     windowed.filter(a => a.title.toLowerCase().includes(filt) || a.topTerms.some(t=>t.includes(filt)));
 
-  // Core sections
   renderKpis(filtered);
   renderWatch(filtered);
   renderKeywords(filtered);
   renderPhrases(filtered);
 
-  // Heatmap
   const kwPairs = topKeywords(filtered, 14);
   const keys = kwPairs.map(p=>p[0]);
   renderHeat("#heat", keys, cooccurMatrix(filtered, keys));
 
-  // Latest table
   renderLatest(filtered.slice(0,12));
 }
 
@@ -527,9 +585,13 @@ async function tick(force=false){
     FRONTEND_POLL_MS = parseInt(refSel.value,10);
     WINDOW_HOURS = parseInt(winSel.value,10);
 
+    // 1) Fetch summaries
     const data = await loadSummaries();
     const etag = (data && data.etag) || JSON.stringify(data).slice(0,200);
-    if(!force && etag===LAST_ETAG){ setTimeout(()=>tick(false), FRONTEND_POLL_MS); return; }
+    if(!force && etag===LAST_ETAG){
+      setTimeout(()=>tick(false), FRONTEND_POLL_MS);
+      return;
+    }
     LAST_ETAG = etag;
 
     const articles = normalizeArticles(data.items || data);
@@ -538,7 +600,7 @@ async function tick(force=false){
     articles.forEach(a=> map.set((a.title+"|"+a.host).toLowerCase(), a));
     CACHE = [...map.values()].sort((a,b)=> b.observedAt - a.observedAt);
 
-    // Build poll snapshot for watchlist & phrases
+    // 2) Build poll snapshot for watchlist & phrases
     const mentionsByTheme = {};
     WATCH.forEach(w=>{
       const re = new RegExp(`\\b(${w.aliases.map(a=>a.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")})\\b`, "i");
@@ -554,9 +616,12 @@ async function tick(force=false){
     POLL_HISTORY.push({ ts: Date.now(), mentionsByTheme, ngrams, topSet });
     if(POLL_HISTORY.length>48) POLL_HISTORY.shift();
 
+    // 3) Fetch/refresh sentiments (cached 10m)
+    LAST_SENT_MAP = await loadAllSentiments();
+
+    // 4) Render
     renderAll();
     lastUpdated.textContent = "Last updated: " + new Date().toLocaleString();
-
     document.querySelectorAll(".card").forEach(c=>{ c.classList.add("blink"); setTimeout(()=>c.classList.remove("blink"), 900); });
   }catch(e){
     console.error(e);
