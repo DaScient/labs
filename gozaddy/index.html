@@ -7,29 +7,50 @@
 <style>
   :root{
     --bg:#ffffff; --text:#0b1220; --muted:#667085; --accent:#0f6fff;
-    --card:#ffffff; --border:#e5e7eb;
+    --card:#ffffff; --border:#e5e7eb; --chip:#f8fafc;
+    --good:#15803d; --warn:#b45309; --bad:#b91c1c;
   }
   *{box-sizing:border-box}
-  body{ margin:0; background:var(--bg); color:var(--text);
-        font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial; line-height:1.55; }
-  header{ position:sticky; top:0; z-index:10; background:rgba(255,255,255,.92);
-          backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border); }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
+    line-height:1.55;
+  }
+  header{
+    position:sticky; top:0; z-index:10; background:rgba(255,255,255,.92);
+    backdrop-filter:saturate(140%) blur(6px); border-bottom:1px solid var(--border);
+  }
   .wrap{ max-width:1100px; margin:0 auto; padding:16px; }
   h1{ margin:0; font-size:24px; font-weight:800; letter-spacing:.2px; }
   .toolbar{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px; }
-  .pill{ display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; color:#111; background:#f8fafc }
-  .btn{ padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer; }
+  .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--border);
+         border-radius:999px; font-size:12px; color:#111; background:#f8fafc }
+  .btn{
+    padding:8px 12px; border:1px solid var(--border); border-radius:10px; background:#fff; cursor:pointer;
+    font-size:14px;
+  }
   .btn:hover{ border-color:#cbd5e1 }
+  .btn:focus{ outline:2px solid #9ec5ff; outline-offset:1px }
   main{ padding:18px 0 60px }
   .card{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin:12px 0; }
   .title{ font-weight:800; font-size:22px; margin-bottom:6px; line-height:1.25 }
   .meta{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:13px; color:var(--muted); }
-  .host{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:#f9fafb; color:#0b1220; font-weight:600 }
-  .summary{ margin-top:12px; font-size:16px }
-  .keywords{ margin-top:8px; color:#555; font-size:13px }
+  .host{ display:inline-block; padding:4px 8px; border:1px solid var(--border); border-radius:999px; background:var(--chip); color:#0b1220; font-weight:600 }
+  .summary{ margin-top:10px; font-size:16px }
+  .keywords{ margin-top:8px; color:#475569; font-size:13px }
+  .hashtags{ margin-top:4px; display:flex; flex-wrap:wrap; gap:6px }
+  .tag{ background:var(--chip); border:1px solid var(--border); border-radius:999px; padding:2px 8px; font-size:12px }
   .actions{ display:flex; gap:8px; flex-wrap:wrap; margin-top:12px }
   a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
-  .good{ color:#15803d } .warn{ color:#b45309 } .bad{ color:#b91c1c }
+  .good{ color:var(--good) } .warn{ color:var(--warn) } .bad{ color:var(--bad) }
+
+  /* tiny toast for feedback */
+  .toast{
+    position:fixed; left:50%; bottom:16px; transform:translateX(-50%);
+    background:#0b1220; color:#fff; padding:8px 12px; border-radius:10px; font-size:13px;
+    box-shadow:0 8px 28px rgba(0,0,0,.25); opacity:0; pointer-events:none; transition:opacity .18s ease;
+  }
+  .toast.show{ opacity:1 }
 </style>
 </head>
 <body>
@@ -37,18 +58,21 @@
   <div class="wrap">
     <h1>AI-Generated News Summaries</h1>
     <div class="toolbar">
-      <span id="last" class="pill">Last updated: …</span>
+      <span id="last" class="pill" aria-live="polite">Last updated: …</span>
       <span id="ref" class="pill">Refresh: 60s</span>
-      <button id="refresh" class="btn">Refresh now</button>
+      <button id="refresh" class="btn" type="button" aria-label="Refresh now">Refresh now</button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div id="list"></div>
+  <div id="list" aria-live="polite"></div>
 </main>
 
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
 <script>
+/* ====== CONFIG ====== */
 const WORKER = "https://gozaddy.aristocles24.workers.dev";
 const FEEDS_URL_DEFAULT = "https://raw.githubusercontent.com/DaScient/labs/main/gozaddy/feeds.txt";
 
@@ -59,9 +83,8 @@ document.getElementById("ref").textContent = "Refresh: " + Math.round(refreshMs/
 
 const SUM_URL = WORKER + "/summaries?feedsUrl=" + encodeURIComponent(feedsUrl) + "&limit=50&interval=3600";
 
-function hostOf(link){
-  try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; }
-}
+/* ====== UTILS ====== */
+function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; } }
 function gradeClass(score){ return score>=70?"good":score>=45?"warn":"bad"; }
 function uniq(items){
   const seen=new Set(), out=[];
@@ -72,7 +95,26 @@ function uniq(items){
   return out;
 }
 function cleanTitle(t){ return (t||"").replace(/<!\[CDATA\[(.*?)\]\]>/gi,"$1").replace(/\s+/g," ").trim(); }
+function toHashtags(arr, max=6){
+  const taken = new Set(); const tags=[];
+  for(const k of (arr||[])){
+    const h = "#"+String(k).toLowerCase().replace(/[^a-z0-9]+/g,"");
+    if(h.length<3 || taken.has(h)) continue;
+    taken.add(h); tags.push(h);
+    if(tags.length>=max) break;
+  }
+  return tags;
+}
+async function copyToClipboard(text){
+  try{ await navigator.clipboard.writeText(text); showToast("Copied to clipboard"); }
+  catch(_){ showToast("Copy failed. Select & press ⌘/Ctrl+C"); }
+}
+function showToast(msg){
+  const el = document.getElementById("toast"); el.textContent = msg;
+  el.classList.add("show"); setTimeout(()=>el.classList.remove("show"), 1200);
+}
 
+/* ====== DATA LOAD LOOP ====== */
 async function load(){
   try{
     const r = await fetch(SUM_URL + "&_t=" + Date.now(), { cache:"no-store" });
@@ -87,90 +129,150 @@ async function load(){
     setTimeout(load, refreshMs);
   }
 }
+document.getElementById("refresh").onclick = ()=>load();
 
+/* ====== RENDER ====== */
 function render(items){
   const root = document.getElementById("list");
   root.innerHTML = "";
   for(const it of items){
-    const card = document.createElement("div");
+    const card = document.createElement("article");
     card.className = "card";
+    card.setAttribute("tabindex","0");
 
     const title = cleanTitle(it.title);
     const link = it.link || "";
-    const h = document.createElement("div");
+    const host = hostOf(link);
+    const conf = Math.round(it.confidence || 0);
+    const confCls = gradeClass(conf);
+    const keywords = (it.keywords && it.keywords.length) ? it.keywords : (it.topTerms||[]);
+    const tags = toHashtags(keywords, 6);
+
+    // ----- Title
+    const h = document.createElement("h2");
     h.className = "title";
     h.textContent = title;
     card.appendChild(h);
 
+    // ----- Meta
     const meta = document.createElement("div");
     meta.className = "meta";
-    const host = hostOf(link);
-    const conf = Math.round(it.confidence || 0);
-    const confCls = gradeClass(conf);
     meta.innerHTML = `
-      <span class="host">${host||"unknown"}</span>
+      <span class="host" title="Source">${host||"unknown"}</span>
       <span>${it.published || ""}</span>
       ${link ? `<a href="${link}" target="_blank" rel="noopener">Open source</a>` : ""}
-      <span>Confidence: <span class="${confCls}">${conf}</span></span>
+      <span>Confidence: <strong class="${confCls}">${conf}</strong></span>
       ${it.model ? `<span>Model: ${it.model}</span>` : ""}
     `;
     card.appendChild(meta);
 
+    // ----- Summary
     if (it.summary) {
-      const s = document.createElement("div");
+      const s = document.createElement("p");
       s.className = "summary";
       s.textContent = it.summary;
       card.appendChild(s);
     }
 
-    if (it.keywords && it.keywords.length){
+    // ----- Keywords + hashtags
+    if (keywords && keywords.length){
       const k = document.createElement("div");
       k.className = "keywords";
-      k.textContent = "Top terms: " + it.keywords.slice(0,8).join(", ");
+      k.textContent = "Top terms: " + keywords.slice(0,8).join(", ");
       card.appendChild(k);
+
+      if(tags.length){
+        const ht = document.createElement("div");
+        ht.className = "hashtags";
+        ht.setAttribute("aria-label","Suggested hashtags");
+        ht.innerHTML = tags.map(t=>`<span class="tag">${t}</span>`).join("");
+        card.appendChild(ht);
+      }
     }
 
-    // actions
+    // ----- Actions
     const actions = document.createElement("div");
     actions.className = "actions";
 
-    // Copy
+    // Build clean shareable summary block
+    const summaryBlock = [
+      `Title: ${title}`,
+      (host || it.published) ? `Source: ${host||"unknown"}${it.published?` — ${it.published}`:""}` : null,
+      it.summary ? `Summary: ${it.summary}` : null,
+      (keywords && keywords.length) ? `Top terms: ${keywords.slice(0,8).join(", ")}` : null,
+      tags.length ? `Hashtags: ${tags.join(" ")}` : null,
+      link ? `Link: ${link}` : null
+    ].filter(Boolean).join("\n");
+
+    // Prompt builder (kept in closure so both buttons can use it)
+    let lastPrompt = "";
+    function buildPrompt(){
+      const seo = (keywords||[]).slice(0,10).join("; ");
+      const tagLine = tags.join(" ");
+      // A concise but powerful, publish-ready prompt:
+      lastPrompt = [
+        "You are an expert editor and content strategist.",
+        "Write a publish-ready article suitable for Medium/Substack/LinkedIn.",
+        "Structure:",
+        "- Headline (punchy, ≤70 chars)",
+        "- Dek/subheadline (1–2 lines)",
+        "- 4–6 short paragraphs with scannable sentences",
+        "- 3–5 bullet takeaways",
+        "- Optional call-to-action for thoughtful discussion",
+        "",
+        `Topic headline: ${title}`,
+        `Source host: ${host||"unknown"}`,
+        it.published ? `Published: ${it.published}` : "",
+        link ? `Canonical link: ${link}` : "",
+        it.summary ? `Source summary:\n${it.summary}` : "No summary available.",
+        "",
+        "Style guidance:",
+        "- Neutral, factual, useful. Avoid hype.",
+        "- Explain why it matters in plain language.",
+        "- Include concrete details from the brief; avoid invented facts.",
+        "- Add context and implications for operators/executives.",
+        "",
+        "SEO & distribution:",
+        `- Suggested keywords: ${seo || "news; analysis; briefing"}`,
+        `- Suggested hashtags: ${tagLine || "#news #analysis"}`,
+        "",
+        "Output in markdown with proper headings and bullet lists."
+      ].filter(Boolean).join("\n");
+      return lastPrompt;
+    }
+
+    // Copy Summary button
     const copyBtn = document.createElement("button");
     copyBtn.className = "btn";
-    copyBtn.textContent = "Copy";
-    copyBtn.onclick = async ()=>{
-      const text = `${title}\n\n${it.summary || ""}\n\n${link}`;
-      await navigator.clipboard.writeText(text);
-      copyBtn.textContent = "Copied";
-      setTimeout(()=>copyBtn.textContent="Copy", 1200);
-    };
+    copyBtn.type = "button";
+    copyBtn.textContent = "Copy summary";
+    copyBtn.title = "Copy title, source, summary, top terms, hashtags, link";
+    copyBtn.onclick = async ()=>{ await copyToClipboard(summaryBlock); };
     actions.appendChild(copyBtn);
 
-    // Generate prompt (client-side)
+    // Generate Prompt button (copies prompt)
     const promptBtn = document.createElement("button");
     promptBtn.className = "btn";
+    promptBtn.type = "button";
     promptBtn.textContent = "Generate prompt";
-    promptBtn.onclick = ()=>{
-      const prompt = [
-        `You are an expert analyst. Use the headline and brief to craft a 5-bullet executive summary + 3 action items.`,
-        `Headline: ${title}`,
-        `Brief: ${it.summary || "(none)"}`,
-        `Source: ${it.link || "(none)"}`,
-        `Constraints: concise, factual, neutral tone.`,
-      ].join("\n");
-      navigator.clipboard.writeText(prompt);
-      promptBtn.textContent = "Prompt copied";
-      setTimeout(()=>promptBtn.textContent="Generate prompt", 1200);
+    promptBtn.title = "Create and copy a publish-ready writing prompt";
+    promptBtn.onclick = async ()=>{
+      const prompt = buildPrompt();
+      await copyToClipboard(prompt);
     };
     actions.appendChild(promptBtn);
 
-    // Open ChatGPT
-    const chatBtn = document.createElement("a");
+    // Open ChatGPT button (auto-generates + copies prompt if needed)
+    const chatBtn = document.createElement("button");
     chatBtn.className = "btn";
-    chatBtn.target = "_blank";
-    chatBtn.rel = "noopener";
-    chatBtn.href = "https://chat.openai.com/?temporary-chat=true";
+    chatBtn.type = "button";
     chatBtn.textContent = "Open ChatGPT";
+    chatBtn.title = "Open chatgpt.com (prompt is auto-copied if not already)";
+    chatBtn.onclick = async ()=>{
+      if(!lastPrompt) { const p = buildPrompt(); await copyToClipboard(p); }
+      // Open a fresh ChatGPT tab
+      window.open("https://chatgpt.com/", "_blank", "noopener");
+    };
     actions.appendChild(chatBtn);
 
     card.appendChild(actions);
@@ -178,7 +280,7 @@ function render(items){
   }
 }
 
-document.getElementById("refresh").onclick = ()=>load();
+/* boot */
 load();
 </script>
 </body>
