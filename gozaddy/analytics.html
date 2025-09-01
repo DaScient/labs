@@ -1,410 +1,627 @@
-<!DOCTYPE html>
-<html lang="en" data-theme="light">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>AI-Generated News Summaries — Analytics</title>
-<style>
-  /* -------- THEME TOKENS -------- */
-  :root {
-    --bg: transparent;            /* full-page transparent for embedding on white sites */
-    --text: #101828;              /* near-black text */
-    --muted: #667085;             /* secondary text */
-    --accent: #0f6fff;            /* link/buttons */
-    --card: rgba(255,255,255,.94);/* soft white card w/ transparency */
-    --border: #e7e9ee;            /* light border */
-    --dash: #f1f3f7;              /* dashed separators */
+/**
+ * GoZaddy Worker (Full)
+ * Endpoints:
+ *   GET  /summaries?feeds=<csv>&feedsUrl=<txt_url>&limit=25&interval=3600
+ *   GET  /ascii?feeds=<csv>&feedsUrl=<txt_url>&limit=25&interval=3600
+ *   POST /prompts { title, summary, link, perspectives:[], platform, tone, minWords, maxWords }
+ *   GET  /health
+ *
+ * Notes:
+ * - Caches responses for `interval` seconds via Cloudflare edge cache.
+ * - Always returns CORS headers.
+ * - CDATA cleaned; Atom & RSS supported; basic description→summary fallback.
+ * - Dedupes by (title|link) and sorts by published desc.
+ */
 
-    --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      const url = new URL(request.url);
+      const path = url.pathname;
 
-    --title:26px; --h2:18px; --body:16px; --mono:12px;
-    --radius:14px; --shadow:0 6px 18px rgba(16,24,40,.06);
-  }
-  /* Optional dark preview via ?theme=dark */
-  [data-theme="dark"] {
-    --bg:#0c111a;
-    --text:#e6e9ef;
-    --muted:#9aa4b2;
-    --accent:#74a8ff;
-    --card:#0f141d;
-    --border:#202636;
-    --dash:#1a2030;
-    --shadow:0 10px 28px rgba(0,0,0,.28);
-  }
+      if (path === "/health") {
+        return withCORS(json({ ok: true, ts: Date.now() }));
+      }
 
-  /* -------- BASE -------- */
-  * { box-sizing:border-box }
-  body {
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-    font: 400 16px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
-  }
-  header {
-    position:sticky; top:0; z-index:10;
-    background: rgba(255,255,255,.85);
-    backdrop-filter: saturate(140%) blur(6px);
-    border-bottom:1px solid var(--border);
-  }
-  [data-theme="dark"] header { background: rgba(12,17,26,.82); }
-  .wrap { max-width:1180px; margin:0 auto; padding:16px; }
-  h1 { margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px }
-  .meta {
-    display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px;
-    color:var(--muted); font-size:13px;
-  }
-  .pill {
-    display:inline-flex; align-items:center; gap:6px;
-    padding:6px 10px; border:1px solid var(--border); border-radius:999px;
-    background:#fff; color:#111; font-size:12px;
-  }
-  [data-theme="dark"] .pill { background:#0c111a; color:var(--text); }
-  .btn {
-    display:inline-flex; align-items:center; gap:6px; cursor:pointer;
-    padding:8px 12px; border:1px solid var(--border); border-radius:10px;
-    background:#fff; color:#111; font-size:14px;
-  }
-  [data-theme="dark"] .btn { background:#0f141d; color:var(--text); }
-  .btn:hover { border-color:#cfd4dc }
-  a { color:var(--accent); text-decoration:none }
-  a:hover { text-decoration:underline }
+      if (path === "/summaries") {
+        return await handleSummaries(request, env, ctx);
+      }
 
-  /* -------- LAYOUT -------- */
-  main { padding:18px 0 60px }
-  .grid { display:grid; gap:16px }
-  @media (min-width:1000px){ .grid { grid-template-columns: 2fr 1fr } }
+      if (path === "/ascii") {
+        return await handleAscii(request, env, ctx);
+      }
 
-  .card {
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    padding:16px;
-  }
-  h2 { margin:0 0 10px; font-size:var(--h2); font-weight:800 }
+      if (path === "/prompts" && request.method === "POST") {
+        return await handlePrompts(request, env);
+      }
 
-  /* -------- MINI BARS -------- */
-  .list{ display:flex; flex-direction:column; gap:12px }
-  .barrow{ display:grid; grid-template-columns:160px 1fr auto; gap:12px; align-items:center }
-  .barrow .label{ font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-  .barrow .wrap{ background:#f3f6fb; border-radius:8px; height:10px; position:relative }
-  .barrow .bar{ position:absolute; inset:0; width:0; border-radius:8px;
-    background:linear-gradient(90deg,#0f6fff,#62a4ff) }
-  [data-theme="dark"] .barrow .wrap{ background:#152033 }
-
-  .mono{ font: 500 var(--mono)/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#1f2937 }
-  [data-theme="dark"] .mono{ color:#cbd5e1 }
-
-  .table{ width:100%; border-collapse:collapse; font-size:14px }
-  .table th,.table td{ border-bottom:1px dashed var(--dash); padding:8px 0; text-align:left; vertical-align:top }
-  .table th{ font-weight:700 }
-
-  /* -------- HEATMAP (light-friendly) -------- */
-  .heat { display:grid; gap:2px; border:1px solid var(--border); border-radius:12px; padding:8px; overflow:auto; background:#fff }
-  [data-theme="dark"] .heat{ background:#0c111a }
-  .heat .hdr{ position:sticky; top:0; background:inherit }
-  .heat .lab{ font-size:12px; color:#111; white-space:nowrap }
-  [data-theme="dark"] .heat .lab{ color:#e6e9ef }
-  .heat .cell{
-    display:flex; align-items:center; justify-content:center;
-    height:26px; border-radius:6px; font-size:12px; color:#0b1220;
-  }
-  [data-theme="dark"] .heat .cell{ color:#e6e9ef }
-  /* pastel scale for light backgrounds */
-  .v0{ background:#f8fafc }
-  .v1{ background:rgba(99,179,237,.18) }
-  .v2{ background:rgba(99,179,237,.30) }
-  .v3{ background:rgba(99,179,237,.42) }
-  .v4{ background:rgba(249,115,22,.28) } /* hotter */
-  .v5{ background:rgba(239,68,68,.30) }   /* hottest */
-
-  .muted{ color:var(--muted) }
-  .good{ color:var(--good) } .warn{ color:var(--warn) } .bad{ color:var(--bad) }
-
-  .rowgrid{ display:grid; gap:16px }
-  @media (min-width:1000px){ .rowgrid{ grid-template-columns:1fr 1fr } }
-
-  .blink{ animation:blink .8s ease 1 } @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
-</style>
-</head>
-<body>
-<header>
-  <div class="wrap">
-    <h1>AI-Generated News Summaries — Analytics</h1>
-    <div class="meta">
-      <span id="lastUpdated" class="pill">Loading…</span>
-      <label class="pill">Window:
-        <select id="winSel" style="border:none;background:transparent;outline:none">
-          <option value="3">3h</option><option value="6" selected>6h</option>
-          <option value="12">12h</option><option value="24">24h</option>
-        </select>
-      </label>
-      <label class="pill">Refresh:
-        <select id="refSel" style="border:none;background:transparent;outline:none">
-          <option value="60000">60s</option><option value="90000" selected>90s</option>
-          <option value="180000">3m</option><option value="300000">5m</option>
-        </select>
-      </label>
-      <button id="refreshBtn" class="btn">Refresh Now</button>
-    </div>
-  </div>
-</header>
-
-<main class="wrap">
-  <div class="grid">
-    <section class="card">
-      <h2>Key Metrics</h2>
-      <div class="rowgrid">
-        <div><div class="list" id="sources"></div></div>
-        <div><div class="list" id="keywords"></div></div>
-      </div>
-      <div class="rowgrid" style="margin-top:14px">
-        <div>
-          <h2>Average Confidence by Source</h2>
-          <div class="list" id="confSources"></div>
-        </div>
-        <div>
-          <h2>Snapshot</h2>
-          <table class="table"><tbody id="snapshot"></tbody></table>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2>Keyword Correlations</h2>
-      <div class="muted" style="margin-bottom:8px">Co-occurrence across the current window (top terms).</div>
-      <div id="heat"></div>
-    </section>
-  </div>
-
-  <section class="card" style="margin-top:16px">
-    <h2>Latest Articles</h2>
-    <table class="table">
-      <thead>
-        <tr><th style="width:42%">Title</th><th>Source</th><th>Confidence</th><th>Top Terms</th></tr>
-      </thead>
-      <tbody id="latest"></tbody>
-    </table>
-  </section>
-</main>
-
-<script>
-/* ====== CONFIG (update your Worker base if needed) ====== */
-const WORKER_BASE = "https://gozaddy.aristocles24.workers.dev"; // your Worker
-const DEFAULT_FEEDS = [
-  "https://feeds.reuters.com/reuters/topNews",
-  "https://www.aljazeera.com/xml/rss/all.xml",
-  "https://feeds.bbci.co.uk/news/rss.xml",
-  "https://rss.dw.com/rdf/rss-en-all",
-  "https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml"
-].join(",");
-const FEEDS = new URLSearchParams(location.search).get("feeds") || DEFAULT_FEEDS;
-const FRONTEND_POLL_MS = parseInt(new URLSearchParams(location.search).get("refresh")||"90000",10);
-let WINDOW_HOURS = parseInt(new URLSearchParams(location.search).get("window")||"6",10);
-
-/* ====== LIGHT THEME FOR EMBEDS ====== */
-(function setTheme(){
-  const q = new URLSearchParams(location.search);
-  const t = (q.get("theme")||"light").toLowerCase();
-  document.documentElement.setAttribute("data-theme", t==="dark" ? "dark" : "light");
-})();
-
-/* ====== HELPERS ====== */
-const $ = s => document.querySelector(s);
-const nowStr = () => new Date().toLocaleString();
-
-async function getJSON(u){
-  const r = await fetch(u + (u.includes("?")?"&":"?") + "_t=" + Date.now(), {cache:"no-store"});
-  if(!r.ok) throw new Error("Fetch failed: " + r.status);
-  return r.json();
-}
-async function sha(str){
-  const b = new TextEncoder().encode(str);
-  const h = await crypto.subtle.digest("SHA-256", b);
-  return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");
-}
-function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; } }
-function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]); }
-const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
-
-function findSeoKeywords(text){
-  const m = text.match(/^\s*seo keywords:\s*(.+)$/gim);
-  if(!m) return [];
-  const line = m[m.length-1];
-  return (line.split(":")[1]||"").split(/[;,]/g).map(s=>s.trim()).filter(Boolean);
-}
-function topKeywords(articles, k=20){
-  const freq = new Map();
-  for(const a of articles){
-    let kws = findSeoKeywords(a.body);
-    if(!kws.length){
-      kws = words(a.body).filter(w=>!STOP.has(w) && w.length>2).slice(0,80);
+      return withCORS(text("Not found", 404));
+    } catch (err) {
+      return withCORS(json({ ok: false, error: String(err?.message || err) }, 500));
     }
-    for(const kw of kws){
-      const key = kw.toLowerCase();
-      freq.set(key, (freq.get(key)||0)+1);
-    }
+  },
+};
+
+/* ------------- Core handlers ------------- */
+
+async function handleSummaries(request, env, ctx) {
+  const u = new URL(request.url);
+  const { items, modelUsed } = await loadItemsCached(u, env, ctx);
+
+  const limit = clampInt(u.searchParams.get("limit"), 1, 200, 50);
+  const out = items.slice(0, limit);
+
+  return withCORS(
+    json({
+      ok: true,
+      count: out.length,
+      model: modelUsed || "open",
+      items: out,
+      ts: Date.now(),
+    })
+  );
+}
+
+async function handleAscii(request, env, ctx) {
+  const u = new URL(request.url);
+  const { items } = await loadItemsCached(u, env, ctx);
+  const limit = clampInt(u.searchParams.get("limit"), 1, 200, 40);
+
+  const body = renderAscii(items.slice(0, limit), {
+    header: "AI-Generated News Summaries (ASCII)",
+    footer: "(Updates per cache interval; sources via worker)",
+  });
+  return withCORS(text(body));
+}
+
+async function handlePrompts(request, env) {
+  let body = {};
+  try {
+    body = await request.json();
+  } catch (_) {
+    // ignore; will validate below
   }
-  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k);
+
+  const {
+    title = "",
+    summary = "",
+    link = "",
+    perspectives = [],
+    platform = "Medium",
+    tone = "authoritative",
+    minWords = 800,
+    maxWords = 1200,
+  } = body || {};
+
+  const results = await generateCreatorPrompts(
+    { title, summary, link, perspectives, platform, tone, minWords, maxWords },
+    env
+  );
+
+  return withCORS(json({ ok: true, results, ts: Date.now() }));
 }
-const POS = new Set("confirm,confirmed,official,approved,announced,launch,launched,records,record,acquires,acquired,sec,filing,final,definitive,report,results".split(","));
-const NEG = new Set("may,might,could,reportedly,rumor,alleged,seems,suggests,likely,unverified,investigating,unclear,disputed,questioned,unconfirmed".split(","));
-function confidenceScore(text, sourceHost=""){
-  const bag = words(text); let pos=0,neg=0;
-  for(const w of bag){ if(POS.has(w)) pos++; if(NEG.has(w)) neg++; }
-  let s = 52 + 6*pos - 6*neg;
-  if(/nytimes\.com|washingtonpost\.com|reuters\.com|bbc\.co\.uk|aljazeera\.com/i.test(sourceHost)) s += 6;
-  return Math.max(0, Math.min(100, s));
+
+/* ------------- Cached loader ------------- */
+
+async function loadItemsCached(u, env, ctx) {
+  const cache = caches.default;
+  const interval = clampInt(u.searchParams.get("interval"), 60, 86400, 3600);
+  const cacheKey = new Request(cacheKeyFromURL(u), { method: "GET" });
+
+  // Try cache
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    const j = await cached.json();
+    return j; // { items, modelUsed }
+  }
+
+  // Build feed list
+  const feedsCsv = u.searchParams.get("feeds") || "";
+  const feedsUrl = u.searchParams.get("feedsUrl");
+  const feeds = await resolveFeeds({ feedsCsv, feedsUrl });
+
+  // Pull & parse
+  const rawItems = [];
+  await Promise.all(
+    feeds.map(async (src) => {
+      try {
+        const res = await fetch(src, {
+          headers: {
+            "User-Agent": "GoZaddy/1.0 (Cloudflare Worker; RSS fetcher)",
+            "Accept": "application/rss+xml, application/atom+xml, text/xml, text/html",
+          },
+          cf: { cacheEverything: false },
+        });
+        const txt = await res.text();
+        const parsed = parseAnyFeed(txt, src);
+        rawItems.push(...parsed);
+      } catch (e) {
+        // Collect a synthetic error item (won't usually appear unless debugging)
+        // rawItems.push({ title:`[Feed error] ${src}`, link:"", published_ts:0, summary:String(e) });
+      }
+    })
+  );
+
+  // Clean, dedupe, sort
+  const cleaned = rawItems.map(cleanItem).filter((it) => it.title || it.summary);
+  const deduped = dedupeItems(cleaned);
+  deduped.sort((a, b) => (b.published_ts || 0) - (a.published_ts || 0));
+
+  const payload = { items: deduped, modelUsed: "open" };
+
+  // Cache JSON
+  const resp = new Response(JSON.stringify(payload), {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "Cache-Control": `public, max-age=${interval}`,
+    },
+  });
+  ctx.waitUntil(cache.put(cacheKey, resp.clone()));
+
+  return payload;
 }
-function cooccurMatrix(articles, keys){
-  const K = keys.length, ix = new Map(keys.map((k,i)=>[k,i]));
-  const M = Array.from({length:K},()=>Array(K).fill(0));
-  for(const a of articles){
-    let kws = findSeoKeywords(a.body);
-    if(!kws.length){ kws = words(a.body).filter(w=>!STOP.has(w)&&w.length>2).slice(0,50); }
-    const set = new Set(kws.map(k=>k.toLowerCase()).filter(k=>ix.has(k)));
-    const arr = [...set];
-    for(let i=0;i<arr.length;i++){
-      for(let j=i;j<arr.length;j++){
-        const ii=ix.get(arr[i]), jj=ix.get(arr[j]); M[ii][jj]++; if(ii!==jj) M[jj][ii]++;
+
+/* ------------- Feeds utils ------------- */
+
+async function resolveFeeds({ feedsCsv, feedsUrl }) {
+  // If feedsUrl is given, fetch newline-delimited list
+  if (feedsUrl) {
+    try {
+      const r = await fetch(feedsUrl, { cf: { cacheEverything: true, cacheTtl: 900 } });
+      if (r.ok) {
+        const t = await r.text();
+        const arr = t
+          .split(/\r?\n/)
+          .map((s) => s.trim())
+          .filter((s) => s && !s.startsWith("#"));
+        if (arr.length) return arr;
+      }
+    } catch (_) {}
+  }
+
+  // Else, CSV from query
+  if (feedsCsv) {
+    const arr = feedsCsv
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (arr.length) return arr;
+  }
+
+  // Fallback curated minimal set (stable public feeds)
+  return [
+    "https://feeds.reuters.com/reuters/topNews",
+    "https://www.aljazeera.com/xml/rss/all.xml",
+    "https://feeds.bbci.co.uk/news/rss.xml",
+    "https://rss.dw.com/rdf/rss-en-all",
+    "https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml",
+  ];
+}
+
+/* ------------- Parsing (RSS + Atom) ------------- */
+
+function parseAnyFeed(xml, sourceUrl) {
+  const items = [];
+
+  // Detect Atom vs RSS quickly
+  const isAtom = /<feed[\s>]/i.test(xml) && /<\/feed>/i.test(xml);
+  const isRss = /<rss[\s>]/i.test(xml) || /<rdf:RDF/i.test(xml) || /<channel>/i.test(xml);
+
+  if (isAtom) {
+    // Atom: <entry><title>, <link href>, <updated>, <summary>/<content>
+    const entryRe = /<entry\b[\s\S]*?<\/entry>/gi;
+    const linkHref = (block) => {
+      // Prefer link rel="alternate", else first href
+      const alt = block.match(/<link[^>]*?rel=["']alternate["'][^>]*?href=["']([^"']+)["']/i);
+      if (alt) return alt[1];
+      const any = block.match(/<link[^>]*?href=["']([^"']+)["']/i);
+      return any ? any[1] : "";
+    };
+
+    let m;
+    while ((m = entryRe.exec(xml))) {
+      const block = m[0];
+      const title = innerText(block, "title");
+      const link = linkHref(block);
+      const updated = innerText(block, "updated") || innerText(block, "published") || "";
+      const summary = innerText(block, "summary") || innerText(block, "content") || "";
+      items.push({
+        source: sourceUrl,
+        title,
+        link,
+        published: updated,
+        summary,
+      });
+    }
+  } else if (isRss) {
+    // RSS: <item><title>, <link>, <pubDate>, <description> or <content:encoded>
+    const itemRe = /<item\b[\s\S]*?<\/item>/gi;
+    let m;
+    while ((m = itemRe.exec(xml))) {
+      const block = m[0];
+      const title = innerText(block, "title");
+      const link = innerText(block, "link") || smartLinkFromGuid(block);
+      const pubDate = innerText(block, "pubDate") || innerText(block, "dc:date") || "";
+      const contentEnc = innerText(block, "content:encoded");
+      const desc = innerText(block, "description");
+      const summary = contentEnc || desc || "";
+      items.push({
+        source: sourceUrl,
+        title,
+        link,
+        published: pubDate,
+        summary,
+      });
+    }
+
+    // Some “RSS-like” pages use <entry> too (fallback)
+    if (items.length === 0) {
+      const entryRe = /<entry\b[\s\S]*?<\/entry>/gi;
+      let em;
+      while ((em = entryRe.exec(xml))) {
+        const block = em[0];
+        const title = innerText(block, "title");
+        const link = innerText(block, "link") || smartLinkFromGuid(block);
+        const updated = innerText(block, "updated") || innerText(block, "published") || "";
+        const summary = innerText(block, "summary") || innerText(block, "content") || "";
+        items.push({
+          source: sourceUrl,
+          title,
+          link,
+          published: updated,
+          summary,
+        });
       }
     }
   }
-  return M;
-}
-function gradeClass(n){ return n>=70? "good" : n>=45? "warn" : "bad"; }
 
-/* ====== RENDERERS ====== */
-function renderBars(sel, pairs, cap=10, suffix=""){
-  const root=$(sel); root.innerHTML="";
-  if(!pairs.length){ root.innerHTML='<div class="muted">No data</div>'; return; }
-  const max=Math.max(...pairs.map(p=>p[1]))||1;
-  pairs.slice(0,cap).forEach(([label,val])=>{
-    const row=document.createElement("div"); row.className="barrow";
-    const lab=document.createElement("div"); lab.className="label"; lab.textContent=label;
-    const wrap=document.createElement("div"); wrap.className="wrap";
-    const bar=document.createElement("div"); bar.className="bar"; bar.style.width=(100*val/max).toFixed(1)+"%";
-    const v=document.createElement("div"); v.className="mono"; v.textContent=val+(suffix? " "+suffix:"");
-    wrap.appendChild(bar); row.appendChild(lab); row.appendChild(wrap); row.appendChild(v); root.appendChild(row);
-  });
+  return items;
 }
-function renderHeat(sel, keys, M){
-  const root=$(sel); root.innerHTML=""; if(!keys.length){ root.innerHTML='<div class="muted">No correlations yet.</div>'; return; }
-  const K=keys.length, max=Math.max(1, ...M.flat());
-  root.className="heat"; root.style.gridTemplateColumns=`140px repeat(${K}, minmax(36px, 1fr))`;
-  const blank=document.createElement("div"); blank.className="lab hdr"; root.appendChild(blank);
-  for(let j=0;j<K;j++){ const d=document.createElement("div"); d.className="lab hdr"; d.textContent=keys[j]; root.appendChild(d); }
-  for(let i=0;i<K;i++){
-    const lab=document.createElement("div"); lab.className="lab"; lab.textContent=keys[i]; root.appendChild(lab);
-    for(let j=0;j<K;j++){
-      const v=M[i][j], r=v/max;
-      const cell=document.createElement("div"); cell.className="cell " + (r>0.75?"v5":r>0.5?"v4":r>0.3?"v3":r>0.15?"v2":r>0?"v1":"v0");
-      cell.title=`${keys[i]} × ${keys[j]}: ${v}`; cell.textContent=v? String(v):""; root.appendChild(cell);
+
+function innerText(block, tag) {
+  // Get tag content; handle CDATA
+  const re = new RegExp(`<${tag}\\b[^>]*>([\\s\\S]*?)<\\/${tag}>`, "i");
+  const m = block.match(re);
+  if (!m) return "";
+  return cleanCDATA(stripTags(m[1] || "")).trim();
+}
+
+function smartLinkFromGuid(block) {
+  const m = block.match(/<guid[^>]*>([\s\S]*?)<\/guid>/i);
+  if (!m) return "";
+  const t = cleanCDATA(m[1] || "").trim();
+  if (/^https?:\/\//i.test(t)) return t;
+  return "";
+}
+
+function cleanCDATA(t) {
+  return t.replace(/<!\[CDATA\[(.*?)\]\]>/gis, "$1");
+}
+
+function stripTags(html) {
+  // Keep a minimal text from HTML
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<\/?[^>]+>/g, " ")
+    .replace(/\s+/g, " ");
+}
+
+function cleanItem(it) {
+  const title = (it.title || "").replace(/<!\[CDATA\[(.*?)\]\]>/gi, "$1").replace(/\s+/g, " ").trim();
+  const link = (it.link || "").trim();
+  const host = hostOf(link);
+  const published = it.published || "";
+  const ts = dateToTs(published);
+  const summary = smartSummary(it.summary || "", title);
+
+  return {
+    title,
+    link,
+    published: published,
+    published_ts: ts,
+    host,
+    summary,
+    top_terms: extractTopTerms(`${title} ${summary}`),
+    confidence: confidenceScore(`${title} ${summary}`, host),
+  };
+}
+
+function dedupeItems(items) {
+  const map = new Map();
+  for (const it of items) {
+    const key = `${(it.title || "").toLowerCase()}|${(it.link || "").toLowerCase()}`;
+    if (!map.has(key)) map.set(key, it);
+  }
+  return Array.from(map.values());
+}
+
+/* ------------- ASCII render ------------- */
+
+function renderAscii(items, { header, footer }) {
+  const lines = [];
+  lines.push("=".repeat(66));
+  lines.push(center(header || "GoZaddy ASCII"));
+  lines.push("=".repeat(66));
+  lines.push("");
+
+  for (const it of items) {
+    lines.push(`${it.title}`);
+    lines.push("-".repeat(Math.min(80, Math.max(20, it.title.length))));
+    if (it.link) lines.push(`Link: ${it.link}`);
+    if (it.published) lines.push(`Published: ${it.published}`);
+    if (it.host) lines.push(`Source: ${it.host}`);
+    lines.push("");
+    if (it.summary) {
+      lines.push(wrap(it.summary, 90));
+      lines.push("");
+    }
+    if (it.top_terms?.length) {
+      lines.push("Top terms: " + it.top_terms.slice(0, 10).join(", "));
+    }
+    lines.push(`Confidence: ${it.confidence}`);
+    lines.push("-".repeat(66));
+    lines.push("");
+  }
+
+  if (footer) {
+    lines.push(footer);
+  }
+  return lines.join("\n");
+}
+
+/* ------------- Creator prompts (OpenAI) ------------- */
+
+async function generateCreatorPrompts(
+  { title, summary, link, perspectives, platform, tone, minWords, maxWords },
+  env
+) {
+  const chosen = Array.isArray(perspectives) ? perspectives.filter(Boolean) : [];
+  const out = [];
+  const apiKey = env.OPENAI_API_KEY;
+  const models = (env.MODEL_LIST || "gpt-4.1-mini,gpt-4o-mini,gpt-4.1")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const cleanTitle = (t) => (t || "").replace(/<!\[CDATA\[(.*?)\]\]>/gi, "$1").replace(/\s+/g, " ").trim();
+
+  for (let i = 0; i < chosen.length; i++) {
+    const perspective = chosen[i];
+    const model = models[i % models.length];
+    const titleClean = cleanTitle(title);
+
+    if (!apiKey) {
+      out.push({
+        perspective,
+        model: "fallback",
+        prompt: fallbackCreatorPrompt({
+          title: titleClean,
+          summary,
+          link,
+          platform,
+          tone,
+          minWords,
+          maxWords,
+          perspective,
+        }),
+      });
+      continue;
+    }
+
+    const sys = `You craft short, high-signal PROMPTS for other AI assistants to generate publish-ready articles.
+The prompt must be article-aware, perspective-specific, concise (~180-260 words), and strictly formatted for easy copy/paste.`;
+
+    const user = `
+ARTICLE
+- Headline: ${titleClean}
+- Brief: ${summary || "(none)"}
+- Source URL: ${link || "(none)"}
+
+TARGET
+- Platform: ${platform}
+- Perspective: ${perspective}
+- Tone: ${tone}
+- Target length: ${minWords}-${maxWords} words
+
+WRITE ONE PROMPT (nothing else) that instructs an AI to produce a single, publication-quality article tailored to this perspective and platform.
+
+Your prompt MUST:
+- Start with: "You are a ${tone} ${perspective} expert writing for ${platform}."
+- Include a 1-2 line context recap grounded in the ARTICLE.
+- Define objective/outcome (bullet list).
+- Specify structure: Title (SEO), Dek, TL;DR, 3–6 H2 sections with H3s, 1 pull-quote, Conclusion/CTA.
+- Demand concrete details, numbers, timelines, and sourcing if available from the link.
+- Require an "At-a-glance" bullet capsule.
+- Require metadata: 8–12 SEO keywords; 6–12 platform-appropriate hashtags.
+- Require internal/external links (when link is provided).
+- Enforce guardrails: attribute uncertainty; avoid speculation; no hallucinated facts.
+- End with a clean output format checklist (markdown headings).
+
+Return ONLY the prompt text.`;
+
+    try {
+      const promptText = await openAI_prompt(env.OPENAI_API_KEY, model, sys, user);
+      out.push({ perspective, model, prompt: (promptText || "").trim() });
+    } catch (e) {
+      out.push({
+        perspective,
+        model,
+        error: String(e?.message || e),
+        prompt: fallbackCreatorPrompt({
+          title: titleClean,
+          summary,
+          link,
+          platform,
+          tone,
+          minWords,
+          maxWords,
+          perspective,
+        }),
+      });
     }
   }
+  return out;
 }
-function renderLatest(list){
-  const tbody=$("#latest"); tbody.innerHTML="";
-  list.forEach(a=>{
-    const tr=document.createElement("tr");
-    const tdT=document.createElement("td"), tdS=document.createElement("td"), tdC=document.createElement("td"), tdK=document.createElement("td");
-    tdT.innerHTML = `<div style="font-weight:700">${a.title}</div>
-                     <div class="mono">${a.published||""}</div>
-                     ${a.link? `<a href="${a.link}" target="_blank" rel="noopener">Open source</a>`:""}`;
-    tdS.textContent = a.host||"—";
-    tdC.innerHTML = `<span class="${gradeClass(a.confidence)}" style="font-weight:700">${a.confidence}</span>`;
-    tdK.textContent = (a.topTerms||[]).slice(0,6).join(", ");
-    tr.appendChild(tdT); tr.appendChild(tdS); tr.appendChild(tdC); tr.appendChild(tdK); tbody.appendChild(tr);
+
+function fallbackCreatorPrompt({ title, summary, link, platform, tone, minWords, maxWords, perspective }) {
+  return [
+    `You are a ${tone} ${perspective} expert writing for ${platform}.`,
+    `Context: "${title}". ${summary ? "Brief: " + summary : ""} ${link ? "Source: " + link : ""}`,
+    `Objective: Produce a ${minWords}-${maxWords} word article that is publication-ready for ${platform}.`,
+    `Structure:`,
+    `- Title (SEO-optimized)`,
+    `- Dek (1–2 lines)`,
+    `- TL;DR (3 bullets)`,
+    `- H2 Sections (3–6) with H3 subpoints; include data, dates, examples`,
+    `- Pull-quote (1)`,
+    `- Conclusion / Next Steps / CTA`,
+    `- At-a-glance (bulleted summary)`,
+    `Metadata: Provide 8–12 SEO keywords and 6–12 hashtags relevant to ${perspective} and the topic.`,
+    `Guardrails: Attribute uncertainty; do not invent facts; link to ${link || "relevant sources"} where appropriate.`,
+    `Output: Markdown only.`,
+  ].join("\n");
+}
+
+async function openAI_prompt(apiKey, model, systemText, userText) {
+  const r = await fetch("https://api.openai.com/v1/responses", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      input: [
+        { role: "system", content: systemText },
+        { role: "user", content: userText },
+      ],
+      temperature: 0.6,
+      top_p: 0.9,
+      max_output_tokens: 520,
+    }),
   });
-}
-function renderSnapshot(articles, kwPairs, srcPairs){
-  const total=articles.length;
-  const avg = total? Math.round(articles.reduce((s,a)=>s+a.confidence,0)/total) : 0;
-  const rows=[
-    ["Articles in window", String(total)],
-    ["Top keyword", kwPairs[0]?.[0]||"—"],
-    ["Top source", srcPairs[0]?.[0]||"—"],
-    ["Avg confidence", String(avg)],
-    ["Window (hours)", String(WINDOW_HOURS)]
-  ];
-  const tb=$("#snapshot"); tb.innerHTML=""; rows.forEach(([k,v])=>{ const tr=document.createElement("tr"); tr.innerHTML=`<th>${k}</th><td>${v}</td>`; tb.appendChild(tr); });
+  if (!r.ok) throw new Error(`OpenAI ${r.status}`);
+  const j = await r.json();
+  return j.output_text || "";
 }
 
-/* ====== DATA LOOP ====== */
-let CACHE=[], LAST_HASH="";
-function withinWindow(a){ return (Date.now()-a.observedAt) <= WINDOW_HOURS*3600*1000; }
+/* ------------- Scoring / text utils ------------- */
 
-async function loadSummaries(){
-  const url = `${WORKER_BASE}/summaries?feeds=${encodeURIComponent(FEEDS)}&limit=60&interval=3600`;
-  const data = await getJSON(url); // expects {items:[{title,link,published,summary,body?}]}
-  // make a stable text hash to avoid unnecessary re-renders
-  const textSig = JSON.stringify(data.items||[]).slice(0,100000);
-  const h = await sha(textSig);
-  if(h===LAST_HASH) return null;
-  LAST_HASH = h;
-  return (data.items||[]).map(it=>{
-    const host = hostOf(it.link);
-    const body = it.summary || it.body || "";
-    const conf = confidenceScore(body, host);
-    const kw = findSeoKeywords(body);
-    const topTerms = (kw.length? kw : words(body).filter(w=>!STOP.has(w)).slice(0,8)).map(w=>w.toLowerCase());
-    return { title: it.title, link: it.link, published: it.published, body, host, confidence: conf, topTerms, observedAt: Date.now() };
-  });
+function confidenceScore(text, sourceHost = "") {
+  const POS = new Set(
+    "confirm,confirmed,official,approved,announced,launch,launched,records,record,acquires,acquired,sec filing,final,definitive,report,results".split(
+      ","
+    )
+  );
+  const NEG = new Set(
+    "may,might,could,reportedly,rumor,alleged,seems,suggests,likely,unverified,investigating,unclear,disputed,questioned,unconfirmed".split(
+      ","
+    )
+  );
+  const bag = (text.toLowerCase().match(/[a-z0-9]+/g) || []);
+  let pos = 0,
+    neg = 0;
+  for (const w of bag) {
+    if (POS.has(w)) pos++;
+    if (NEG.has(w)) neg++;
+  }
+  let score = 52 + 6 * pos - 6 * neg;
+  if (/nytimes\.com|washingtonpost\.com|reuters\.com|bbc\.co\.uk|aljazeera\.com/i.test(sourceHost)) score += 6;
+  return Math.max(0, Math.min(100, score));
 }
 
-function renderAll(){
-  const windowed = CACHE.filter(withinWindow);
-  // sources
-  const sc=new Map(); windowed.forEach(a=> sc.set(a.host||"unknown",(sc.get(a.host||"unknown")||0)+1));
-  const srcPairs=[...sc.entries()].sort((a,b)=>b[1]-a[1]);
-
-  // keywords, confidence
-  const kwPairs=topKeywords(windowed,20);
-  const cm=new Map();
-  windowed.forEach(a=>{ const k=a.host||"unknown"; const acc=cm.get(k)||[0,0]; acc[0]+=a.confidence; acc[1]+=1; cm.set(k,acc); });
-  const confPairs=[...cm.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
-
-  // heatmap
-  const keyList=kwPairs.slice(0,12).map(p=>p[0]);
-  const M=cooccurMatrix(windowed,keyList);
-
-  renderBars("#sources", srcPairs, 8, "articles");
-  renderBars("#keywords", kwPairs, 12, "hits");
-  renderBars("#confSources", confPairs, 8, "conf");
-  renderHeat("#heat", keyList, M);
-  renderLatest(windowed.slice(0,8));
-  renderSnapshot(windowed, kwPairs, srcPairs);
-  $("#lastUpdated").textContent = "Last updated: " + nowStr();
+function extractTopTerms(text, k = 10) {
+  const STOP = new Set(
+    `a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would,update,news,report,brief,said,says`
+      .split(",")
+  );
+  const words = (text.toLowerCase().match(/[a-z0-9]+/g) || []).filter((w) => !STOP.has(w) && w.length > 2);
+  const freq = new Map();
+  for (const w of words) freq.set(w, (freq.get(w) || 0) + 1);
+  return [...freq.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, k)
+    .map((x) => x[0]);
 }
 
-async function tick(){
-  try{
-    const items = await loadSummaries();
-    if(items){ // update cache only when changed
-      // unique by title+host
-      const key = x => (x.title+"|"+x.host).toLowerCase();
-      const map=new Map(CACHE.filter(withinWindow).map(a=>[key(a),a]));
-      items.forEach(p=> map.set(key(p), p));
-      CACHE = [...map.values()].sort((a,b)=>b.observedAt - a.observedAt);
-      renderAll();
-      document.querySelectorAll(".card").forEach(n=>n.classList.add("blink"));
-      setTimeout(()=>document.querySelectorAll(".card").forEach(n=>n.classList.remove("blink")), 900);
-    }
-  }catch(e){ console.error(e); }
-  finally{
-    setTimeout(tick, parseInt($("#refSel").value,10));
+function smartSummary(desc, title) {
+  const t = desc.replace(/\s+/g, " ").trim();
+  if (!t) return (title || "").substring(0, 240);
+  // Strip leading "SUMMARY" labels if present
+  return t.replace(/^summary\s*[:\-]\s*/i, "").trim();
+}
+
+function dateToTs(s) {
+  if (!s) return 0;
+  const d = new Date(s);
+  const n = d.getTime();
+  if (!isNaN(n)) return n;
+  // try RFC822 variants
+  const alt = Date.parse(s.replace(/^\w{3},\s*/, ""));
+  return isNaN(alt) ? 0 : alt;
+}
+
+function hostOf(href) {
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch (_) {
+    return "";
   }
 }
 
-/* ====== BOOT & UI ====== */
-$("#winSel").value = String(WINDOW_HOURS);
-$("#refSel").value = String(FRONTEND_POLL_MS);
-$("#winSel").addEventListener("change", e=>{ WINDOW_HOURS = parseInt(e.target.value,10)||6; renderAll(); });
-$("#refSel").addEventListener("change", ()=>{}); // next tick will read this value
-$("#refreshBtn").addEventListener("click", ()=>{ LAST_HASH=""; tick(); });
+function wrap(txt, width = 80) {
+  return (txt || "")
+    .split(/\s+/)
+    .reduce(
+      (acc, w) => {
+        const line = acc[acc.length - 1];
+        if ((line + " " + w).trim().length > width) acc.push(w);
+        else acc[acc.length - 1] = (line + " " + w).trim();
+        return acc;
+      },
+      [""]
+    )
+    .join("\n");
+}
 
-// start
-tick();
-</script>
-</body>
-</html>
+function center(s, w = 66) {
+  const t = s || "";
+  if (t.length >= w) return t;
+  const pad = Math.floor((w - t.length) / 2);
+  return " ".repeat(pad) + t;
+}
+
+function clampInt(v, min, max, dflt) {
+  const n = parseInt(v || "", 10);
+  if (Number.isFinite(n)) return Math.max(min, Math.min(max, n));
+  return dflt;
+}
+
+function cacheKeyFromURL(u) {
+  // Do not include cache-busters (e.g., _t)
+  const copy = new URL(u.toString());
+  copy.searchParams.delete("_t");
+  return copy.toString();
+}
+
+/* ------------- Response helpers ------------- */
+
+function withCORS(resp) {
+  const r = new Response(resp.body, resp);
+  r.headers.set("Access-Control-Allow-Origin", "*");
+  r.headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  r.headers.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  return r;
+}
+
+function json(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { "content-type": "application/json; charset=utf-8" },
+  });
+}
+
+function text(s, status = 200) {
+  return new Response(typeof s === "string" ? s : String(s), {
+    status,
+    headers: { "content-type": "text/plain; charset=utf-8" },
+  });
+}
