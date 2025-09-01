@@ -1,242 +1,187 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="utf-8" />
-<title>AI-Generated News Summaries — Analytics</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="color-scheme" content="light dark" />
+<title>AI-Generated News Summaries — Analytics</title>
 <style>
+  /* -------- THEME TOKENS -------- */
   :root {
-    --bg: transparent; /* fully transparent background */
-    --text: #111111;   /* dark text */
-    --muted: #555555;  /* softer gray for secondary text */
-    --accent: #0f6fff; /* accent blue for links/buttons */
-    --card: rgba(255,255,255,0.9); /* light cards with transparency */
-    --border: #e0e0e0; /* light border */
-    --dash: #f0f0f0;   /* dashed separator */
+    --bg: transparent;            /* full-page transparent for embedding on white sites */
+    --text: #101828;              /* near-black text */
+    --muted: #667085;             /* secondary text */
+    --accent: #0f6fff;            /* link/buttons */
+    --card: rgba(255,255,255,.94);/* soft white card w/ transparency */
+    --border: #e7e9ee;            /* light border */
+    --dash: #f1f3f7;              /* dashed separators */
+
+    --good:#15803d; --warn:#b45309; --bad:#b91c1c;
+
+    --title:26px; --h2:18px; --body:16px; --mono:12px;
+    --radius:14px; --shadow:0 6px 18px rgba(16,24,40,.06);
   }
-  
-  .dark {
-    /* Dark theme */
-    --bg:#0d1117;
-    --panel:#0d1117cc;
-    --text:#e6edf3;
+  /* Optional dark preview via ?theme=dark */
+  [data-theme="dark"] {
+    --bg:#0c111a;
+    --text:#e6e9ef;
     --muted:#9aa4b2;
-    --border:#1f2632;
-    --dash:#1b2230;
-    --accent:#7aa2f7;
-    --good:#34d399; --warn:#f59e0b; --bad:#f87171;
+    --accent:#74a8ff;
+    --card:#0f141d;
+    --border:#202636;
+    --dash:#1a2030;
+    --shadow:0 10px 28px rgba(0,0,0,.28);
   }
-  *{box-sizing:border-box}
-  html,body{ height:100% }
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    line-height:1.5;
+
+  /* -------- BASE -------- */
+  * { box-sizing:border-box }
+  body {
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font: 400 16px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;
   }
-  header{
-    position:sticky; top:0; z-index:20;
-    background: color-mix(in srgb, var(--panel) 96%, transparent);
-    -webkit-backdrop-filter: saturate(140%) blur(6px);
+  header {
+    position:sticky; top:0; z-index:10;
+    background: rgba(255,255,255,.85);
     backdrop-filter: saturate(140%) blur(6px);
-    border-bottom: 1px solid var(--border);
+    border-bottom:1px solid var(--border);
   }
-  .wrap{ max-width:1200px; margin:0 auto; padding:14px 16px; }
-  h1{ margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px; }
-  .metaBar{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px; color:var(--muted); font-size:13px }
-  .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border:1px solid var(--border); border-radius:999px; font-size:12px; background: #fff; color:#111 }
-  .dark .pill{ background:#0f172a; color:#dfe6fb }
-  .pill > select, .pill > input{
-    border:0; background:transparent; color:inherit; font:inherit; outline:none; padding:0; min-width:60px;
+  [data-theme="dark"] header { background: rgba(12,17,26,.82); }
+  .wrap { max-width:1180px; margin:0 auto; padding:16px; }
+  h1 { margin:0; font-size:var(--title); font-weight:800; letter-spacing:.2px }
+  .meta {
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:8px;
+    color:var(--muted); font-size:13px;
   }
-  .btn{
-    display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border:1px solid var(--border);
-    border-radius:10px; background:#fff; color:#0b1220; cursor:pointer; font-weight:600;
+  .pill {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 10px; border:1px solid var(--border); border-radius:999px;
+    background:#fff; color:#111; font-size:12px;
   }
-  .dark .btn{ background:#0f172a; color:#dfe6fb }
-  .btn:hover{ border-color: color-mix(in srgb, var(--accent) 40%, var(--border)) }
-  main{ padding:18px 0 60px }
-  .grid{ display:grid; gap:16px; grid-template-columns: 1fr }
-  @media (min-width:1100px){ .grid{ grid-template-columns: 2fr 1fr; } }
+  [data-theme="dark"] .pill { background:#0c111a; color:var(--text); }
+  .btn {
+    display:inline-flex; align-items:center; gap:6px; cursor:pointer;
+    padding:8px 12px; border:1px solid var(--border); border-radius:10px;
+    background:#fff; color:#111; font-size:14px;
+  }
+  [data-theme="dark"] .btn { background:#0f141d; color:var(--text); }
+  .btn:hover { border-color:#cfd4dc }
+  a { color:var(--accent); text-decoration:none }
+  a:hover { text-decoration:underline }
 
-  .card{
-    background: var(--panel);
-    border:1px solid var(--border); border-radius:var(--card-radius);
-    padding:14px;
-  }
-  h2{ margin:0 0 12px; font-size:var(--h2); font-weight:800; letter-spacing:.2px }
-  .row{ display:flex; gap:12px; flex-wrap:wrap }
-  .col{ display:grid; gap:12px }
-  .list{ display:flex; flex-direction:column; gap:8px }
-  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:var(--mono) }
-  .muted{ color:var(--muted) }
-  a{ color:var(--accent); text-decoration:none } a:hover{ text-decoration:underline }
+  /* -------- LAYOUT -------- */
+  main { padding:18px 0 60px }
+  .grid { display:grid; gap:16px }
+  @media (min-width:1000px){ .grid { grid-template-columns: 2fr 1fr } }
 
-  /* Bars list */
-  .barrow{ display:grid; grid-template-columns: 180px 1fr auto; gap:12px; align-items:center; }
+  .card {
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:16px;
+  }
+  h2 { margin:0 0 10px; font-size:var(--h2); font-weight:800 }
+
+  /* -------- MINI BARS -------- */
+  .list{ display:flex; flex-direction:column; gap:12px }
+  .barrow{ display:grid; grid-template-columns:160px 1fr auto; gap:12px; align-items:center }
   .barrow .label{ font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-  .barrow .barWrap{ background:var(--dash); border-radius:8px; height:10px; position:relative }
-  .barrow .bar{ position:absolute; left:0; top:0; bottom:0; border-radius:8px; background:linear-gradient(90deg,var(--accent),color-mix(in srgb, var(--accent) 40%, #a0c1ff)) }
-  .barrow .val{ font-size:13px; color:var(--muted) }
+  .barrow .wrap{ background:#f3f6fb; border-radius:8px; height:10px; position:relative }
+  .barrow .bar{ position:absolute; inset:0; width:0; border-radius:8px;
+    background:linear-gradient(90deg,#0f6fff,#62a4ff) }
+  [data-theme="dark"] .barrow .wrap{ background:#152033 }
 
-  /* Chips */
-  .chip{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--border); background:#fff;
-         color:#111; border-radius:999px; padding:4px 8px; font-size:12px; cursor:pointer; }
-  .chip.active{ background: color-mix(in srgb, var(--accent) 18%, #fff); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
-  .dark .chip{ background:#0f172a; color:#e6edf3 }
-  .dark .chip.active{ background: color-mix(in srgb, var(--accent) 24%, #0f172a); }
+  .mono{ font: 500 var(--mono)/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; color:#1f2937 }
+  [data-theme="dark"] .mono{ color:#cbd5e1 }
 
-  /* Tables */
   .table{ width:100%; border-collapse:collapse; font-size:14px }
-  .table th,.table td{ border-bottom:1px dashed var(--dash); padding:10px 0; text-align:left; vertical-align:top }
+  .table th,.table td{ border-bottom:1px dashed var(--dash); padding:8px 0; text-align:left; vertical-align:top }
   .table th{ font-weight:700 }
+
+  /* -------- HEATMAP (light-friendly) -------- */
+  .heat { display:grid; gap:2px; border:1px solid var(--border); border-radius:12px; padding:8px; overflow:auto; background:#fff }
+  [data-theme="dark"] .heat{ background:#0c111a }
+  .heat .hdr{ position:sticky; top:0; background:inherit }
+  .heat .lab{ font-size:12px; color:#111; white-space:nowrap }
+  [data-theme="dark"] .heat .lab{ color:#e6e9ef }
+  .heat .cell{
+    display:flex; align-items:center; justify-content:center;
+    height:26px; border-radius:6px; font-size:12px; color:#0b1220;
+  }
+  [data-theme="dark"] .heat .cell{ color:#e6e9ef }
+  /* pastel scale for light backgrounds */
+  .v0{ background:#f8fafc }
+  .v1{ background:rgba(99,179,237,.18) }
+  .v2{ background:rgba(99,179,237,.30) }
+  .v3{ background:rgba(99,179,237,.42) }
+  .v4{ background:rgba(249,115,22,.28) } /* hotter */
+  .v5{ background:rgba(239,68,68,.30) }   /* hottest */
+
+  .muted{ color:var(--muted) }
   .good{ color:var(--good) } .warn{ color:var(--warn) } .bad{ color:var(--bad) }
 
-  .note{ font-size:13px; color:var(--muted) }
+  .rowgrid{ display:grid; gap:16px }
+  @media (min-width:1000px){ .rowgrid{ grid-template-columns:1fr 1fr } }
 
-  /* Heatmap grid */
-  .heat{
-    display:grid; gap:2px; border:1px solid var(--border); border-radius:10px; padding:8px;
-    overflow:auto; max-height:520px; background:transparent;
-  }
-  .heat .hdr{ position:sticky; top:0; background:var(--panel) }
-  .heat .cell{ display:flex; align-items:center; justify-content:center; height:26px; border-radius:4px; color:var(--text); font-size:12px }
-  .heat .lab{ font-size:12px; white-space:nowrap }
-
-  .blink{ animation:blink .8s ease 1 } @keyframes blink{ 50%{ box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent)}}
-
-  /* Chart containers */
-  .chartWrap{ background:transparent; border:1px dashed var(--dash); border-radius:10px; padding:10px }
-  .kpi{
-    display:grid; grid-template-columns: repeat(4, minmax(140px,1fr)); gap:10px;
-  }
-  .kpi .tile{
-    border:1px solid var(--border); border-radius:12px; padding:10px; background:transparent;
-  }
-  .kpi .tile .t{ font-size:12px; color:var(--muted) }
-  .kpi .tile .v{ font-size:22px; font-weight:800 }
-
-  .controls{ display:flex; gap:8px; flex-wrap:wrap; }
-  .controls .pill strong{ font-weight:700 }
+  .blink{ animation:blink .8s ease 1 } @keyframes blink{ 50%{ box-shadow:0 0 0 3px rgba(15,111,255,.18)}}
 </style>
-<!-- Chart.js for interactive charts -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 </head>
 <body>
 <header>
   <div class="wrap">
     <h1>AI-Generated News Summaries — Analytics</h1>
-    <div class="metaBar">
-      <span id="lastUpdated" class="muted">Loading…</span>
-      <div class="controls">
-        <span class="pill">Window
-          <select id="windowSel">
-            <option value="1">1h</option>
-            <option value="3">3h</option>
-            <option value="6" selected>6h</option>
-            <option value="12">12h</option>
-            <option value="24">24h</option>
-          </select>
-        </span>
-        <span class="pill">Refresh
-          <select id="refreshSel">
-            <option value="30000">30s</option>
-            <option value="60000" selected>60s</option>
-            <option value="90000">90s</option>
-            <option value="120000">2m</option>
-            <option value="300000">5m</option>
-          </select>
-        </span>
-        <span class="pill">Theme
-          <select id="themeSel">
-            <option value="light" selected>Light</option>
-            <option value="dark">Dark</option>
-          </select>
-        </span>
-        <span class="pill">
-          <strong>Filter</strong>
-          <input id="kwFilter" placeholder="keyword…" />
-        </span>
-        <button class="btn" id="clearFilters">Clear Filters</button>
-      </div>
+    <div class="meta">
+      <span id="lastUpdated" class="pill">Loading…</span>
+      <label class="pill">Window:
+        <select id="winSel" style="border:none;background:transparent;outline:none">
+          <option value="3">3h</option><option value="6" selected>6h</option>
+          <option value="12">12h</option><option value="24">24h</option>
+        </select>
+      </label>
+      <label class="pill">Refresh:
+        <select id="refSel" style="border:none;background:transparent;outline:none">
+          <option value="60000">60s</option><option value="90000" selected>90s</option>
+          <option value="180000">3m</option><option value="300000">5m</option>
+        </select>
+      </label>
+      <button id="refreshBtn" class="btn">Refresh Now</button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
   <div class="grid">
-
-    <!-- LEFT: Metrics & Charts -->
     <section class="card">
-      <h2>Key Intelligence</h2>
-
-      <!-- KPIs -->
-      <div class="kpi" id="kpiRow">
-        <div class="tile"><div class="t">Articles (window)</div><div class="v" id="kpiArticles">—</div></div>
-        <div class="tile"><div class="t">Avg Confidence</div><div class="v" id="kpiAvgConf">—</div></div>
-        <div class="tile"><div class="t">Heat Index (∑ kw freq × conf)</div><div class="v" id="kpiHeat">—</div></div>
-        <div class="tile"><div class="t">Newcomer Keywords</div><div class="v" id="kpiNew">—</div></div>
+      <h2>Key Metrics</h2>
+      <div class="rowgrid">
+        <div><div class="list" id="sources"></div></div>
+        <div><div class="list" id="keywords"></div></div>
       </div>
-
-      <div class="row" style="margin-top:12px">
-        <div class="col" style="flex:1">
-          <div class="chartWrap"><canvas id="chartConfidence"></canvas></div>
-          <div class="chartWrap" style="margin-top:10px"><canvas id="chartMomentum"></canvas></div>
-        </div>
-        <div class="col" style="width:380px; max-width:100%">
-          <div class="chartWrap"><canvas id="chartSourcesPie"></canvas></div>
-          <div class="chartWrap" style="margin-top:10px"><canvas id="chartQuadrant"></canvas></div>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <div class="col" style="flex:1">
-          <h2 style="margin-bottom:6px">Top Sources</h2>
-          <div class="list" id="sources"></div>
-        </div>
-        <div class="col" style="flex:1">
-          <h2 style="margin-bottom:6px">Rising Keywords</h2>
-          <div class="list" id="rising"></div>
-        </div>
-      </div>
-
-      <div class="row" style="margin-top:12px">
-        <div class="col" style="flex:1">
-          <h2 style="margin-bottom:6px">Average Confidence by Source</h2>
+      <div class="rowgrid" style="margin-top:14px">
+        <div>
+          <h2>Average Confidence by Source</h2>
           <div class="list" id="confSources"></div>
         </div>
-        <div class="col" style="flex:1">
-          <h2 style="margin-bottom:6px">Snapshot</h2>
-          <table class="table">
-            <tbody id="snapshot"></tbody>
-          </table>
+        <div>
+          <h2>Snapshot</h2>
+          <table class="table"><tbody id="snapshot"></tbody></table>
         </div>
       </div>
     </section>
 
-    <!-- RIGHT: Heatmap + Annotations -->
     <section class="card">
       <h2>Keyword Correlations</h2>
-      <div class="note" style="margin-bottom:6px">Co-occurrence across current window (top terms). Hover for counts. Click a keyword to filter.</div>
+      <div class="muted" style="margin-bottom:8px">Co-occurrence across the current window (top terms).</div>
       <div id="heat"></div>
-
-      <div style="margin-top:12px">
-        <h2>Auto-Annotations</h2>
-        <div id="annotations" class="list"></div>
-      </div>
     </section>
-
   </div>
 
-  <!-- Latest Articles -->
   <section class="card" style="margin-top:16px">
     <h2>Latest Articles</h2>
-    <div class="note" style="margin-bottom:6px">
-      Tip: Click a keyword chip or source to filter. Filter field matches in title/summary/keywords.
-    </div>
     <table class="table">
       <thead>
-        <tr><th style="width:40%">Title</th><th>Source</th><th>Confidence</th><th>Keywords</th></tr>
+        <tr><th style="width:42%">Title</th><th>Source</th><th>Confidence</th><th>Top Terms</th></tr>
       </thead>
       <tbody id="latest"></tbody>
     </table>
@@ -244,713 +189,222 @@
 </main>
 
 <script>
-/* ===========================
-   CONFIG & QUERY PARAMS
-=========================== */
-const Q = new URLSearchParams(location.search);
-const WORKER_BASE = Q.get("worker") || "https://gozaddy.aristocles24.workers.dev";
-const FEEDS = Q.get("feeds") || ""; // CSV (optional; worker has its own defaults too)
-let REFRESH_MS = parseInt(Q.get("refresh") || "60000", 10);
-let WINDOW_HOURS = parseInt(Q.get("window") || "6", 10);
+/* ====== CONFIG (update your Worker base if needed) ====== */
+const WORKER_BASE = "https://gozaddy.aristocles24.workers.dev"; // your Worker
+const DEFAULT_FEEDS = [
+  "https://feeds.reuters.com/reuters/topNews",
+  "https://www.aljazeera.com/xml/rss/all.xml",
+  "https://feeds.bbci.co.uk/news/rss.xml",
+  "https://rss.dw.com/rdf/rss-en-all",
+  "https://www.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+].join(",");
+const FEEDS = new URLSearchParams(location.search).get("feeds") || DEFAULT_FEEDS;
+const FRONTEND_POLL_MS = parseInt(new URLSearchParams(location.search).get("refresh")||"90000",10);
+let WINDOW_HOURS = parseInt(new URLSearchParams(location.search).get("window")||"6",10);
 
-const PREF_JSON_FIRST = true; // try /summaries(JSON) first, fallback to /ascii
-const LIMIT = parseInt(Q.get("limit") || "120", 10); // cap for speed
-const WORKER_JSON_URL = `${WORKER_BASE}/summaries?${FEEDS ? "feeds="+encodeURIComponent(FEEDS)+"&" : ""}limit=${LIMIT}&interval=3600`;
-const WORKER_ASCII_URL = `${WORKER_BASE}/ascii?${FEEDS ? "feeds="+encodeURIComponent(FEEDS)+"&" : ""}limit=${LIMIT}&interval=3600`;
+/* ====== LIGHT THEME FOR EMBEDS ====== */
+(function setTheme(){
+  const q = new URLSearchParams(location.search);
+  const t = (q.get("theme")||"light").toLowerCase();
+  document.documentElement.setAttribute("data-theme", t==="dark" ? "dark" : "light");
+})();
 
-const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
-const POS = new Set("confirm,confirmed,official,approved,announced,launch,launched,records,record,acquires,acquired,sec,filing,final,definitive,report,results,agreement,partnership,award,grants,raised,profit,profits,beats,expands,appoints,unveils".split(","));
-const NEG = new Set("may,might,could,reportedly,rumor,alleged,seems,suggests,likely,unverified,investigating,unclear,disputed,questioned,unconfirmed,layoffs,loss,losses,breach,probe,probing,lawsuit,charges,scandal,recall".split(","));
+/* ====== HELPERS ====== */
+const $ = s => document.querySelector(s);
+const nowStr = () => new Date().toLocaleString();
 
-const $ = (s)=>document.querySelector(s);
-
-/* ===========================
-   STATE
-=========================== */
-let CACHE = [];          // article objects
-let LAST_HASH = "";
-let REFRESH_TIMER = null;
-let THEME = (Q.get("theme") || "light").toLowerCase();
-
-/* ===========================
-   UTILITIES
-=========================== */
-const nowStr = ()=>new Date().toLocaleString();
-function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]); }
-function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; } }
-function gradeClass(score){ return score>=70?"good":score>=45?"warn":"bad"; }
-function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
-function sha256Hex(str){
-  const enc = new TextEncoder().encode(str);
-  return crypto.subtle.digest("SHA-256", enc).then(buf => Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join(''));
-}
-function parseDate(s){
-  if(!s) return null;
-  const d = new Date(s);
-  if(!isNaN(+d)) return d;
-  // fallback: try common date strings
-  const d2 = new Date(String(s).replace("GMT","UTC"));
-  return isNaN(+d2) ? null : d2;
-}
-function hms(ms){
-  const s = Math.round(ms/1000);
-  const m = Math.floor(s/60), r = s%60;
-  return `${m}m ${r}s`;
-}
-
-/* ===========================
-   FETCH: JSON → fallback ASCII
-=========================== */
-async function fetchText(url){
-  const r = await fetch(url + (url.includes("?") ? "&" : "?") + "_t="+Date.now(), { cache:"no-store" });
-  if(!r.ok) throw new Error("Fetch failed: " + r.status);
-  return r.text();
-}
-async function fetchJSON(url){
-  const r = await fetch(url + (url.includes("?") ? "&" : "?") + "_t="+Date.now(), { cache:"no-store" });
+async function getJSON(u){
+  const r = await fetch(u + (u.includes("?")?"&":"?") + "_t=" + Date.now(), {cache:"no-store"});
   if(!r.ok) throw new Error("Fetch failed: " + r.status);
   return r.json();
 }
-
-/* ASCII parser (compatible with our worker’s /ascii) */
-function parseAscii(txt){
-  const lines = txt.split(/\r?\n/);
-  // trim banner/footer
-  let i=0; while(i<lines.length && (lines[i].startsWith("=") || !lines[i].trim())) i++;
-  const footIdx = lines.findIndex(L=>/\(Updates hourly/i.test(L));
-  const usable = (footIdx>-1 ? lines.slice(i, footIdx) : lines.slice(i));
-
-  const articles = [];
-  let idx=0;
-  while(idx<usable.length){
-    const titleLine = (usable[idx]||"").trim();
-    const dashLine = (usable[idx+1]||"").trim();
-    const isTitleStart = !!titleLine && /^-{20,}$/.test(dashLine);
-    if(!isTitleStart){ idx++; continue; }
-
-    const parts = titleLine.split("|").map(s=>s.trim());
-    const title = parts[0] || "(untitled)";
-    const link = (parts[1] && /^https?:\/\//i.test(parts[1])) ? parts[1] : "";
-    const published = parts.slice(2).join(" | ");
-    const body = [];
-    let j = idx+2;
-    while(j<usable.length){
-      const L = (usable[j]||"").trim();
-      const longSep = /^-{60,}$/.test(L);
-      const aheadTitle = (usable[j+1]||"").trim();
-      const aheadDash   = (usable[j+2]||"").trim();
-      const nextStart = aheadTitle && /^-{20,}$/.test(aheadDash);
-      if(longSep && nextStart){ j++; break; }
-      body.push(usable[j]); j++;
-    }
-    const summary = body.join("\n").trim();
-    const kwSeoMatch = summary.match(/^\s*seo keywords:\s*(.+)$/gim);
-    const seoKeywords = kwSeoMatch ? (kwSeoMatch.pop().split(":")[1]||"").split(/[;,]/g).map(s=>s.trim()).filter(Boolean) : [];
-    const source = hostOf(link);
-    articles.push({
-      title, link, published, summary, source,
-      confidence: confidenceScore(summary, source),
-      keywords: (seoKeywords.length ? seoKeywords : deriveKeywords(summary)).slice(0,12),
-      observedAt: Date.now()
-    });
-    idx = j+1;
-  }
-  return articles;
+async function sha(str){
+  const b = new TextEncoder().encode(str);
+  const h = await crypto.subtle.digest("SHA-256", b);
+  return Array.from(new Uint8Array(h)).map(x=>x.toString(16).padStart(2,"0")).join("");
 }
+function hostOf(link){ try{ return new URL(link).hostname.replace(/^www\./,''); }catch(_){ return ""; } }
+function words(t){ return (t.toLowerCase().match(/[a-z0-9]+/g)||[]); }
+const STOP = new Set(`a,an,the,of,in,on,for,with,and,or,to,from,by,as,is,are,was,were,be,been,at,that,this,these,those,it,its,their,his,her,our,your,not,no,if,then,than,but,so,also,into,over,under,about,via,per,within,without,across,between,among,will,can,may,might,could,should,would`.split(","));
 
-/* Confidence & sentiment heuristics */
-function confidenceScore(text, sourceHost=""){
-  const bag = words(text);
-  let pos=0, neg=0;
-  for(const w of bag){ if(POS.has(w)) pos++; if(NEG.has(w)) neg++; }
-  let score = 52 + 6*pos - 6*neg;
-  if(/nytimes\.com|washingtonpost\.com|forbes\.com|reuters\.com|apnews\.com|bbc\.co\.uk|aljazeera\.com|npr\.org|wsj\.com/i.test(sourceHost)) score += 6;
-  return clamp(score, 0, 100);
+function findSeoKeywords(text){
+  const m = text.match(/^\s*seo keywords:\s*(.+)$/gim);
+  if(!m) return [];
+  const line = m[m.length-1];
+  return (line.split(":")[1]||"").split(/[;,]/g).map(s=>s.trim()).filter(Boolean);
 }
-function sentiment(text){
-  const bag = words(text);
-  let p=0, n=0;
-  for(const w of bag){ if(POS.has(w)) p++; if(NEG.has(w)) n++; }
-  const total = p+n || 1;
-  const score = clamp(Math.round(((p - n)/total)*50 + 50), 0, 100); // 0–100
-  return { pos:p, neg:n, score };
-}
-
-/* Keyword derivation (naive) */
-function deriveKeywords(text, limit=20){
-  const freq = new Map();
-  for(const w of words(text)){
-    if(w.length<3 || STOP.has(w)) continue;
-    freq.set(w, (freq.get(w)||0)+1);
-  }
-  return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0, limit).map(x=>x[0]);
-}
-
-/* Harmonize JSON from /summaries */
-function normalizeJSON(items){
-  const out = [];
-  for(const it of (items||[])){
-    const title = String(it.title||"").trim();
-    const link = String(it.link||it.url||"").trim();
-    const source = it.sourceHost || hostOf(link);
-    const published = it.published || it.publishedAt || "";
-    const summary = (it.summary || it.body || it.text || "").trim();
-    const kws = (Array.isArray(it.keywords) ? it.keywords : deriveKeywords(summary)).slice(0,12);
-    const conf = typeof it.confidence === "number" ? it.confidence : confidenceScore(summary, source);
-    out.push({
-      title, link, source, published, summary,
-      keywords: kws, confidence: conf,
-      observedAt: Date.now(),
-      senti: typeof it.sentimentScore === "number" ? it.sentimentScore : sentiment(summary).score
-    });
-  }
-  return out;
-}
-
-/* ===========================
-   CHARTS
-=========================== */
-let charts = { confidence:null, momentum:null, sources:null, quadrant:null };
-
-/* Create or update charts */
-function renderConfidenceTrend(buckets){
-  const ctx = $("#chartConfidence").getContext("2d");
-  const labels = buckets.map(b=>new Date(b.t).toLocaleTimeString());
-  const overall = buckets.map(b=> b.items.length ? Math.round(b.items.reduce((s,a)=>s+a.confidence,0)/b.items.length) : 0);
-
-  // per-source averages (top 3)
-  const srcSet = new Set();
-  buckets.forEach(b => b.items.forEach(a => srcSet.add(a.source||"unknown")));
-  const sources = [...srcSet].slice(0,3);
-
-  const datasets = [
-    { label:"Overall", data: overall, borderWidth:2, tension:.25 }
-  ];
-  sources.forEach((src,i)=>{
-    const data = buckets.map(b=>{
-      const arr = b.items.filter(a=> (a.source||"unknown")===src);
-      return arr.length ? Math.round(arr.reduce((s,a)=>s+a.confidence,0)/arr.length) : null;
-    });
-    datasets.push({ label:src, data, borderWidth:1.5, tension:.25 });
-  });
-
-  const conf = {
-    type:'line',
-    data:{ labels, datasets },
-    options:{
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom' }, tooltip:{ mode:'index', intersect:false } },
-      scales:{ y:{ min:0, max:100, title:{ display:true, text:"Confidence (0–100)" } } }
-    }
-  };
-
-  if(charts.confidence){ charts.confidence.data = conf.data; charts.confidence.options = conf.options; charts.confidence.update(); }
-  else { charts.confidence = new Chart(ctx, conf); }
-}
-
-function renderSourcesPie(countPairs){
-  const ctx = $("#chartSourcesPie").getContext("2d");
-  const labels = countPairs.map(p=>p[0]);
-  const data = countPairs.map(p=>p[1]);
-  const conf = {
-    type:'doughnut',
-    data:{ labels, datasets:[{ data }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom' }, tooltip:{ callbacks:{ label:(ctx)=> `${ctx.label}: ${ctx.raw}` } } }
-    }
-  };
-  if(charts.sources){ charts.sources.data = conf.data; charts.sources.update(); }
-  else { charts.sources = new Chart(ctx, conf); }
-}
-
-/* Keyword momentum (stacked area of top keywords) */
-function renderMomentum(buckets, topKeys){
-  const ctx = $("#chartMomentum").getContext("2d");
-  const labels = buckets.map(b=>new Date(b.t).toLocaleTimeString());
-  const datasets = topKeys.map(k=>{
-    return {
-      label:k,
-      data: buckets.map(b=>{
-        // count articles that include keyword k
-        return b.items.reduce((cnt,a)=> cnt + (a.keywords.map(x=>x.toLowerCase()).includes(k.toLowerCase()) ? 1 : 0), 0);
-      }),
-      borderWidth:1.5, fill:true, tension:.2
-    };
-  });
-
-  const conf = {
-    type:'line',
-    data:{ labels, datasets },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom' } },
-      scales:{ y:{ stacked:true, beginAtZero:true, title:{ display:true, text:"Articles per tick" } }, x:{ stacked:true } }
-    }
-  };
-  if(charts.momentum){ charts.momentum.data = conf.data; charts.momentum.options = conf.options; charts.momentum.update(); }
-  else { charts.momentum = new Chart(ctx, conf); }
-}
-
-/* Risk vs Confidence quadrant (bubbles by keyword) */
-function renderQuadrant(kwStats){
-  const ctx = $("#chartQuadrant").getContext("2d");
-  // kwStats: [{k, confAvg, velocity, freq}]
-  const data = kwStats.map(o=>({ x: o.confAvg, y: o.velocityScaled, r: Math.max(3, Math.sqrt(o.freq)*2), k:o.k }));
-  const conf = {
-    type:'bubble',
-    data:{ datasets: [{ label:"Keywords", data }]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:(ctx)=> `${ctx.raw.k}: conf ${ctx.raw.x.toFixed(0)}, vel ${ctx.raw.y.toFixed(2)}` } } },
-      scales:{
-        x:{ min:0, max:100, title:{ display:true, text:"Avg Confidence →" } },
-        y:{ min:-1, max:3, title:{ display:true, text:"Velocity (emergence) ↑" } }
-      }
-    }
-  };
-  if(charts.quadrant){ charts.quadrant.data = conf.data; charts.quadrant.options = conf.options; charts.quadrant.update(); }
-  else { charts.quadrant = new Chart(ctx, conf); }
-}
-
-/* ===========================
-   RENDER HELPERS (lists)
-=========================== */
-function renderBars(containerSel, pairs, cap=10, suffix=""){
-  const root = $(containerSel); root.innerHTML = "";
-  if(!pairs.length){ root.innerHTML = '<div class="muted">No data</div>'; return; }
-  const max = Math.max(...pairs.map(p=>p[1])) || 1;
-  pairs.slice(0,cap).forEach(([label,val])=>{
-    const row = document.createElement("div"); row.className="barrow";
-    const lab = document.createElement("div"); lab.className="label";
-    const srcBtn = document.createElement("a"); srcBtn.href="javascript:void(0)";
-    srcBtn.textContent = label; srcBtn.onclick = ()=> applySourceFilter(label);
-    lab.appendChild(srcBtn);
-    const wrap = document.createElement("div"); wrap.className="barWrap";
-    const bar = document.createElement("div"); bar.className="bar"; bar.style.width = (100*val/max).toFixed(1)+"%";
-    const v = document.createElement("div"); v.className="val"; v.textContent = val + (suffix? " "+suffix:"");
-    wrap.appendChild(bar);
-    row.appendChild(lab); row.appendChild(wrap); row.appendChild(v);
-    root.appendChild(row);
-  });
-}
-
-function renderRising(containerSel, items, cap=10){
-  const root = $(containerSel); root.innerHTML = "";
-  if(!items.length){ root.innerHTML = '<div class="muted">No signals yet</div>'; return; }
-  items.slice(0,cap).forEach(o=>{
-    const row = document.createElement("div"); row.className="barrow";
-    const lab = document.createElement("div"); lab.className="label";
-    const chip = document.createElement("span"); chip.className="chip";
-    chip.textContent = o.k; chip.onclick = ()=> applyKeywordFilter(o.k);
-    lab.appendChild(chip);
-    const wrap = document.createElement("div"); wrap.className="barWrap";
-    const bar = document.createElement("div"); bar.className="bar"; bar.style.width = (100*o.velocityPct).toFixed(1)+"%";
-    const v = document.createElement("div"); v.className="val";
-    v.textContent = `freq ${o.freq} • vel +${(o.velocity*100).toFixed(0)}%`;
-    wrap.appendChild(bar);
-    row.appendChild(lab); row.appendChild(wrap); row.appendChild(v);
-    root.appendChild(row);
-  });
-}
-
-function renderHeat(containerSel, keys, M){
-  const root = $(containerSel); root.innerHTML="";
-  if(!keys.length){ root.innerHTML='<div class="muted">No correlations yet.</div>'; return; }
-  const K = keys.length;
-  const max = Math.max(1, ...M.flat());
-  root.className = "heat";
-  root.style.gridTemplateColumns = `140px repeat(${K}, minmax(36px, 1fr))`;
-  // header
-  root.appendChild(Object.assign(document.createElement("div"), { className:"lab hdr" }));
-  keys.forEach(k=>{
-    const d = document.createElement("div"); d.className="lab hdr";
-    const chip = document.createElement("span"); chip.className="chip"; chip.textContent=k;
-    chip.onclick = ()=> applyKeywordFilter(k);
-    d.appendChild(chip);
-    root.appendChild(d);
-  });
-  // rows
-  for(let i=0;i<K;i++){
-    const lab = document.createElement("div"); lab.className="lab";
-    const chip = document.createElement("span"); chip.className="chip"; chip.textContent=keys[i];
-    chip.onclick = ()=> applyKeywordFilter(keys[i]);
-    lab.appendChild(chip);
-    root.appendChild(lab);
-    for(let j=0;j<K;j++){
-      const v = M[i][j];
-      const ratio = v/max;
-      const hue = 210 - Math.round(210*ratio); // blue→red
-      const alpha = 0.12 + 0.68*ratio;
-      const cell = document.createElement("div"); cell.className="cell";
-      cell.style.background = `hsla(${hue}, 85%, 60%, ${alpha.toFixed(2)})`;
-      cell.title = `${keys[i]} × ${keys[j]}: ${v}`;
-      cell.textContent = v? String(v): "";
-      root.appendChild(cell);
-    }
-  }
-}
-
-function renderLatest(list){
-  const tbody = $("#latest"); tbody.innerHTML="";
-  list.forEach(a=>{
-    const tr = document.createElement("tr");
-    const tdT = document.createElement("td");
-    const tdS = document.createElement("td");
-    const tdC = document.createElement("td");
-    const tdK = document.createElement("td");
-
-    const titleLink = a.link ? `<a href="${a.link}" target="_blank" rel="noopener">${escapeHtml(a.title)}</a>` : escapeHtml(a.title);
-    tdT.innerHTML = `<div style="font-weight:700">${titleLink}</div>
-                     <div class="mono">${escapeHtml(a.published || "")}</div>
-                     <div class="muted" style="margin-top:4px">${escapeHtml(truncate(a.summary||"", 180))}</div>`;
-    tdS.innerHTML = a.source ? `<a href="javascript:void(0)">${escapeHtml(a.source)}</a>` : "—";
-    if(a.source){
-      tdS.querySelector("a").onclick = ()=> applySourceFilter(a.source);
-    }
-    const cls = gradeClass(a.confidence);
-    tdC.innerHTML = `<span class="${cls}" style="font-weight:700">${Math.round(a.confidence)}</span>`;
-    tdK.innerHTML = (a.keywords||[]).slice(0,8).map(k=>{
-      const s = document.createElement("span");
-      s.className = "chip"; s.textContent = k;
-      s.onclick = ()=> applyKeywordFilter(k);
-      tdK.appendChild(s);
-      return "";
-    }).join("");
-
-    tr.appendChild(tdT); tr.appendChild(tdS); tr.appendChild(tdC); tr.appendChild(tdK);
-    tbody.appendChild(tr);
-  });
-}
-
-function renderSnapshot(articles, kwPairs, sourcePairs){
-  const total = articles.length;
-  const topKW = kwPairs[0]?.[0] || "—";
-  const topSrc = sourcePairs[0]?.[0] || "—";
-  const avgConf = total? Math.round(articles.reduce((s,a)=>s+a.confidence,0)/total) : 0;
-  const posAvg = total? Math.round(articles.reduce((s,a)=>s+ (a.senti ?? sentiment(a.summary).score),0)/total) : 0;
-
-  const rows = [
-    ["Articles in window", String(total)],
-    ["Top keyword", topKW],
-    ["Top source", topSrc],
-    ["Avg confidence", `${avgConf}`],
-    ["Avg sentiment", `${posAvg}`],
-    ["Window (hours)", String(WINDOW_HOURS)]
-  ];
-  const tb = $("#snapshot"); tb.innerHTML="";
-  rows.forEach(([k,v])=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML = `<th>${k}</th><td>${escapeHtml(v)}</td>`;
-    tb.appendChild(tr);
-  });
-
-  // KPIs
-  $("#kpiArticles").textContent = String(total);
-  $("#kpiAvgConf").textContent = String(avgConf);
-}
-
-/* Auto-annotations */
-function renderAnnotations(windowed, rising, heatIndexTop){
-  const box = $("#annotations"); box.innerHTML = "";
-  const items = [];
-
-  const topEmerging = rising.slice(0,3).map(x=>x.k);
-  if(topEmerging.length){
-    items.push({
-      t:"Top Emerging Topics",
-      d:`${topEmerging.join(", ")}`,
-    });
-  }
-
-  if(heatIndexTop.length){
-    const h3 = heatIndexTop.slice(0,3).map(o=>`${o.k} (HI ${o.heat})`);
-    items.push({
-      t:"High Heat Keywords",
-      d:h3.join(", ")
-    });
-  }
-
-  const lowConf = windowed.filter(a=>a.confidence<45).slice(0,3).map(a=>a.title);
-  if(lowConf.length){
-    items.push({ t:"Low Confidence Watchlist", d: lowConf.join(" • ") });
-  }
-
-  if(!items.length){
-    items.push({ t:"No notable annotations", d:"As data accrues, automated takeaways will appear here." });
-  }
-
-  items.forEach(it=>{
-    const div = document.createElement("div");
-    div.className="tile";
-    div.style.border = `1px dashed var(--dash)`;
-    div.style.borderRadius = "10px";
-    div.style.padding = "8px";
-    div.innerHTML = `<div class="t" style="font-weight:700">${escapeHtml(it.t)}</div>
-                     <div class="muted" style="margin-top:4px">${escapeHtml(it.d)}</div>`;
-    box.appendChild(div);
-  });
-}
-
-/* ===========================
-   ANALYTICS
-=========================== */
-function withinWindow(a){
-  const ageMs = Date.now() - a.observedAt;
-  return ageMs <= WINDOW_HOURS*3600*1000;
-}
-
 function topKeywords(articles, k=20){
   const freq = new Map();
   for(const a of articles){
-    for(const kw of (a.keywords||[])){
+    let kws = findSeoKeywords(a.body);
+    if(!kws.length){
+      kws = words(a.body).filter(w=>!STOP.has(w) && w.length>2).slice(0,80);
+    }
+    for(const kw of kws){
       const key = kw.toLowerCase();
       freq.set(key, (freq.get(key)||0)+1);
     }
   }
   return [...freq.entries()].sort((a,b)=>b[1]-a[1]).slice(0,k);
 }
-
+const POS = new Set("confirm,confirmed,official,approved,announced,launch,launched,records,record,acquires,acquired,sec,filing,final,definitive,report,results".split(","));
+const NEG = new Set("may,might,could,reportedly,rumor,alleged,seems,suggests,likely,unverified,investigating,unclear,disputed,questioned,unconfirmed".split(","));
+function confidenceScore(text, sourceHost=""){
+  const bag = words(text); let pos=0,neg=0;
+  for(const w of bag){ if(POS.has(w)) pos++; if(NEG.has(w)) neg++; }
+  let s = 52 + 6*pos - 6*neg;
+  if(/nytimes\.com|washingtonpost\.com|reuters\.com|bbc\.co\.uk|aljazeera\.com/i.test(sourceHost)) s += 6;
+  return Math.max(0, Math.min(100, s));
+}
 function cooccurMatrix(articles, keys){
-  const K = keys.length;
-  const index = new Map(keys.map((k,i)=>[k,i]));
+  const K = keys.length, ix = new Map(keys.map((k,i)=>[k,i]));
   const M = Array.from({length:K},()=>Array(K).fill(0));
   for(const a of articles){
-    const set = new Set((a.keywords||[]).map(k=>k.toLowerCase()).filter(k=>index.has(k)));
+    let kws = findSeoKeywords(a.body);
+    if(!kws.length){ kws = words(a.body).filter(w=>!STOP.has(w)&&w.length>2).slice(0,50); }
+    const set = new Set(kws.map(k=>k.toLowerCase()).filter(k=>ix.has(k)));
     const arr = [...set];
     for(let i=0;i<arr.length;i++){
       for(let j=i;j<arr.length;j++){
-        const ii = index.get(arr[i]), jj = index.get(arr[j]);
-        M[ii][jj]++; if(ii!==jj) M[jj][ii]++;
+        const ii=ix.get(arr[i]), jj=ix.get(arr[j]); M[ii][jj]++; if(ii!==jj) M[jj][ii]++;
       }
     }
   }
   return M;
 }
+function gradeClass(n){ return n>=70? "good" : n>=45? "warn" : "bad"; }
 
-/* Buckets by time (e.g., 8 ticks across window) */
-function bucketize(articles, ticks=8){
-  const now = Date.now();
-  const span = WINDOW_HOURS*3600*1000;
-  const step = span/ticks;
-  const buckets = [];
-  for(let i=ticks-1;i>=0;i--){
-    const t0 = now - (i+1)*step;
-    const t1 = now - i*step;
-    const items = articles.filter(a=>{
-      const pd = parseDate(a.published)?.getTime();
-      const obs = a.observedAt;
-      const ts = pd || obs;
-      return ts>=t0 && ts<t1;
-    });
-    buckets.push({ t: t1, items });
+/* ====== RENDERERS ====== */
+function renderBars(sel, pairs, cap=10, suffix=""){
+  const root=$(sel); root.innerHTML="";
+  if(!pairs.length){ root.innerHTML='<div class="muted">No data</div>'; return; }
+  const max=Math.max(...pairs.map(p=>p[1]))||1;
+  pairs.slice(0,cap).forEach(([label,val])=>{
+    const row=document.createElement("div"); row.className="barrow";
+    const lab=document.createElement("div"); lab.className="label"; lab.textContent=label;
+    const wrap=document.createElement("div"); wrap.className="wrap";
+    const bar=document.createElement("div"); bar.className="bar"; bar.style.width=(100*val/max).toFixed(1)+"%";
+    const v=document.createElement("div"); v.className="mono"; v.textContent=val+(suffix? " "+suffix:"");
+    wrap.appendChild(bar); row.appendChild(lab); row.appendChild(wrap); row.appendChild(v); root.appendChild(row);
+  });
+}
+function renderHeat(sel, keys, M){
+  const root=$(sel); root.innerHTML=""; if(!keys.length){ root.innerHTML='<div class="muted">No correlations yet.</div>'; return; }
+  const K=keys.length, max=Math.max(1, ...M.flat());
+  root.className="heat"; root.style.gridTemplateColumns=`140px repeat(${K}, minmax(36px, 1fr))`;
+  const blank=document.createElement("div"); blank.className="lab hdr"; root.appendChild(blank);
+  for(let j=0;j<K;j++){ const d=document.createElement("div"); d.className="lab hdr"; d.textContent=keys[j]; root.appendChild(d); }
+  for(let i=0;i<K;i++){
+    const lab=document.createElement("div"); lab.className="lab"; lab.textContent=keys[i]; root.appendChild(lab);
+    for(let j=0;j<K;j++){
+      const v=M[i][j], r=v/max;
+      const cell=document.createElement("div"); cell.className="cell " + (r>0.75?"v5":r>0.5?"v4":r>0.3?"v3":r>0.15?"v2":r>0?"v1":"v0");
+      cell.title=`${keys[i]} × ${keys[j]}: ${v}`; cell.textContent=v? String(v):""; root.appendChild(cell);
+    }
   }
-  return buckets;
+}
+function renderLatest(list){
+  const tbody=$("#latest"); tbody.innerHTML="";
+  list.forEach(a=>{
+    const tr=document.createElement("tr");
+    const tdT=document.createElement("td"), tdS=document.createElement("td"), tdC=document.createElement("td"), tdK=document.createElement("td");
+    tdT.innerHTML = `<div style="font-weight:700">${a.title}</div>
+                     <div class="mono">${a.published||""}</div>
+                     ${a.link? `<a href="${a.link}" target="_blank" rel="noopener">Open source</a>`:""}`;
+    tdS.textContent = a.host||"—";
+    tdC.innerHTML = `<span class="${gradeClass(a.confidence)}" style="font-weight:700">${a.confidence}</span>`;
+    tdK.textContent = (a.topTerms||[]).slice(0,6).join(", ");
+    tr.appendChild(tdT); tr.appendChild(tdS); tr.appendChild(tdC); tr.appendChild(tdK); tbody.appendChild(tr);
+  });
+}
+function renderSnapshot(articles, kwPairs, srcPairs){
+  const total=articles.length;
+  const avg = total? Math.round(articles.reduce((s,a)=>s+a.confidence,0)/total) : 0;
+  const rows=[
+    ["Articles in window", String(total)],
+    ["Top keyword", kwPairs[0]?.[0]||"—"],
+    ["Top source", srcPairs[0]?.[0]||"—"],
+    ["Avg confidence", String(avg)],
+    ["Window (hours)", String(WINDOW_HOURS)]
+  ];
+  const tb=$("#snapshot"); tb.innerHTML=""; rows.forEach(([k,v])=>{ const tr=document.createElement("tr"); tr.innerHTML=`<th>${k}</th><td>${v}</td>`; tb.appendChild(tr); });
 }
 
-/* Velocity & newcomers (compare halves) */
-function keywordVelocity(articles){
-  const now = Date.now();
-  const span = WINDOW_HOURS*3600*1000;
-  const mid = now - span/2;
-  const q3 = now - span/4;
+/* ====== DATA LOOP ====== */
+let CACHE=[], LAST_HASH="";
+function withinWindow(a){ return (Date.now()-a.observedAt) <= WINDOW_HOURS*3600*1000; }
 
-  const map = new Map();
-  for(const a of articles){
-    const ts = parseDate(a.published)?.getTime() || a.observedAt;
-    const recent = ts >= mid;
-    const latestQuarter = ts >= q3;
-    (a.keywords||[]).forEach(k=>{
-      const o = map.get(k) || { early:0, late:0, latestQ:0, freq:0, confSum:0, confN:0 };
-      o.freq++; o.confSum += a.confidence; o.confN++;
-      if(recent) o.late++; else o.early++;
-      if(latestQuarter) o.latestQ++;
-      map.set(k,o);
-    });
-  }
-  const out = [];
-  for(const [k, o] of map.entries()){
-    const velocity = (o.late - o.early)/Math.max(1, o.early); // -1..inf
-    const confAvg = o.confN ? o.confSum/o.confN : 0;
-    const newcomer = (o.early===0 && o.late>0);
-    out.push({
-      k, freq:o.freq, velocity, velocityPct: clamp((o.late/Math.max(1,o.early+o.late))*100,0,100),
-      velocityScaled: clamp(velocity, -1, 3),
-      confAvg, newcomer, heat: Math.round(confAvg * o.freq)
-    });
-  }
-  out.sort((a,b)=> (b.velocity - a.velocity) || (b.freq - a.freq));
-  return out;
+async function loadSummaries(){
+  const url = `${WORKER_BASE}/summaries?feeds=${encodeURIComponent(FEEDS)}&limit=60&interval=3600`;
+  const data = await getJSON(url); // expects {items:[{title,link,published,summary,body?}]}
+  // make a stable text hash to avoid unnecessary re-renders
+  const textSig = JSON.stringify(data.items||[]).slice(0,100000);
+  const h = await sha(textSig);
+  if(h===LAST_HASH) return null;
+  LAST_HASH = h;
+  return (data.items||[]).map(it=>{
+    const host = hostOf(it.link);
+    const body = it.summary || it.body || "";
+    const conf = confidenceScore(body, host);
+    const kw = findSeoKeywords(body);
+    const topTerms = (kw.length? kw : words(body).filter(w=>!STOP.has(w)).slice(0,8)).map(w=>w.toLowerCase());
+    return { title: it.title, link: it.link, published: it.published, body, host, confidence: conf, topTerms, observedAt: Date.now() };
+  });
 }
-
-/* ===========================
-   RENDER ALL
-=========================== */
-let FILTER = { keyword:null, source:null, text:null };
-
-function applyKeywordFilter(k){ FILTER.keyword = k.toLowerCase(); renderAll(); }
-function applySourceFilter(s){ FILTER.source = s.toLowerCase(); renderAll(); }
-function applyTextFilter(s){ FILTER.text = (s||"").toLowerCase().trim(); renderAll(); }
-function clearFilters(){ FILTER = { keyword:null, source:null, text:null }; $("#kwFilter").value=""; renderAll(); }
-
-function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;', "'":'&#39;'}[c])); }
-function truncate(s, n){ return s.length>n ? s.slice(0,n-1)+"…" : s; }
 
 function renderAll(){
-  const windowed0 = CACHE.filter(withinWindow);
-  const windowed = windowed0.filter(a=>{
-    if(FILTER.keyword && !(a.keywords||[]).map(x=>x.toLowerCase()).includes(FILTER.keyword)) return false;
-    if(FILTER.source && (a.source||"").toLowerCase() !== FILTER.source) return false;
-    if(FILTER.text){
-      const hay = (a.title+" "+(a.summary||"")+" "+(a.keywords||[]).join(" ")).toLowerCase();
-      if(!hay.includes(FILTER.text)) return false;
-    }
-    return true;
-  });
+  const windowed = CACHE.filter(withinWindow);
+  // sources
+  const sc=new Map(); windowed.forEach(a=> sc.set(a.host||"unknown",(sc.get(a.host||"unknown")||0)+1));
+  const srcPairs=[...sc.entries()].sort((a,b)=>b[1]-a[1]);
 
-  // Sources counts
-  const srcCountsMap = new Map();
-  windowed.forEach(a=> srcCountsMap.set(a.source||"unknown", (srcCountsMap.get(a.source||"unknown")||0)+1));
-  const sourcePairs = [...srcCountsMap.entries()].sort((a,b)=>b[1]-a[1]);
+  // keywords, confidence
+  const kwPairs=topKeywords(windowed,20);
+  const cm=new Map();
+  windowed.forEach(a=>{ const k=a.host||"unknown"; const acc=cm.get(k)||[0,0]; acc[0]+=a.confidence; acc[1]+=1; cm.set(k,acc); });
+  const confPairs=[...cm.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
 
-  // Conf per source
-  const confMap = new Map(); // host -> [sum,cnt]
-  windowed.forEach(a=>{
-    const k = a.source || "unknown";
-    const v = confMap.get(k) || [0,0];
-    v[0]+=a.confidence; v[1]+=1;
-    confMap.set(k, v);
-  });
-  const confPairs = [...confMap.entries()].map(([h,[s,c]])=>[h, Math.round(s/c)]).sort((a,b)=>b[1]-a[1]);
+  // heatmap
+  const keyList=kwPairs.slice(0,12).map(p=>p[0]);
+  const M=cooccurMatrix(windowed,keyList);
 
-  // Keywords
-  const kwPairs = topKeywords(windowed, 24);
-  const keyList = kwPairs.slice(0,12).map(p=>p[0]);
-  const M = cooccurMatrix(windowed, keyList);
-
-  // Buckets & charts
-  const buckets = bucketize(windowed, 8);
-  renderConfidenceTrend(buckets);
-  renderSourcesPie(sourcePairs.slice(0,10));
-  renderMomentum(buckets, keyList.slice(0,6));
-
-  // Velocity / newcomers / heat index
-  const vels = keywordVelocity(windowed);
-  const rising = vels.filter(v=>v.velocity>0).slice(0,10);
-  const newcomers = vels.filter(v=>v.newcomer).slice(0,10);
-  const heatIndexTop = [...vels].sort((a,b)=>b.heat-a.heat).slice(0,10);
-
-  renderBars("#sources", sourcePairs, 8, "articles");
-  renderRising("#rising", rising, 8);
+  renderBars("#sources", srcPairs, 8, "articles");
+  renderBars("#keywords", kwPairs, 12, "hits");
   renderBars("#confSources", confPairs, 8, "conf");
   renderHeat("#heat", keyList, M);
-  renderLatest(windowed.slice(0,30));
-  renderSnapshot(windowed, kwPairs, sourcePairs);
-  renderAnnotations(windowed, rising, heatIndexTop);
-
-  // Quadrant (keywords): conf vs velocity (bubble=freq)
-  renderQuadrant(vels.slice(0,15));
-
-  // Extra KPIs
-  const totalHeat = vels.reduce((s,o)=>s+o.heat,0);
-  $("#kpiHeat").textContent = String(totalHeat);
-  $("#kpiNew").textContent = String(newcomers.length);
-
-  // Blink pulse on update
-  document.querySelectorAll(".card").forEach(n=>n.classList.add("blink"));
-  setTimeout(()=>document.querySelectorAll(".card").forEach(n=>n.classList.remove("blink")), 900);
-
-  $("#lastUpdated").textContent = "Last updated " + nowStr();
+  renderLatest(windowed.slice(0,8));
+  renderSnapshot(windowed, kwPairs, srcPairs);
+  $("#lastUpdated").textContent = "Last updated: " + nowStr();
 }
 
-/* ===========================
-   LIVE LOOP
-=========================== */
-async function loadData(){
+async function tick(){
   try{
-    let items = [];
-    if(PREF_JSON_FIRST){
-      try {
-        const json = await fetchJSON(WORKER_JSON_URL);
-        items = normalizeJSON(json.items || json || []);
-      } catch(e){
-        // fallback to ASCII
-        const txt = await fetchText(WORKER_ASCII_URL);
-        items = parseAscii(txt);
-      }
-    } else {
-      // ascii first
-      try{
-        const txt = await fetchText(WORKER_ASCII_URL);
-        items = parseAscii(txt);
-      } catch(_){
-        const json = await fetchJSON(WORKER_JSON_URL);
-        items = normalizeJSON(json.items || json || []);
-      }
-    }
-
-    // Merge into CACHE by (title|source)
-    const key = a => (a.title+"|"+(a.source||"")).toLowerCase();
-    const map = new Map(CACHE.map(a=>[key(a), a]));
-    items.forEach(it=>{
-      const k = key(it);
-      const prev = map.get(k);
-      if(prev){
-        // update fields (keep earliest observedAt)
-        map.set(k, { ...prev, ...it, observedAt: prev.observedAt });
-      } else {
-        map.set(k, it);
-      }
-    });
-    CACHE = [...map.values()].sort((a,b)=>{
-      const ta = parseDate(a.published)?.getTime() || a.observedAt;
-      const tb = parseDate(b.published)?.getTime() || b.observedAt;
-      return (tb - ta);
-    });
-
-    // Hash to skip redundant renders
-    const h = await sha256Hex(JSON.stringify(CACHE.map(a=>[a.title,a.source,a.published])));
-    if(h !== LAST_HASH){
+    const items = await loadSummaries();
+    if(items){ // update cache only when changed
+      // unique by title+host
+      const key = x => (x.title+"|"+x.host).toLowerCase();
+      const map=new Map(CACHE.filter(withinWindow).map(a=>[key(a),a]));
+      items.forEach(p=> map.set(key(p), p));
+      CACHE = [...map.values()].sort((a,b)=>b.observedAt - a.observedAt);
       renderAll();
-      LAST_HASH = h;
+      document.querySelectorAll(".card").forEach(n=>n.classList.add("blink"));
+      setTimeout(()=>document.querySelectorAll(".card").forEach(n=>n.classList.remove("blink")), 900);
     }
-  }catch(e){
-    console.error(e);
+  }catch(e){ console.error(e); }
+  finally{
+    setTimeout(tick, parseInt($("#refSel").value,10));
   }
 }
 
-function startLoop(){
-  if(REFRESH_TIMER) clearInterval(REFRESH_TIMER);
-  loadData();
-  REFRESH_TIMER = setInterval(loadData, REFRESH_MS);
-}
+/* ====== BOOT & UI ====== */
+$("#winSel").value = String(WINDOW_HOURS);
+$("#refSel").value = String(FRONTEND_POLL_MS);
+$("#winSel").addEventListener("change", e=>{ WINDOW_HOURS = parseInt(e.target.value,10)||6; renderAll(); });
+$("#refSel").addEventListener("change", ()=>{}); // next tick will read this value
+$("#refreshBtn").addEventListener("click", ()=>{ LAST_HASH=""; tick(); });
 
-/* ===========================
-   CONTROLS + BOOT
-=========================== */
-function applyTheme(name){
-  THEME = name;
-  document.documentElement.classList.toggle("dark", THEME==="dark");
-}
-function initControls(){
-  // Preload from query
-  $("#windowSel").value = String(WINDOW_HOURS);
-  $("#refreshSel").value = String(REFRESH_MS);
-  $("#themeSel").value = THEME;
-  applyTheme(THEME);
-
-  $("#windowSel").onchange = (e)=>{ WINDOW_HOURS = parseInt(e.target.value,10)||6; renderAll(); };
-  $("#refreshSel").onchange = (e)=>{ REFRESH_MS = parseInt(e.target.value,10)||60000; startLoop(); };
-  $("#themeSel").onchange = (e)=> applyTheme(e.target.value);
-  $("#kwFilter").oninput = (e)=> applyTextFilter(e.target.value);
-  $("#clearFilters").onclick = ()=> clearFilters();
-}
-
-document.addEventListener("DOMContentLoaded", ()=>{
-  initControls();
-  startLoop();
-});
+// start
+tick();
 </script>
 </body>
 </html>
