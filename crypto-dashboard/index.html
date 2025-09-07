@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypto RL Trading Dashboard – DaScient Labs</title>
+  <meta name="description" content="Live crypto momentum + sentiment signals powered by an RL-inspired ensemble with Kalman trend filtering. For research only." />
   <style>
     /* --- Styles for the dashboard UI --- */
     :root {
@@ -169,21 +170,8 @@
       transition: width 0.5s ease;
       background: linear-gradient(90deg, rgba(56,189,248,0.35), rgba(34,211,238,0.35));
     }
-    /* Sentiment bar specific: bullish left-to-right, bearish right-to-left */
     .bar#sent .bull { background: linear-gradient(90deg, rgba(16,185,129,0.45), rgba(34,197,94,0.35)); }
-    .bar#sent .bear { right: 0; left: auto;
-      background: linear-gradient(270deg, rgba(239,68,68,0.45), rgba(248,113,113,0.35));
-    }
-    .spark {
-      height: 30px;
-      width: 120px;
-      background: linear-gradient(180deg, #0b1222, #0a0f1d);
-      border: 1px solid #1b2342;
-      border-radius: 8px;
-      position: relative;
-      overflow: hidden;
-    }
-    .spark canvas { position: absolute; inset: 0; }
+    .bar#sent .bear { right: 0; left: auto; background: linear-gradient(270deg, rgba(239,68,68,0.45), rgba(248,113,113,0.35)); }
     .tag { font-size: 11px; color: var(--muted); }
     .note { color: #b5c1d8; font-size: 12px; }
     .badge {
@@ -221,15 +209,18 @@
       padding: 20px 16px 40px;
       text-align: center;
     }
-    .pulse {
-      animation: pulse 1.6s infinite;
-    }
+    .pulse { animation: pulse 1.6s infinite; }
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(125,211,252,0.45); }
       70% { box-shadow: 0 0 0 12px rgba(125,211,252,0); }
       100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); }
     }
     .ghost { opacity: 0.65; }
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid #2b3656; border-top-color: #7dd3fc;
+      border-radius: 50%; animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg);} }
   </style>
 </head>
 <body>
@@ -244,12 +235,11 @@
       <div class="subtitle">Live BUY/SELL signals from Reinforcement Learning Ensemble</div>
     </div>
     <div class="grid">
-      <!-- Left panel: Endpoint and symbol input -->
       <section class="panel">
         <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
           <div class="badgelite">
             <span class="key">Endpoint:</span>
-            <code class="mono" id="baseUrlTxt">https://your-worker-url.workers.dev</code>
+            <code class="mono" id="baseUrlTxt">https://crypto.aristocles24.workers.dev</code>
           </div>
           <div class="badgelite" id="pingBox">
             <span class="key">Providers:</span>
@@ -260,9 +250,9 @@
           </div>
         </div>
         <div class="row" style="gap: 8px;">
-          <input id="symbols" type="text" placeholder="Enter symbols (e.g. BTC/USDT,ETH/USDT,...)" 
+          <input id="symbols" type="text" placeholder="Enter symbols (e.g. BTC/USDT,ETH/USDT,...)"
                  value="SHIB/USDT, FLOKI/USDT, DOGE/USDT, MEW/USDT, PEPE/USDT, ETC/USDT, ETH/USDT, BTC/USDT" />
-          <button class="btn primary" id="goBtn">Run Recommender</button>
+          <button class="btn primary" id="goBtn"><span id="goSpin" class="spinner" style="display:none;"></span>Run</button>
           <button class="btn" id="demoBtn">Demo</button>
           <label class="badgelite" style="gap:4px;">
             <input id="autoref" type="checkbox" />
@@ -276,7 +266,6 @@
         </div>
         <div id="alert" class="small" style="margin-top:6px; color:#fca5a5; display:none;"></div>
       </section>
-      <!-- Right panel: Mode and rules -->
       <section class="panel">
         <div class="row" style="justify-content: space-between;">
           <div class="badgelite">
@@ -322,198 +311,200 @@
 
 <script>
 /** CONFIGURATION **/
-const BASE_URL = "https://crypto.aristocles24.workers.dev/";  // <-- update to your Cloudflare Worker URL
-const MAX_BATCH = 50;  // max symbols per batch request (per API limits)
+const BASE_URL = "https://crypto.aristocles24.workers.dev";  // set to your Cloudflare Worker URL
+const MAX_BATCH = 25;  // stay well under API limits
+const LS_KEY = "dascient-crypto-dashboard";
 
 /** STATE **/
-let rowsData = [];       // will hold current data for symbols
-let sortByScore = true;  // whether to sort table by score (vs by symbol)
-let autoTimer = null;    // interval timer for auto-refresh
+let rowsData = [];       // current data for symbols
+let sortByScore = true;  // sort table by score (vs symbol)
+let autoTimer = null;    // interval timer
 
 /** DOM Helper **/
 const $ = (sel) => document.querySelector(sel);
-const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
-/** Utility Functions **/
-const formatNumber = (n, digits=2) => {
+/** Utils **/
+const formatNumber = (n, digits=6) => {
   if (n == null || isNaN(n)) return '—';
-  return Number(n).toLocaleString(undefined, { maximumFractionDigits: digits });
+  const abs = Math.abs(Number(n));
+  const prec = abs < 1 ? 8 : abs < 100 ? 6 : 2;
+  return Number(n).toLocaleString(undefined, { maximumFractionDigits: Math.min(prec, digits) });
 };
-const formatPercent = (n) => (n == null) ? '—' : (Math.round(n) + '%');
 const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
 const timestampToLocal = ts => new Date(ts).toLocaleString();
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-/** Fetch JSON with timeout **/
-async function fetchWithTimeout(url, timeoutMs = 10000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
+function persist() {
+  localStorage.setItem(LS_KEY, JSON.stringify({
+    symbols: $('#symbols').value,
+    autoref: $('#autoref').checked,
+    interval: $('#intervalSel').value
+  }));
+}
+function restore() {
   try {
-    const res = await fetch(url, { signal: controller.signal });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } finally {
-    clearTimeout(timer);
-  }
+    const cfg = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
+    if (cfg.symbols) $('#symbols').value = cfg.symbols;
+    if (cfg.interval) $('#intervalSel').value = cfg.interval;
+    if (cfg.autoref) $('#autoref').checked = true;
+  } catch(_) {}
 }
 
-/** Ping providers status and update UI indicators **/
+/** Fetch JSON with timeout + simple backoff **/
+async function fetchWithTimeout(url, timeoutMs = 12000, tries = 2) {
+  for (let attempt = 0; attempt < tries; attempt++) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+    await sleep(300 * (attempt + 1));
+  }
+  throw new Error("Network timeout");
+}
+
+/** Provider pinger **/
 async function pingProviders() {
   try {
     const data = await fetchWithTimeout(`${BASE_URL}/api/ping`, 5000);
     $('#nowTxt').textContent = 'Updated: ' + new Date(data.now).toLocaleTimeString();
-    // Update dots (green if true, red if false, yellow if unknown)
-    $('#binanceDot').className = 'status-dot ' + (data.providers.binance ? 'dot-good' : data.providers.binance === false ? 'dot-bad' : 'dot-warn');
-    $('#finhubDot').className  = 'status-dot ' + (data.providers.finnhub ? 'dot-good' : data.providers.finnhub === false ? 'dot-bad' : 'dot-warn');
-    $('#stwDot').className     = 'status-dot ' + (data.providers.stocktwits ? 'dot-good' : data.providers.stocktwits === false ? 'dot-bad' : 'dot-warn');
+    $('#binanceDot').className = 'status-dot ' + (data.providers.binance ? 'dot-good' : 'dot-bad');
+    $('#finhubDot').className  = 'status-dot ' + (data.providers.finnhub ? 'dot-good' : 'dot-warn');
+    $('#stwDot').className     = 'status-dot ' + (data.providers.stocktwits ? 'dot-good' : 'dot-warn');
   } catch (e) {
-    // If ping fails, mark all as warning
     ['#binanceDot','#finhubDot','#stwDot'].forEach(sel => $(sel).className = 'status-dot dot-warn');
     $('#nowTxt').textContent = 'offline';
   }
 }
 
-/** Load data for given symbols (calls the API) **/
+/** Normalize symbol input to comma-separated uppercase pairs like BTC/USDT **/
+function parseSymbols(input) {
+  return input.split(/[\s,]+/)
+    .map(s => s.trim().toUpperCase())
+    .filter(Boolean)
+    .map(s => s.includes('/') ? s : (s.endsWith('USDT') ? s.replace('USDT', '/USDT') : s));
+}
+
+/** Load data for given symbols **/
 async function loadSymbols(symbolsStr) {
   $('#alert').style.display = 'none';
-  const symbols = symbolsStr.split(/[\s,]+/).map(s => s.trim()).filter(s => s);
-  if (symbols.length === 0) {
-    $('#alert').textContent = 'Please enter at least one symbol.';
-    $('#alert').style.display = 'block';
-    return;
-  }
-  // Limit to MAX_BATCH at a time if needed
-  const chunks = [];
-  for (let i = 0; i < symbols.length; i += MAX_BATCH) {
-    chunks.push(symbols.slice(i, i + MAX_BATCH));
-  }
-  let allData = [];
-  for (const chunk of chunks) {
-    try {
-      const url = \`${BASE_URL}/api/summary-batch?symbols=\${encodeURIComponent(chunk.join(','))}\`;
-      const data = await fetchWithTimeout(url, 10000);
-      if (Array.isArray(data)) {
-        allData = allData.concat(data);
-      }
-    } catch (err) {
-      // If batch fails (maybe too many symbols or network issue), try individual
-      for (const sym of chunk) {
-        try {
-          const url = \`${BASE_URL}/api/summary?symbol=\${encodeURIComponent(sym)}\`;
-          const one = await fetchWithTimeout(url, 5000);
-          allData.push(one);
-        } catch (e) {
-          allData.push({ symbol: sym.toUpperCase(), error: 'No data' });
+  const btnSpin = $('#goSpin'); btnSpin.style.display = 'inline-block';
+  try {
+    const symbols = parseSymbols(symbolsStr);
+    if (symbols.length === 0) throw new Error('Please enter at least one symbol.');
+    const chunks = [];
+    for (let i = 0; i < symbols.length; i += MAX_BATCH) chunks.push(symbols.slice(i, i + MAX_BATCH));
+    let allData = [];
+    for (const chunk of chunks) {
+      try {
+        const url = `${BASE_URL}/api/summary-batch?symbols=${encodeURIComponent(chunk.join(','))}`;
+        const data = await fetchWithTimeout(url, 12000);
+        if (Array.isArray(data)) allData = allData.concat(data);
+      } catch (err) {
+        // Fallback to per-symbol
+        for (const sym of chunk) {
+          try {
+            const one = await fetchWithTimeout(`${BASE_URL}/api/summary?symbol=${encodeURIComponent(sym)}`, 8000);
+            allData.push(one);
+          } catch (e) {
+            allData.push({ symbol: sym, error: (e && e.message) || 'No data' });
+          }
         }
       }
     }
-  }
-  if (allData.length === 0) {
-    // If no data returned, fallback to demo
-    $('#alert').innerHTML = `Live data unavailable. Showing <b>demo mode</b> results.`;
-    $('#alert').style.display = 'block';
-    rowsData = DEMO_DATA.map(x => ({ ...x }));
-    $('#modeTxt').textContent = 'demo';
-  } else {
+    if (allData.length === 0) throw new Error('No data returned');
     rowsData = allData;
-    // Determine mode from response (if any _mode field present)
     const mode = allData[0]._mode || 'live';
     $('#modeTxt').textContent = mode;
+    renderRows();
+  } catch (err) {
+    $('#alert').textContent = (err && err.message) || 'Unknown error';
+    $('#alert').style.display = 'block';
+  } finally {
+    btnSpin.style.display = 'none';
   }
-  renderRows();
 }
 
-/** Render table rows based on rowsData **/
+/** Render table rows **/
 function renderRows() {
-  // Sort the data
-  const sorted = [...rowsData];
-  sorted.sort((a, b) => {
-    if (sortByScore) {
-      // sort descending by score
-      return (b.score || 0) - (a.score || 0);
-    } else {
-      // sort alphabetically by symbol
-      return (a.symbol || '').localeCompare(b.symbol || '');
-    }
+  const sorted = [...rowsData].sort((a,b) => {
+    return sortByScore ? ((b.score||0)-(a.score||0)) : (a.symbol||'').localeCompare(b.symbol||'');
   });
-  const tbody = $('#rows');
-  tbody.innerHTML = '';  // clear
+  const tbody = document.getElementById('rows');
+  tbody.innerHTML = '';
   for (const item of sorted) {
     const sym = item.symbol || '—';
     const price = formatNumber(item.price);
-    const sig = item.signal || '—';
+    const sig = (item.signal || '—').toUpperCase();
     const score = item.score != null ? item.score : '—';
     const confPct = item.confidence != null ? Math.round(item.confidence * 100) : 0;
     const sentiment = item.sentiment || {};
-    const bullPct = sentiment.bullish != null ? sentiment.bullish : 0;
-    const bearPct = sentiment.bearish != null ? sentiment.bearish : 0;
-    const neuPct = sentiment.neutral != null ? sentiment.neutral : (100 - bullPct - bearPct);
+    const bullPct = sentiment.bullish ?? 0;
+    const bearPct = sentiment.bearish ?? 0;
+    const neuPct  = 100 - bullPct - bearPct;
     const trendLabel = (item.ta && item.ta.choppiness != null)
-                        ? (item.ta.choppiness < 38 ? 'Trending' : item.ta.choppiness > 61 ? 'Choppy' : 'Mixed')
-                        : '—';
-    const targetPrice = item.targetMeanPrice ? '$' + formatNumber(item.targetMeanPrice, 2) : '—';
-    const targetProv = item._targetProvider ? \`<span class="tag">(\${item._targetProvider})</span>\` : '';
-    // Notes (up to 2 shown)
+      ? (item.ta.choppiness < 38 ? 'Trending' : item.ta.choppiness > 61 ? 'Choppy' : 'Mixed')
+      : '—';
     const notesArr = item.ta && item.ta.notes ? item.ta.notes : [];
     const notesStr = notesArr.slice(0,2).join(' • ');
-    // Build HTML row
     const pillClass = sig.toLowerCase();
     const pulseClass = confPct >= 85 ? 'pulse' : '';
-    const rowHtml = \`
+
+    const rowHtml = `
       <tr class="tr">
         <td class="td">
-          <div class="sym"><span style="font-size:16px;">\${sym}</span> 
-            <span class="tag">\${item.recommendationKey || ''}</span></div>
-          <div class="note">\${notesStr}</div>
+          <div class="sym"><span style="font-size:16px;">${sym}</span> <span class="tag">${item._provider || ''}</span></div>
+          <div class="note">${notesStr}</div>
+          ${item.error ? `<div class="small" style="color:#fca5a5;">${item.error}</div>` : ''}
         </td>
-        <td class="td">\${price}</td>
-        <td class="td"><span class="pill \${pillClass} \${pulseClass}">\${sig}</span></td>
+        <td class="td">${price}</td>
+        <td class="td"><span class="pill ${pillClass} ${pulseClass}">${sig}</span></td>
         <td class="td" style="min-width:140px;">
-          <div class="bar" id="score-\${cssSafe(sym)}"><i></i></div>
-          <div class="small">Score <b>\${score}</b> / 60</div>
+          <div class="bar" id="score-${cssSafe(sym)}"><i></i></div>
+          <div class="small">Score <b>${score}</b> / 60</div>
         </td>
         <td class="td" style="min-width:130px;">
-          <div class="bar" id="conf-\${cssSafe(sym)}"><i></i></div>
-          <div class="small">Confidence <b>\${confPct}%</b></div>
+          <div class="bar" id="conf-${cssSafe(sym)}"><i></i></div>
+          <div class="small">Confidence <b>${confPct}%</b></div>
         </td>
         <td class="td" style="min-width:150px;">
-          <div class="bar" id="sent-\${cssSafe(sym)}">
+          <div class="bar" id="sent-${cssSafe(sym)}">
             <i class="bull"></i><i class="bear"></i>
           </div>
-          <div class="small">Bull <b>\${bullPct}%</b> · \${neuPct}% · Bear <b>\${bearPct}%</b></div>
+          <div class="small">Bull <b>${bullPct}%</b> · ${neuPct}% · Bear <b>${bearPct}%</b></div>
         </td>
         <td class="td">
-          <div class="badge">\${trendLabel}</div>
-          <div class="small">\${item.ta && item.ta.choppiness != null 
-            ? \`CHOP \${Math.round(item.ta.choppiness)} · RSI \${item.ta.rsi != null ? Math.round(item.ta.rsi) : '—'} · AO \${item.ta.aoUp ? '↑' : item.ta.aoDown ? '↓' : '•'}\`
+          <div class="badge">${trendLabel}</div>
+          <div class="small">${item.ta && item.ta.choppiness != null 
+            ? `CHOP ${Math.round(item.ta.choppiness)} · RSI ${item.ta.rsi != null ? Math.round(item.ta.rsi) : '—'} · AO ${item.ta.aoUp ? '↑' : item.ta.aoDown ? '↓' : '•'}`
             : '—'}</div>
         </td>
-        <td class="td">\${targetPrice}\${targetProv}</td>
+        <td class="td">—</td>
         <td class="td" style="min-width:130px;">
           <details>
             <summary>Details</summary>
-            <div class="small" style="margin:4px 0;">Updated: \${item.timestamp ? timestampToLocal(item.timestamp) : '—'}</div>
+            <div class="small" style="margin:4px 0;">Updated: ${item.timestamp ? timestampToLocal(item.timestamp) : '—'}</div>
             <div style="display:flex; gap:4px; flex-wrap: wrap; margin: 6px 0;">
-              <!-- Optionally, a button for trade ideas or additional actions -->
-              <!-- <button class="btn" onclick="openOptions('\${sym}')">Strategy</button> -->
-              <button class="btn" onclick="toggleJSON('\${cssSafe(sym)}')">JSON</button>
+              <button class="btn" onclick="toggleJSON('${cssSafe(sym)}')">JSON</button>
             </div>
-            <pre id="json-\${cssSafe(sym)}" class="mono ghost" style="display:none; background:#0a0f1d; border:1px solid #1c2543; border-radius:8px; padding:8px; max-height:300px; overflow:auto;"></pre>
+            <pre id="json-${cssSafe(sym)}" class="mono ghost" style="display:none; background:#0a0f1d; border:1px solid #1c2543; border-radius:8px; padding:8px; max-height:300px; overflow:auto;"></pre>
           </details>
         </td>
-      </tr>\`;
+      </tr>`;
     tbody.insertAdjacentHTML('beforeend', rowHtml);
-    // Animate bars after inserting
-    const scoreBar = $(\`#score-\${cssSafe(sym)} i\`);
-    const confBar = $(\`#conf-\${cssSafe(sym)} i\`);
-    const sentBull = $(\`#sent-\${cssSafe(sym)} .bull\`);
-    const sentBear = $(\`#sent-\${cssSafe(sym)} .bear\`);
+    const scoreBar = document.querySelector(`#score-${cssSafe(sym)} i`);
+    const confBar  = document.querySelector(`#conf-${cssSafe(sym)} i`);
+    const sentBull = document.querySelector(`#sent-${cssSafe(sym)} .bull`);
+    const sentBear = document.querySelector(`#sent-${cssSafe(sym)} .bear`);
     if (scoreBar) {
-      const scorePct = ((item.score || 0) + 60) / 120 * 100;  // map -60..60 to 0..100%
+      const scorePct = ((item.score || 0) + 60) / 120 * 100;
       scoreBar.style.width = clamp(scorePct, 0, 100) + '%';
     }
-    if (confBar) {
-      confBar.style.width = clamp(confPct, 0, 100) + '%';
-    }
+    if (confBar) confBar.style.width = clamp(confPct, 0, 100) + '%';
     if (sentBull && sentBear) {
       sentBull.style.width = clamp(bullPct, 0, 100) + '%';
       sentBear.style.width = clamp(bearPct, 0, 100) + '%';
@@ -521,17 +512,12 @@ function renderRows() {
   }
 }
 
-/** Make symbol safe for use in element IDs **/
-function cssSafe(sym) {
-  return sym.replace(/[^a-zA-Z0-9]/g, '_');
-}
-
-/** Toggle JSON view in details **/
+/** Helpers **/
+function cssSafe(sym) { return sym.replace(/[^a-zA-Z0-9]/g, '_'); }
 function toggleJSON(idSafeSym) {
   const pre = document.getElementById('json-' + idSafeSym);
   if (!pre) return;
   if (pre.textContent === "") {
-    // Fill JSON if not filled yet
     const sym = idSafeSym.replace(/_/g, '');
     const dataObj = rowsData.find(x => x.symbol && x.symbol.replace('/', '') === sym);
     pre.textContent = JSON.stringify(dataObj, null, 2);
@@ -539,80 +525,35 @@ function toggleJSON(idSafeSym) {
   pre.style.display = (pre.style.display === 'none' ? 'block' : 'none');
 }
 
-/** Demo data set (if live data fails) **/
-const DEMO_DATA = [
-  {
-    "symbol": "BTC/USDT", "price": 30850, "recommendationKey": null,
-    "ta": { "ao": 1.2, "aoUp": true, "choppiness": 45, "rsi": 55, "volumeUp": false, "priceStability": 0.90, "sellVolumeDeclining": false, "notes": ["Momentum building quietly"] },
-    "sentiment": { "bullish": 70, "bearish": 20, "neutral": 10 },
-    "signal": "BUY", "score": 30, "confidence": 0.5, "_mode": "demo", "timestamp": Date.now()
-  },
-  {
-    "symbol": "ETH/USDT", "price": 1850, "recommendationKey": null,
-    "ta": { "ao": -0.5, "aoUp": false, "choppiness": 65, "rsi": 48, "volumeUp": true, "priceStability": 0.85, "sellVolumeDeclining": false, "notes": ["Distribution risk"] },
-    "sentiment": { "bullish": 50, "bearish": 30, "neutral": 20 },
-    "signal": "HOLD", "score": -5, "confidence": 0.08, "_mode": "demo", "timestamp": Date.now()
-  },
-  {
-    "symbol": "DOGE/USDT", "price": 0.065, "recommendationKey": null,
-    "ta": { "ao": 0.0, "aoUp": true, "choppiness": 33, "rsi": 60, "volumeUp": true, "priceStability": 0.92, "sellVolumeDeclining": true, "notes": ["Trend-friendly regime"] },
-    "sentiment": { "bullish": 58, "bearish": 10, "neutral": 32 },
-    "signal": "BUY", "score": 45, "confidence": 0.75, "_mode": "demo", "timestamp": Date.now()
-  },
-  {
-    "symbol": "SHIB/USDT", "price": 0.00000812, "recommendationKey": null,
-    "ta": { "ao": -0.0000001, "aoUp": false, "choppiness": 70, "rsi": 41, "volumeUp": false, "priceStability": 0.78, "sellVolumeDeclining": false, "notes": [] },
-    "sentiment": { "bullish": 40, "bearish": 50, "neutral": 10 },
-    "signal": "SELL", "score": -30, "confidence": 0.5, "_mode": "demo", "timestamp": Date.now()
-  }
-];
+/** Demo data (if you want a hard fallback, uncomment and wire) **/
+// const DEMO_DATA = [...]
 
-/** Initialize event listeners **/
-$('#goBtn').addEventListener('click', () => {
-  loadSymbols($('#symbols').value);
+/** Events **/
+$('#goBtn').addEventListener('click', () => { persist(); loadSymbols($('#symbols').value); });
+$('#demoBtn').addEventListener('click', () => { /* set rowsData=DEMO_DATA; renderRows(); */ });
+$('#autoref').addEventListener('change', () => { persist(); restartAuto(); });
+$('#intervalSel').addEventListener('change', () => { persist(); restartAuto(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R') loadSymbols($('#symbols').value);
+  else if (e.key === 'l' || e.key === 'L') { sortByScore = !sortByScore; renderRows(); }
 });
-$('#demoBtn').addEventListener('click', () => {
-  rowsData = DEMO_DATA.map(item => ({ ...item }));  // clone demo data
-  $('#modeTxt').textContent = 'demo';
-  renderRows();
-});
-$('#autoref').addEventListener('change', () => {
-  if (autoTimer) {
-    clearInterval(autoTimer);
-    autoTimer = null;
-  }
+
+function restartAuto() {
+  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
   if ($('#autoref').checked) {
     const interval = parseInt($('#intervalSel').value, 10) || 30;
     autoTimer = setInterval(() => loadSymbols($('#symbols').value), interval * 1000);
   }
-});
-$('#intervalSel').addEventListener('change', () => {
-  if ($('#autoref').checked) {
-    // restart timer with new interval
-    $('#autoref').checked = false;
-    $('#autoref').dispatchEvent(new Event('change'));
-    $('#autoref').checked = true;
-    $('#autoref').dispatchEvent(new Event('change'));
-  }
-});
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'r' || e.key === 'R') {
-    loadSymbols($('#symbols').value);
-  } else if (e.key === 'd' || e.key === 'D') {
-    $('#demoBtn').click();
-  } else if (e.key === 'l' || e.key === 'L') {
-    sortByScore = !sortByScore;
-    renderRows();
-  }
-});
+}
 
-/** Initialize on page load **/
+/** Init **/
 (async function init() {
-  $('#baseUrlTxt').textContent = BASE_URL;
+  restore();
+  document.getElementById('baseUrlTxt').textContent = BASE_URL;
   await pingProviders();
   loadSymbols($('#symbols').value);
-  // Periodically ping provider status every 60s
   setInterval(pingProviders, 60000);
+  restartAuto();
 })();
 </script>
 </body>
