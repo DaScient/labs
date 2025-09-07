@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Crypto RL Trading Dashboard – DaScient Labs</title>
+  <style>
+    /* --- Styles for the dashboard UI --- */
+    :root {
+      --bg: #0b0d12;
+      --panel: #111420;
+      --panel-2: #0e1220;
+      --ink: #e6e7ee;
+      --muted: #9aa3b2;
+      --accent: #7dd3fc;
+      --buy: #10b981;
+      --sell: #ef4444;
+      --hold: #f59e0b;
+      --chip: #1e2537;
+      --good: #16a34a;
+      --warn: #f59e0b;
+      --bad: #dc2626;
+      --border: #1c2335;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 20% -10%, #12162a 0%, #0b0d12 50%) fixed;
+      color: var(--ink);
+      line-height: 1.45;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(11,13,18,0.85), rgba(11,13,18,0.65) 60%, rgba(11,13,18,0));
+      border-bottom: 1px solid var(--border);
+    }
+    .wrap { max-width: 1150px; margin: 0 auto; padding: 16px; }
+    .title {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .brand {
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      font-size: 20px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: linear-gradient(90deg, #5eead4, #7dd3fc);
+      color: #0b1220;
+      box-shadow: 0 0 0 3px rgba(125,211,252,0.12) inset;
+    }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .grid {
+      display: grid;
+      gap: 14px;
+      margin-top: 14px;
+      grid-template-columns: 1.2fr 0.8fr;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+    .panel {
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 12px 30px rgba(3,6,12,0.35);
+    }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    input[type=text], select {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0f1424;
+      color: var(--ink);
+      outline: none;
+      font: inherit;
+    }
+    input[type=text]:focus { border-color: #2f3a5b; box-shadow: 0 0 0 3px rgba(125,211,252,0.1); }
+    .btn {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, #17203a, #0f1529);
+      color: var(--ink);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); border-color: #2a3656; }
+    .btn.primary {
+      background: linear-gradient(90deg, #38bdf8, #22d3ee);
+      color: #091225;
+      border: none;
+    }
+    .small { font-size: 12px; color: var(--muted); }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .badgelite {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--chip);
+      padding: 5px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 12px;
+    }
+    .key { color: var(--muted); }
+    .pill {
+      display: inline-block;
+      font-weight: 800;
+      padding: 5px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.3px;
+      border: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .pill.buy  { background: rgba(16,185,129,0.15); color: #a7f3d0; border-color: rgba(16,185,129,0.35); }
+    .pill.sell { background: rgba(239,68,68,0.15); color: #fecaca; border-color: rgba(239,68,68,0.35); }
+    .pill.hold { background: rgba(245,158,11,0.15); color: #fde68a; border-color: rgba(245,158,11,0.35); }
+    .table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+    .thead th {
+      text-align: left;
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 10px 4px;
+    }
+    .tr {
+      background: linear-gradient(180deg, #0e1323, #0c1120);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .td {
+      padding: 10px;
+      border-right: 1px dashed #1b2342;
+      vertical-align: top;
+    }
+    .td:last-child { border-right: none; }
+    .sym {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+    .bar {
+      position: relative;
+      height: 8px;
+      background: #0b1222;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #1b2342;
+    }
+    .bar > i {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 0;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      transition: width 0.5s ease;
+      background: linear-gradient(90deg, rgba(56,189,248,0.35), rgba(34,211,238,0.35));
+    }
+    /* Sentiment bar specific: bullish left-to-right, bearish right-to-left */
+    .bar#sent .bull { background: linear-gradient(90deg, rgba(16,185,129,0.45), rgba(34,197,94,0.35)); }
+    .bar#sent .bear { right: 0; left: auto;
+      background: linear-gradient(270deg, rgba(239,68,68,0.45), rgba(248,113,113,0.35));
+    }
+    .spark {
+      height: 30px;
+      width: 120px;
+      background: linear-gradient(180deg, #0b1222, #0a0f1d);
+      border: 1px solid #1b2342;
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+    .spark canvas { position: absolute; inset: 0; }
+    .tag { font-size: 11px; color: var(--muted); }
+    .note { color: #b5c1d8; font-size: 12px; }
+    .badge {
+      border: 1px solid var(--border);
+      padding: 3px 6px;
+      border-radius: 8px;
+      background: #0c1222;
+      color: #c6d0e1;
+      font-size: 12px;
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-good { background: var(--good); }
+    .dot-bad  { background: var(--bad); }
+    .dot-warn { background: var(--warn); }
+    details {
+      background: linear-gradient(180deg, #0d1222, #0b111f);
+      border: 1px dashed #24304f;
+      border-radius: 12px;
+      padding: 6px 8px;
+      margin-top: 8px;
+    }
+    details[open] { border-style: solid; }
+    summary { cursor: pointer; color: #bcd1ff; outline: none; }
+    .kbd {
+      font: 600 11px ui-monospace, Menlo, Consolas, monospace;
+      background: #0a0f1d;
+      border: 1px solid #1c2543;
+      padding: 2px 6px;
+      border-radius: 6px;
+      color: #a7b3ce;
+    }
+    .footer {
+      color: #7f8aa3;
+      font-size: 12px;
+      padding: 20px 16px 40px;
+      text-align: center;
+    }
+    .pulse {
+      animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(125,211,252,0.45); }
+      70% { box-shadow: 0 0 0 12px rgba(125,211,252,0); }
+      100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); }
+    }
+    .ghost { opacity: 0.65; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="title">
+      <div class="brand">DaScient</div>
+      <div style="font-weight:800; font-size:18px;">
+        Crypto RL Trading Dashboard
+        <span class="small">– Momentum & Sentiment Enhanced</span>
+      </div>
+      <div class="subtitle">Live BUY/SELL signals from Reinforcement Learning Ensemble</div>
+    </div>
+    <div class="grid">
+      <!-- Left panel: Endpoint and symbol input -->
+      <section class="panel">
+        <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
+          <div class="badgelite">
+            <span class="key">Endpoint:</span>
+            <code class="mono" id="baseUrlTxt">https://your-worker-url.workers.dev</code>
+          </div>
+          <div class="badgelite" id="pingBox">
+            <span class="key">Providers:</span>
+            <span class="badge"><span class="status-dot dot-warn" id="binanceDot"></span> Binance</span>
+            <span class="badge"><span class="status-dot dot-warn" id="finhubDot"></span> Finnhub</span>
+            <span class="badge"><span class="status-dot dot-warn" id="stwDot"></span> Stocktwits</span>
+            <span class="badge small" id="nowTxt">—</span>
+          </div>
+        </div>
+        <div class="row" style="gap: 8px;">
+          <input id="symbols" type="text" placeholder="Enter symbols (e.g. BTC/USDT,ETH/USDT,...)" 
+                 value="SHIB/USDT, FLOKI/USDT, DOGE/USDT, MEW/USDT, PEPE/USDT, ETC/USDT, ETH/USDT, BTC/USDT" />
+          <button class="btn primary" id="goBtn">Run Recommender</button>
+          <button class="btn" id="demoBtn">Demo</button>
+          <label class="badgelite" style="gap:4px;">
+            <input id="autoref" type="checkbox" />
+            <span>Auto-refresh</span>
+            <select id="intervalSel">
+              <option value="15">15s</option>
+              <option value="30" selected>30s</option>
+              <option value="60">60s</option>
+            </select>
+          </label>
+        </div>
+        <div id="alert" class="small" style="margin-top:6px; color:#fca5a5; display:none;"></div>
+      </section>
+      <!-- Right panel: Mode and rules -->
+      <section class="panel">
+        <div class="row" style="justify-content: space-between;">
+          <div class="badgelite">
+            <span class="key">Mode:</span>
+            <span id="modeTxt">live</span>
+          </div>
+          <div class="badgelite">
+            <span class="key">Rules:</span>
+            Low CHOP + AO↑ → BUY • High CHOP + AO↓ → SELL • Sentiment ↕ adjusts confidence
+          </div>
+        </div>
+        <div class="small" style="margin-top: 8px;">
+          Tip: Press <span class="kbd">R</span> to refresh, <span class="kbd">D</span> for demo data, 
+          <span class="kbd">L</span> to toggle sort.
+        </div>
+      </section>
+    </div>
+  </div>
+</header>
+<main class="wrap">
+  <section class="panel">
+    <table class="table">
+      <thead class="thead">
+        <tr>
+          <th>Symbol</th>
+          <th>Price</th>
+          <th>Signal</th>
+          <th>Score</th>
+          <th>Confidence</th>
+          <th>Sentiment</th>
+          <th>Trend</th>
+          <th>Target</th>
+          <th>More</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </section>
+  <div class="footer">
+    For informational purposes only. Not financial advice. Use at your own risk.
+  </div>
+</main>
+
+<script>
+/** CONFIGURATION **/
+const BASE_URL = "https://your-worker-url.workers.dev";  // <-- update to your Cloudflare Worker URL
+const MAX_BATCH = 50;  // max symbols per batch request (per API limits)
+
+/** STATE **/
+let rowsData = [];       // will hold current data for symbols
+let sortByScore = true;  // whether to sort table by score (vs by symbol)
+let autoTimer = null;    // interval timer for auto-refresh
+
+/** DOM Helper **/
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+/** Utility Functions **/
+const formatNumber = (n, digits=2) => {
+  if (n == null || isNaN(n)) return '—';
+  return Number(n).toLocaleString(undefined, { maximumFractionDigits: digits });
+};
+const formatPercent = (n) => (n == null) ? '—' : (Math.round(n) + '%');
+const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
+const timestampToLocal = ts => new Date(ts).toLocaleString();
+
+/** Fetch JSON with timeout **/
+async function fetchWithTimeout(url, timeoutMs = 10000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Ping providers status and update UI indicators **/
+async function pingProviders() {
+  try {
+    const data = await fetchWithTimeout(`${BASE_URL}/api/ping`, 5000);
+    $('#nowTxt').textContent = 'Updated: ' + new Date(data.now).toLocaleTimeString();
+    // Update dots (green if true, red if false, yellow if unknown)
+    $('#binanceDot').className = 'status-dot ' + (data.providers.binance ? 'dot-good' : data.providers.binance === false ? 'dot-bad' : 'dot-warn');
+    $('#finhubDot').className  = 'status-dot ' + (data.providers.finnhub ? 'dot-good' : data.providers.finnhub === false ? 'dot-bad' : 'dot-warn');
+    $('#stwDot').className     = 'status-dot ' + (data.providers.stocktwits ? 'dot-good' : data.providers.stocktwits === false ? 'dot-bad' : 'dot-warn');
+  } catch (e) {
+    // If ping fails, mark all as warning
+    ['#binanceDot','#finhubDot','#stwDot'].forEach(sel => $(sel).className = 'status-dot dot-warn');
+    $('#nowTxt').textContent = 'offline';
+  }
+}
+
+/** Load data for given symbols (calls the API) **/
+async function loadSymbols(symbolsStr) {
+  $('#alert').style.display = 'none';
+  const symbols = symbolsStr.split(/[\s,]+/).map(s => s.trim()).filter(s => s);
+  if (symbols.length === 0) {
+    $('#alert').textContent = 'Please enter at least one symbol.';
+    $('#alert').style.display = 'block';
+    return;
+  }
+  // Limit to MAX_BATCH at a time if needed
+  const chunks = [];
+  for (let i = 0; i < symbols.length; i += MAX_BATCH) {
+    chunks.push(symbols.slice(i, i + MAX_BATCH));
+  }
+  let allData = [];
+  for (const chunk of chunks) {
+    try {
+      const url = \`${BASE_URL}/api/summary-batch?symbols=\${encodeURIComponent(chunk.join(','))}\`;
+      const data = await fetchWithTimeout(url, 10000);
+      if (Array.isArray(data)) {
+        allData = allData.concat(data);
+      }
+    } catch (err) {
+      // If batch fails (maybe too many symbols or network issue), try individual
+      for (const sym of chunk) {
+        try {
+          const url = \`${BASE_URL}/api/summary?symbol=\${encodeURIComponent(sym)}\`;
+          const one = await fetchWithTimeout(url, 5000);
+          allData.push(one);
+        } catch (e) {
+          allData.push({ symbol: sym.toUpperCase(), error: 'No data' });
+        }
+      }
+    }
+  }
+  if (allData.length === 0) {
+    // If no data returned, fallback to demo
+    $('#alert').innerHTML = `Live data unavailable. Showing <b>demo mode</b> results.`;
+    $('#alert').style.display = 'block';
+    rowsData = DEMO_DATA.map(x => ({ ...x }));
+    $('#modeTxt').textContent = 'demo';
+  } else {
+    rowsData = allData;
+    // Determine mode from response (if any _mode field present)
+    const mode = allData[0]._mode || 'live';
+    $('#modeTxt').textContent = mode;
+  }
+  renderRows();
+}
+
+/** Render table rows based on rowsData **/
+function renderRows() {
+  // Sort the data
+  const sorted = [...rowsData];
+  sorted.sort((a, b) => {
+    if (sortByScore) {
+      // sort descending by score
+      return (b.score || 0) - (a.score || 0);
+    } else {
+      // sort alphabetically by symbol
+      return (a.symbol || '').localeCompare(b.symbol || '');
+    }
+  });
+  const tbody = $('#rows');
+  tbody.innerHTML = '';  // clear
+  for (const item of sorted) {
+    const sym = item.symbol || '—';
+    const price = formatNumber(item.price);
+    const sig = item.signal || '—';
+    const score = item.score != null ? item.score : '—';
+    const confPct = item.confidence != null ? Math.round(item.confidence * 100) : 0;
+    const sentiment = item.sentiment || {};
+    const bullPct = sentiment.bullish != null ? sentiment.bullish : 0;
+    const bearPct = sentiment.bearish != null ? sentiment.bearish : 0;
+    const neuPct = sentiment.neutral != null ? sentiment.neutral : (100 - bullPct - bearPct);
+    const trendLabel = (item.ta && item.ta.choppiness != null)
+                        ? (item.ta.choppiness < 38 ? 'Trending' : item.ta.choppiness > 61 ? 'Choppy' : 'Mixed')
+                        : '—';
+    const targetPrice = item.targetMeanPrice ? '$' + formatNumber(item.targetMeanPrice, 2) : '—';
+    const targetProv = item._targetProvider ? \`<span class="tag">(\${item._targetProvider})</span>\` : '';
+    // Notes (up to 2 shown)
+    const notesArr = item.ta && item.ta.notes ? item.ta.notes : [];
+    const notesStr = notesArr.slice(0,2).join(' • ');
+    // Build HTML row
+    const pillClass = sig.toLowerCase();
+    const pulseClass = confPct >= 85 ? 'pulse' : '';
+    const rowHtml = \`
+      <tr class="tr">
+        <td class="td">
+          <div class="sym"><span style="font-size:16px;">\${sym}</span> 
+            <span class="tag">\${item.recommendationKey || ''}</span></div>
+          <div class="note">\${notesStr}</div>
+        </td>
+        <td class="td">\${price}</td>
+        <td class="td"><span class="pill \${pillClass} \${pulseClass}">\${sig}</span></td>
+        <td class="td" style="min-width:140px;">
+          <div class="bar" id="score-\${cssSafe(sym)}"><i></i></div>
+          <div class="small">Score <b>\${score}</b> / 60</div>
+        </td>
+        <td class="td" style="min-width:130px;">
+          <div class="bar" id="conf-\${cssSafe(sym)}"><i></i></div>
+          <div class="small">Confidence <b>\${confPct}%</b></div>
+        </td>
+        <td class="td" style="min-width:150px;">
+          <div class="bar" id="sent-\${cssSafe(sym)}">
+            <i class="bull"></i><i class="bear"></i>
+          </div>
+          <div class="small">Bull <b>\${bullPct}%</b> · \${neuPct}% · Bear <b>\${bearPct}%</b></div>
+        </td>
+        <td class="td">
+          <div class="badge">\${trendLabel}</div>
+          <div class="small">\${item.ta && item.ta.choppiness != null 
+            ? \`CHOP \${Math.round(item.ta.choppiness)} · RSI \${item.ta.rsi != null ? Math.round(item.ta.rsi) : '—'} · AO \${item.ta.aoUp ? '↑' : item.ta.aoDown ? '↓' : '•'}\`
+            : '—'}</div>
+        </td>
+        <td class="td">\${targetPrice}\${targetProv}</td>
+        <td class="td" style="min-width:130px;">
+          <details>
+            <summary>Details</summary>
+            <div class="small" style="margin:4px 0;">Updated: \${item.timestamp ? timestampToLocal(item.timestamp) : '—'}</div>
+            <div style="display:flex; gap:4px; flex-wrap: wrap; margin: 6px 0;">
+              <!-- Optionally, a button for trade ideas or additional actions -->
+              <!-- <button class="btn" onclick="openOptions('\${sym}')">Strategy</button> -->
+              <button class="btn" onclick="toggleJSON('\${cssSafe(sym)}')">JSON</button>
+            </div>
+            <pre id="json-\${cssSafe(sym)}" class="mono ghost" style="display:none; background:#0a0f1d; border:1px solid #1c2543; border-radius:8px; padding:8px; max-height:300px; overflow:auto;"></pre>
+          </details>
+        </td>
+      </tr>\`;
+    tbody.insertAdjacentHTML('beforeend', rowHtml);
+    // Animate bars after inserting
+    const scoreBar = $(\`#score-\${cssSafe(sym)} i\`);
+    const confBar = $(\`#conf-\${cssSafe(sym)} i\`);
+    const sentBull = $(\`#sent-\${cssSafe(sym)} .bull\`);
+    const sentBear = $(\`#sent-\${cssSafe(sym)} .bear\`);
+    if (scoreBar) {
+      const scorePct = ((item.score || 0) + 60) / 120 * 100;  // map -60..60 to 0..100%
+      scoreBar.style.width = clamp(scorePct, 0, 100) + '%';
+    }
+    if (confBar) {
+      confBar.style.width = clamp(confPct, 0, 100) + '%';
+    }
+    if (sentBull && sentBear) {
+      sentBull.style.width = clamp(bullPct, 0, 100) + '%';
+      sentBear.style.width = clamp(bearPct, 0, 100) + '%';
+    }
+  }
+}
+
+/** Make symbol safe for use in element IDs **/
+function cssSafe(sym) {
+  return sym.replace(/[^a-zA-Z0-9]/g, '_');
+}
+
+/** Toggle JSON view in details **/
+function toggleJSON(idSafeSym) {
+  const pre = document.getElementById('json-' + idSafeSym);
+  if (!pre) return;
+  if (pre.textContent === "") {
+    // Fill JSON if not filled yet
+    const sym = idSafeSym.replace(/_/g, '');
+    const dataObj = rowsData.find(x => x.symbol && x.symbol.replace('/', '') === sym);
+    pre.textContent = JSON.stringify(dataObj, null, 2);
+  }
+  pre.style.display = (pre.style.display === 'none' ? 'block' : 'none');
+}
+
+/** Demo data set (if live data fails) **/
+const DEMO_DATA = [
+  {
+    "symbol": "BTC/USDT", "price": 30850, "recommendationKey": null,
+    "ta": { "ao": 1.2, "aoUp": true, "choppiness": 45, "rsi": 55, "volumeUp": false, "priceStability": 0.90, "sellVolumeDeclining": false, "notes": ["Momentum building quietly"] },
+    "sentiment": { "bullish": 70, "bearish": 20, "neutral": 10 },
+    "signal": "BUY", "score": 30, "confidence": 0.5, "_mode": "demo", "timestamp": Date.now()
+  },
+  {
+    "symbol": "ETH/USDT", "price": 1850, "recommendationKey": null,
+    "ta": { "ao": -0.5, "aoUp": false, "choppiness": 65, "rsi": 48, "volumeUp": true, "priceStability": 0.85, "sellVolumeDeclining": false, "notes": ["Distribution risk"] },
+    "sentiment": { "bullish": 50, "bearish": 30, "neutral": 20 },
+    "signal": "HOLD", "score": -5, "confidence": 0.08, "_mode": "demo", "timestamp": Date.now()
+  },
+  {
+    "symbol": "DOGE/USDT", "price": 0.065, "recommendationKey": null,
+    "ta": { "ao": 0.0, "aoUp": true, "choppiness": 33, "rsi": 60, "volumeUp": true, "priceStability": 0.92, "sellVolumeDeclining": true, "notes": ["Trend-friendly regime"] },
+    "sentiment": { "bullish": 58, "bearish": 10, "neutral": 32 },
+    "signal": "BUY", "score": 45, "confidence": 0.75, "_mode": "demo", "timestamp": Date.now()
+  },
+  {
+    "symbol": "SHIB/USDT", "price": 0.00000812, "recommendationKey": null,
+    "ta": { "ao": -0.0000001, "aoUp": false, "choppiness": 70, "rsi": 41, "volumeUp": false, "priceStability": 0.78, "sellVolumeDeclining": false, "notes": [] },
+    "sentiment": { "bullish": 40, "bearish": 50, "neutral": 10 },
+    "signal": "SELL", "score": -30, "confidence": 0.5, "_mode": "demo", "timestamp": Date.now()
+  }
+];
+
+/** Initialize event listeners **/
+$('#goBtn').addEventListener('click', () => {
+  loadSymbols($('#symbols').value);
+});
+$('#demoBtn').addEventListener('click', () => {
+  rowsData = DEMO_DATA.map(item => ({ ...item }));  // clone demo data
+  $('#modeTxt').textContent = 'demo';
+  renderRows();
+});
+$('#autoref').addEventListener('change', () => {
+  if (autoTimer) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+  if ($('#autoref').checked) {
+    const interval = parseInt($('#intervalSel').value, 10) || 30;
+    autoTimer = setInterval(() => loadSymbols($('#symbols').value), interval * 1000);
+  }
+});
+$('#intervalSel').addEventListener('change', () => {
+  if ($('#autoref').checked) {
+    // restart timer with new interval
+    $('#autoref').checked = false;
+    $('#autoref').dispatchEvent(new Event('change'));
+    $('#autoref').checked = true;
+    $('#autoref').dispatchEvent(new Event('change'));
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'r' || e.key === 'R') {
+    loadSymbols($('#symbols').value);
+  } else if (e.key === 'd' || e.key === 'D') {
+    $('#demoBtn').click();
+  } else if (e.key === 'l' || e.key === 'L') {
+    sortByScore = !sortByScore;
+    renderRows();
+  }
+});
+
+/** Initialize on page load **/
+(async function init() {
+  $('#baseUrlTxt').textContent = BASE_URL;
+  await pingProviders();
+  loadSymbols($('#symbols').value);
+  // Periodically ping provider status every 60s
+  setInterval(pingProviders, 60000);
+})();
+</script>
+</body>
+</html>
