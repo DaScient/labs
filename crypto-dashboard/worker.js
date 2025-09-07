@@ -1,9 +1,10 @@
 // Cloudflare Worker — Crypto Dashboard API (Binance + Finnhub fallback)
 // Features:
 // - CORS + OPTIONS preflight
-// - Binance primary; Finnhub fallback (supports multiple keys via FINNHUB_API_KEYS)
+// - Binance primary with host-rotation + mirror; Finnhub fallback (FINNHUB_API_KEYS or FINNHUB_API_KEY)
 // - Concurrency-limited batch to reduce 429s
 // - Safe JSON errors; edge caching on public endpoints
+// - Diagnostics: /api/diag and /api/selftest
 
 export default {
   async fetch(request, env, ctx) {
@@ -11,7 +12,9 @@ export default {
       const url = new URL(request.url);
       if (request.method === "OPTIONS") return corsPreflight(env);
 
-      if (url.pathname === "/api/ping")               return withCORS(await ping(env), env);
+      if (url.pathname === "/api/ping")         return withCORS(await ping(env), env);
+      if (url.pathname === "/api/diag")         return withCORS(await diag(env), env);
+      if (url.pathname === "/api/selftest")     return withCORS(await selftest(env), env);
       if (url.pathname.startsWith("/api/summary-batch")) return withCORS(await summaryBatch(url, env, ctx), env);
       if (url.pathname.startsWith("/api/summary"))       return withCORS(await summary(url, env, ctx), env);
 
@@ -56,7 +59,38 @@ async function fetchJson(url, init = {}) {
   return res.json();
 }
 
-// Simple stable hash to spread symbols across keys
+// Binance host rotation + official data mirror
+async function fetchBinanceJson(path) {
+  // All hosts implement /api/v3/* shape
+  const hosts = [
+    "https://api.binance.com",
+    "https://api1.binance.com",
+    "https://api2.binance.com",
+    "https://api3.binance.com",
+    "https://data-api.binance.vision"
+  ];
+  let lastErr;
+  for (const host of hosts) {
+    try {
+      const url = `${host}${path}`;
+      const res = await fetch(url, {
+        headers: {
+          "Accept": "application/json",
+          // A friendlier UA can help avoid edge bot rules at some POPs
+          "User-Agent": "Mozilla/5.0 (compatible; DaScientCryptoDashboard/1.0)"
+        },
+        cf: { cacheTtl: 10 }
+      });
+      if (!res.ok) throw new Error(`Binance ${res.status}`);
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("Binance unreachable");
+}
+
+// Simple stable hash to spread symbols across Finnhub keys
 function hashStr(s) {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
@@ -259,13 +293,11 @@ async function fetchSentiment(symbol) {
 async function fetchCryptoData(pair, env) {
   const symbol = pair.replace("/", "").toUpperCase();
   const result = {};
-  // Try Binance first
+  // Try Binance (with host rotation)
   try {
-    const priceUrl = `https://api.binance.com/api/v3/ticker/24hr?symbol=${symbol}`;
-    const klineUrl = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=1m&limit=120`;
     const [priceData, klineData] = await Promise.all([
-      fetchJson(priceUrl, { cf: { cacheTtl: 10 } }),
-      fetchJson(klineUrl,  { cf: { cacheTtl: 10 } }),
+      fetchBinanceJson(`/api/v3/ticker/24hr?symbol=${symbol}`),
+      fetchBinanceJson(`/api/v3/klines?symbol=${symbol}&interval=1m&limit=120`)
     ]);
     result.price = Number(priceData.lastPrice);
     result.candles = klineData.map(k => ({
@@ -282,8 +314,8 @@ async function fetchCryptoData(pair, env) {
     // Finnhub fallback if keys are configured
     const key = getFinnhubKeyForSymbol(env, symbol);
     if (!key) throw binErr;
+    const finSymbol = symbol.includes("USDT") ? `BINANCE:${symbol}` : symbol;
     try {
-      const finSymbol = symbol.includes("USDT") ? `BINANCE:${symbol}` : symbol;
       const quoteUrl  = `https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(finSymbol)}&token=${key}`;
       const candleUrl = `https://finnhub.io/api/v1/crypto/candle?symbol=${encodeURIComponent(finSymbol)}&resolution=1&count=120&token=${key}`;
       const [quoteData, candleData] = await Promise.all([ fetchJson(quoteUrl), fetchJson(candleUrl) ]);
@@ -377,10 +409,27 @@ async function summary(url, env, ctx) {
 
 async function ping(env) {
   const status = { now: Date.now(), providers: { binance: false, finnhub: false, stocktwits: true } };
+  // Try Binance time with rotation
   try {
-    const resp = await fetch("https://api.binance.com/api/v3/time", { cf: { cacheTtl: 10 } });
-    status.providers.binance = resp.ok;
+    const res = await (async () => {
+      const hosts = [
+        "https://api.binance.com",
+        "https://api1.binance.com",
+        "https://api2.binance.com",
+        "https://api3.binance.com",
+        "https://data-api.binance.vision"
+      ];
+      for (const h of hosts) {
+        try {
+          const r = await fetch(`${h}/api/v3/time`, { cf: { cacheTtl: 10 } });
+          if (r.ok) return r;
+        } catch {}
+      }
+      return null;
+    })();
+    status.providers.binance = !!(res && res.ok);
   } catch {}
+
   try {
     const key = getFinnhubKeyForSymbol(env, "BINANCE:BTCUSDT");
     if (key) {
@@ -389,4 +438,34 @@ async function ping(env) {
     }
   } catch {}
   return json(status);
+}
+
+/* ------------------- Diagnostics ------------------- */
+async function diag(env) {
+  const keysList = (env.FINNHUB_API_KEYS || "").split(",").map(s => s.trim()).filter(Boolean);
+  const hasSingle = !!env.FINNHUB_API_KEY;
+  const corsAllow = env.CORS_ALLOW || "*";
+  return json({
+    ok: true,
+    env: {
+      FINNHUB_API_KEY_present: hasSingle,
+      FINNHUB_API_KEYS_count: keysList.length,
+      CORS_ALLOW: corsAllow
+    }
+  });
+}
+
+async function selftest(env) {
+  const symbol = "BTC/USDT";
+  try {
+    const data = await fetchCryptoData(symbol, env);
+    return json({
+      ok: true,
+      symbol,
+      provider: data._provider || "unknown",
+      samplePrice: data.price
+    });
+  } catch (e) {
+    return json({ ok: false, error: e?.message || String(e) }, 502);
+  }
 }
