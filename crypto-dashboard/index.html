@@ -1,560 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto RL Trading Dashboard – DaScient Labs</title>
-  <meta name="description" content="Live crypto momentum + sentiment signals powered by an RL-inspired ensemble with Kalman trend filtering. For research only." />
-  <style>
-    /* --- Styles for the dashboard UI --- */
-    :root {
-      --bg: #0b0d12;
-      --panel: #111420;
-      --panel-2: #0e1220;
-      --ink: #e6e7ee;
-      --muted: #9aa3b2;
-      --accent: #7dd3fc;
-      --buy: #10b981;
-      --sell: #ef4444;
-      --hold: #f59e0b;
-      --chip: #1e2537;
-      --good: #16a34a;
-      --warn: #f59e0b;
-      --bad: #dc2626;
-      --border: #1c2335;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: radial-gradient(1200px 800px at 20% -10%, #12162a 0%, #0b0d12 50%) fixed;
-      color: var(--ink);
-      line-height: 1.45;
-    }
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(8px);
-      background: linear-gradient(180deg, rgba(11,13,18,0.85), rgba(11,13,18,0.65) 60%, rgba(11,13,18,0));
-      border-bottom: 1px solid var(--border);
-    }
-    .wrap { max-width: 1150px; margin: 0 auto; padding: 16px; }
-    .title {
-      display: flex;
-      gap: 14px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .brand {
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      font-size: 20px;
-      padding: 6px 10px;
-      border-radius: 12px;
-      background: linear-gradient(90deg, #5eead4, #7dd3fc);
-      color: #0b1220;
-      box-shadow: 0 0 0 3px rgba(125,211,252,0.12) inset;
-    }
-    .subtitle { color: var(--muted); font-size: 14px; }
-    .grid {
-      display: grid;
-      gap: 14px;
-      margin-top: 14px;
-      grid-template-columns: 1.2fr 0.8fr;
-    }
-    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
-    .panel {
-      background: linear-gradient(180deg, var(--panel), var(--panel-2));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-      box-shadow: 0 12px 30px rgba(3,6,12,0.35);
-    }
-    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
-    input[type=text], select {
-      flex: 1;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      background: #0f1424;
-      color: var(--ink);
-      outline: none;
-      font: inherit;
-    }
-    input[type=text]:focus { border-color: #2f3a5b; box-shadow: 0 0 0 3px rgba(125,211,252,0.1); }
-    .btn {
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: linear-gradient(180deg, #17203a, #0f1529);
-      color: var(--ink);
-      padding: 8px 12px;
-      border-radius: 10px;
-      font-weight: 700;
-      letter-spacing: 0.2px;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: transform 0.15s;
-    }
-    .btn:hover { transform: translateY(-1px); border-color: #2a3656; }
-    .btn.primary {
-      background: linear-gradient(90deg, #38bdf8, #22d3ee);
-      color: #091225;
-      border: none;
-    }
-    .small { font-size: 12px; color: var(--muted); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-    .badgelite {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--chip);
-      padding: 5px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      font-size: 12px;
-    }
-    .key { color: var(--muted); }
-    .pill {
-      display: inline-block;
-      font-weight: 800;
-      padding: 5px 10px;
-      border-radius: 999px;
-      letter-spacing: 0.3px;
-      border: 1px solid var(--border);
-      font-size: 13px;
-    }
-    .pill.buy  { background: rgba(16,185,129,0.15); color: #a7f3d0; border-color: rgba(16,185,129,0.35); }
-    .pill.sell { background: rgba(239,68,68,0.15); color: #fecaca; border-color: rgba(239,68,68,0.35); }
-    .pill.hold { background: rgba(245,158,11,0.15); color: #fde68a; border-color: rgba(245,158,11,0.35); }
-    .table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
-    .thead th {
-      text-align: left;
-      color: var(--muted);
-      font-size: 12px;
-      padding: 0 10px 4px;
-    }
-    .tr {
-      background: linear-gradient(180deg, #0e1323, #0c1120);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    .td {
-      padding: 10px;
-      border-right: 1px dashed #1b2342;
-      vertical-align: top;
-    }
-    .td:last-child { border-right: none; }
-    .sym {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 800;
-      letter-spacing: 0.3px;
-    }
-    .bar {
-      position: relative;
-      height: 8px;
-      background: #0b1222;
-      border-radius: 999px;
-      overflow: hidden;
-      border: 1px solid #1b2342;
-    }
-    .bar > i {
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 0;
-      border-right: 1px solid rgba(255,255,255,0.08);
-      transition: width 0.5s ease;
-      background: linear-gradient(90deg, rgba(56,189,248,0.35), rgba(34,211,238,0.35));
-    }
-    .bar#sent .bull { background: linear-gradient(90deg, rgba(16,185,129,0.45), rgba(34,197,94,0.35)); }
-    .bar#sent .bear { right: 0; left: auto; background: linear-gradient(270deg, rgba(239,68,68,0.45), rgba(248,113,113,0.35)); }
-    .tag { font-size: 11px; color: var(--muted); }
-    .note { color: #b5c1d8; font-size: 12px; }
-    .badge {
-      border: 1px solid var(--border);
-      padding: 3px 6px;
-      border-radius: 8px;
-      background: #0c1222;
-      color: #c6d0e1;
-      font-size: 12px;
-    }
-    .status-dot { width: 8px; height: 8px; border-radius: 50%; }
-    .dot-good { background: var(--good); }
-    .dot-bad  { background: var(--bad); }
-    .dot-warn { background: var(--warn); }
-    details {
-      background: linear-gradient(180deg, #0d1222, #0b111f);
-      border: 1px dashed #24304f;
-      border-radius: 12px;
-      padding: 6px 8px;
-      margin-top: 8px;
-    }
-    details[open] { border-style: solid; }
-    summary { cursor: pointer; color: #bcd1ff; outline: none; }
-    .kbd {
-      font: 600 11px ui-monospace, Menlo, Consolas, monospace;
-      background: #0a0f1d;
-      border: 1px solid #1c2543;
-      padding: 2px 6px;
-      border-radius: 6px;
-      color: #a7b3ce;
-    }
-    .footer {
-      color: #7f8aa3;
-      font-size: 12px;
-      padding: 20px 16px 40px;
-      text-align: center;
-    }
-    .pulse { animation: pulse 1.6s infinite; }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(125,211,252,0.45); }
-      70% { box-shadow: 0 0 0 12px rgba(125,211,252,0); }
-      100% { box-shadow: 0 0 0 0 rgba(125,211,252,0); }
-    }
-    .ghost { opacity: 0.65; }
-    .spinner {
-      width: 16px; height: 16px; border: 2px solid #2b3656; border-top-color: #7dd3fc;
-      border-radius: 50%; animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg);} }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>RLBot Live Performance</title>
+<meta name="theme-color" content="#0b0d12" />
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0b0d12;--panel:#101422;--panel-2:#0e1220;--ink:#e6e7ee;--muted:#9aa3b2;--accent:#7dd3fc;
+    --good:#16a34a;--bad:#ef4444;--hold:#f59e0b;--chip:#1b2234;--border:#1c2335
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 800px at 20% -10%, #12162a 0%, var(--bg) 50%) fixed;color:var(--ink);font:500 15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+  header{position:sticky;top:0;z-index:8;backdrop-filter: blur(6px);background:linear-gradient(180deg,rgba(11,13,18,.86),rgba(11,13,18,.65) 60%,rgba(11,13,18,0));border-bottom:1px solid var(--border)}
+  .wrap{max-width:1240px;margin:0 auto;padding:16px}
+  .top{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .brand{font-weight:900;letter-spacing:.3px;font-size:18px;padding:6px 10px;border-radius:12px;background:linear-gradient(90deg,#5eead4,#7dd3fc);color:#0b1220;box-shadow:0 0 0 3px rgba(125,211,252,.12) inset}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);padding:6px 10px;border-radius:999px;border:1px solid var(--border);color:#c7d2fe;font-size:13px;text-decoration:none}
+  input[type=text],select,button{padding:9px 12px;border-radius:12px;border:1px solid var(--border);background:#0f1526;color:var(--ink);outline:none}
+  button{cursor:pointer;font-weight:800;letter-spacing:.2px}
+  button.primary{background:linear-gradient(90deg,#38bdf8,#22d3ee);color:#091225;border:none}
+  main .grid{display:grid;gap:12px;margin-top:12px;grid-template-columns:1.2fr .8fr}
+  @media (max-width:1080px){ main .grid{grid-template-columns:1fr} }
+  .panel{background:linear-gradient(180deg,var(--panel),var(--panel-2));border:1px solid var(--border);border-radius:16px;padding:12px;box-shadow:0 12px 30px rgba(3,6,12,.35)}
+  .h2{font-weight:900;margin:2px 0 10px}
+  .metrics{display:flex;gap:10px;flex-wrap:wrap}
+  .kpi{min-width:120px;background:#0d1222;border:1px solid var(--border);border-radius:12px;padding:10px}
+  .kpi .label{color:var(--muted);font-size:12px}
+  .kpi .val{font-size:22px;font-weight:900;margin-top:2px}
+  .gridCards{display:grid;gap:12px;grid-template-columns:repeat(4, minmax(220px, 1fr))}
+  @media (max-width:1200px){ .gridCards{grid-template-columns:repeat(3, minmax(220px, 1fr))}}
+  @media (max-width:900px){ .gridCards{grid-template-columns:repeat(2, minmax(220px, 1fr))}}
+  @media (max-width:600px){ .gridCards{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,#0e1323,#0c1120);border:1px solid var(--border);border-radius:14px;padding:12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pill{font-weight:900;padding:6px 10px;border-radius:999px;border:1px solid var(--border);font-size:12px}
+  .pill.buy{background:rgba(22,163,74,.15);color:#86efac;border-color:rgba(22,163,74,.35)}
+  .pill.sell{background:rgba(239,68,68,.15);color:#fecaca;border-color:rgba(239,68,68,.35)}
+  .pill.hold{background:rgba(245,158,11,.12);color:#fde68a;border-color:rgba(245,158,11,.3)}
+  .muted{color:var(--muted);font-size:12px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  .footer{color:#7f8aa3;font-size:12px;padding:20px 16px 40px;text-align:center}
+</style>
 </head>
 <body>
 <header>
-  <div class="wrap">
-    <div class="title">
-      <div class="brand">DaScient</div>
-      <div style="font-weight:800; font-size:18px;">
-        Crypto RL Trading Dashboard
-        <span class="small">– Momentum & Sentiment Enhanced</span>
-      </div>
-      <div class="subtitle">Live BUY/SELL signals from Reinforcement Learning Ensemble</div>
-    </div>
-    <div class="grid">
-      <section class="panel">
-        <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
-          <div class="badgelite">
-            <span class="key">Endpoint:</span>
-            <code class="mono" id="baseUrlTxt">https://crypto.aristocles24.workers.dev</code>
-          </div>
-          <div class="badgelite" id="pingBox">
-            <span class="key">Providers:</span>
-            <span class="badge"><span class="status-dot dot-warn" id="binanceDot"></span> Binance</span>
-            <span class="badge"><span class="status-dot dot-warn" id="finhubDot"></span> Finnhub</span>
-            <span class="badge"><span class="status-dot dot-warn" id="stwDot"></span> Stocktwits</span>
-            <span class="badge small" id="nowTxt">—</span>
-          </div>
-        </div>
-        <div class="row" style="gap: 8px;">
-          <input id="symbols" type="text" placeholder="Enter symbols (e.g. BTC/USDT,ETH/USDT,...)"
-                 value="SHIB/USDT, FLOKI/USDT, DOGE/USDT, MEW/USDT, PEPE/USDT, ETC/USDT, ETH/USDT, BTC/USDT" />
-          <button class="btn primary" id="goBtn"><span id="goSpin" class="spinner" style="display:none;"></span>Run</button>
-          <button class="btn" id="demoBtn">Demo</button>
-          <label class="badgelite" style="gap:4px;">
-            <input id="autoref" type="checkbox" />
-            <span>Auto-refresh</span>
-            <select id="intervalSel">
-              <option value="15">15s</option>
-              <option value="30" selected>30s</option>
-              <option value="60">60s</option>
-            </select>
-          </label>
-        </div>
-        <div id="alert" class="small" style="margin-top:6px; color:#fca5a5; display:none;"></div>
-      </section>
-      <section class="panel">
-        <div class="row" style="justify-content: space-between;">
-          <div class="badgelite">
-            <span class="key">Mode:</span>
-            <span id="modeTxt">live</span>
-          </div>
-          <div class="badgelite">
-            <span class="key">Rules:</span>
-            Low CHOP + AO↑ → BUY • High CHOP + AO↓ → SELL • Sentiment ↕ adjusts confidence
-          </div>
-        </div>
-        <div class="small" style="margin-top: 8px;">
-          Tip: Press <span class="kbd">R</span> to refresh, <span class="kbd">D</span> for demo data, 
-          <span class="kbd">L</span> to toggle sort.
-        </div>
-      </section>
-    </div>
+  <div class="wrap top">
+    <div class="brand">RLBot Live Performance</div>
+    <a class="chip" id="pingLink" target="_blank" rel="noopener">/api/ping</a>
+    <input id="symbols" type="text" style="min-width:340px"
+      placeholder="BTC/USDT, ETH/USDT, SOL/USDT, DOGE/USDT" />
+    <select id="provider">
+      <option value="okx" selected>OKX</option>
+      <option value="binance">Binance</option>
+      <option value="bybit">Bybit</option>
+    </select>
+    <button class="primary" id="applyBtn">Apply</button>
+    <span class="chip" id="statusChip">status: —</span>
   </div>
 </header>
+
 <main class="wrap">
-  <section class="panel">
-    <table class="table">
-      <thead class="thead">
-        <tr>
-          <th>Symbol</th>
-          <th>Price</th>
-          <th>Signal</th>
-          <th>Score</th>
-          <th>Confidence</th>
-          <th>Sentiment</th>
-          <th>Trend</th>
-          <th>Target</th>
-          <th>More</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
-  </section>
-  <div class="footer">
-    For informational purposes only. Not financial advice. Use at your own risk.
+  <div class="grid">
+    <section class="panel">
+      <div class="row" style="justify-content:space-between">
+        <div class="h2">Portfolio Equity</div>
+        <div class="muted">since <span id="asOf" class="mono">—</span></div>
+      </div>
+      <canvas id="eqChart" height="150"></canvas>
+    </section>
+
+    <section class="panel">
+      <div class="h2">Performance Metrics</div>
+      <div class="metrics">
+        <div class="kpi"><div class="label">Cumulative Return</div><div class="val mono" id="mRet">—</div></div>
+        <div class="kpi"><div class="label">Sharpe (daily)</div><div class="val mono" id="mSharpe">—</div></div>
+        <div class="kpi"><div class="label">Max Drawdown</div><div class="val mono" id="mDD">—</div></div>
+        <div class="kpi"><div class="label">Win Rate</div><div class="val mono" id="mWin">—</div></div>
+      </div>
+      <div class="muted" style="margin-top:8px">* Metrics computed from your locally accumulated trade history (persists in this browser).</div>
+      <div class="row" style="margin-top:10px"><button id="resetBtn">Reset History</button><span id="navNow" class="mono muted"></span></div>
+    </section>
   </div>
+
+  <section class="panel" style="margin-top:12px">
+    <div class="h2">Symbols</div>
+    <div class="gridCards" id="cards"></div>
+    <div class="muted" style="margin-top:8px">Signals are the Worker’s output. We simulate paper trades: <b>BUY → long</b>, <b>SELL → short</b>, <b>HOLD → maintain</b>; equal <b>dollar</b> weight per symbol.</div>
+  </section>
+
+  <div class="footer">For education only. Not investment advice.</div>
 </main>
 
 <script>
-/** CONFIGURATION **/
-const BASE_URL = "https://crypto.aristocles24.workers.dev";  // set to your Cloudflare Worker URL
-const MAX_BATCH = 25;  // stay well under API limits
-const LS_KEY = "dascient-crypto-dashboard";
+/* ========= CONFIG ========= */
+const WORKER_BASE = location.origin; // host this index next to your worker. Override if needed.
+const BATCH_EP = (csv, prov) => `${WORKER_BASE}/api/summary-batch?symbols=${encodeURIComponent(csv)}&provider=${encodeURIComponent(prov)}`;
+const PING_EP  = `${WORKER_BASE}/api/ping`;
 
-/** STATE **/
-let rowsData = [];       // current data for symbols
-let sortByScore = true;  // sort table by score (vs symbol)
-let autoTimer = null;    // interval timer
+const POLL_MS = 60_000;
+const MAX_POINTS = 5000;
+const DOLLAR_NOTIONAL = 100;   // equal $ exposure per symbol
+const CONF_GATE = 0.55;        // ignore signals below this confidence
+const HYST_BUF = 5;            // score buffer before flipping (if score is present)
 
-/** DOM Helper **/
-const $ = (sel) => document.querySelector(sel);
-
-/** Utils **/
-const formatNumber = (n, digits=6) => {
-  if (n == null || isNaN(n)) return '—';
-  const abs = Math.abs(Number(n));
-  const prec = abs < 1 ? 8 : abs < 100 ? 6 : 2;
-  return Number(n).toLocaleString(undefined, { maximumFractionDigits: Math.min(prec, digits) });
+/* ========= STATE & STORAGE ========= */
+const LS_KEYS = {
+  cfg: "rl_cfg_v2",
+  per: "rl_per_v2",
+  hist: "rl_hist_v2"
 };
-const clamp = (val, min, max) => Math.min(max, Math.max(min, val));
-const timestampToLocal = ts => new Date(ts).toLocaleString();
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-function persist() {
-  localStorage.setItem(LS_KEY, JSON.stringify({
-    symbols: $('#symbols').value,
-    autoref: $('#autoref').checked,
-    interval: $('#intervalSel').value
-  }));
+function loadLS(key, fallback) {
+  try { const v = localStorage.getItem(key); return v? JSON.parse(v) : fallback; } catch { return fallback; }
 }
-function restore() {
-  try {
-    const cfg = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-    if (cfg.symbols) $('#symbols').value = cfg.symbols;
-    if (cfg.interval) $('#intervalSel').value = cfg.interval;
-    if (cfg.autoref) $('#autoref').checked = true;
-  } catch(_) {}
-}
+function saveLS(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
 
-/** Fetch JSON with timeout + simple backoff **/
-async function fetchWithTimeout(url, timeoutMs = 12000, tries = 2) {
-  for (let attempt = 0; attempt < tries; attempt++) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const res = await fetch(url, { signal: controller.signal });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } finally {
-      clearTimeout(timer);
-    }
-    await sleep(300 * (attempt + 1));
-  }
-  throw new Error("Network timeout");
-}
+let config = loadLS(LS_KEYS.cfg, {
+  symbols: "BTC/USDT, ETH/USDT, SOL/USDT, DOGE/USDT",
+  provider: "okx"
+});
+let perSym = loadLS(LS_KEYS.per, {});     // sym -> {pos, entry, qty, realized, last, trades[]}
+let navHistory = loadLS(LS_KEYS.hist, []); // [{t, nav: equityValue}]
+let timer = null;
 
-/** Provider pinger **/
-async function pingProviders() {
-  try {
-    const data = await fetchWithTimeout(`${BASE_URL}/api/ping`, 5000);
-    $('#nowTxt').textContent = 'Updated: ' + new Date(data.now).toLocaleTimeString();
-    $('#binanceDot').className = 'status-dot ' + (data.providers.binance ? 'dot-good' : 'dot-bad');
-    $('#finhubDot').className  = 'status-dot ' + (data.providers.finnhub ? 'dot-good' : 'dot-warn');
-    $('#stwDot').className     = 'status-dot ' + (data.providers.stocktwits ? 'dot-good' : 'dot-warn');
-  } catch (e) {
-    ['#binanceDot','#finhubDot','#stwDot'].forEach(sel => $(sel).className = 'status-dot dot-warn');
-    $('#nowTxt').textContent = 'offline';
-  }
-}
+/* ========= DOM ========= */
+const el = (id) => document.getElementById(id);
+el("symbols").value = config.symbols;
+el("provider").value = config.provider;
+el("pingLink").href = PING_EP;
 
-/** Normalize symbol input to comma-separated uppercase pairs like BTC/USDT **/
-function parseSymbols(input) {
-  return input.split(/[\s,]+/)
-    .map(s => s.trim().toUpperCase())
-    .filter(Boolean)
-    .map(s => s.includes('/') ? s : (s.endsWith('USDT') ? s.replace('USDT', '/USDT') : s));
-}
-
-/** Load data for given symbols **/
-async function loadSymbols(symbolsStr) {
-  $('#alert').style.display = 'none';
-  const btnSpin = $('#goSpin'); btnSpin.style.display = 'inline-block';
-  try {
-    const symbols = parseSymbols(symbolsStr);
-    if (symbols.length === 0) throw new Error('Please enter at least one symbol.');
-    const chunks = [];
-    for (let i = 0; i < symbols.length; i += MAX_BATCH) chunks.push(symbols.slice(i, i + MAX_BATCH));
-    let allData = [];
-    for (const chunk of chunks) {
-      try {
-        const url = `${BASE_URL}/api/summary-batch?symbols=${encodeURIComponent(chunk.join(','))}`;
-        const data = await fetchWithTimeout(url, 12000);
-        if (Array.isArray(data)) allData = allData.concat(data);
-      } catch (err) {
-        // Fallback to per-symbol
-        for (const sym of chunk) {
-          try {
-            const one = await fetchWithTimeout(`${BASE_URL}/api/summary?symbol=${encodeURIComponent(sym)}`, 8000);
-            allData.push(one);
-          } catch (e) {
-            allData.push({ symbol: sym, error: (e && e.message) || 'No data' });
-          }
-        }
-      }
-    }
-    if (allData.length === 0) throw new Error('No data returned');
-    rowsData = allData;
-    const mode = allData[0]._mode || 'live';
-    $('#modeTxt').textContent = mode;
-    renderRows();
-  } catch (err) {
-    $('#alert').textContent = (err && err.message) || 'Unknown error';
-    $('#alert').style.display = 'block';
-  } finally {
-    btnSpin.style.display = 'none';
-  }
-}
-
-/** Render table rows **/
-function renderRows() {
-  const sorted = [...rowsData].sort((a,b) => {
-    return sortByScore ? ((b.score||0)-(a.score||0)) : (a.symbol||'').localeCompare(b.symbol||'');
-  });
-  const tbody = document.getElementById('rows');
-  tbody.innerHTML = '';
-  for (const item of sorted) {
-    const sym = item.symbol || '—';
-    const price = formatNumber(item.price);
-    const sig = (item.signal || '—').toUpperCase();
-    const score = item.score != null ? item.score : '—';
-    const confPct = item.confidence != null ? Math.round(item.confidence * 100) : 0;
-    const sentiment = item.sentiment || {};
-    const bullPct = sentiment.bullish ?? 0;
-    const bearPct = sentiment.bearish ?? 0;
-    const neuPct  = 100 - bullPct - bearPct;
-    const trendLabel = (item.ta && item.ta.choppiness != null)
-      ? (item.ta.choppiness < 38 ? 'Trending' : item.ta.choppiness > 61 ? 'Choppy' : 'Mixed')
-      : '—';
-    const notesArr = item.ta && item.ta.notes ? item.ta.notes : [];
-    const notesStr = notesArr.slice(0,2).join(' • ');
-    const pillClass = sig.toLowerCase();
-    const pulseClass = confPct >= 85 ? 'pulse' : '';
-
-    const rowHtml = `
-      <tr class="tr">
-        <td class="td">
-          <div class="sym"><span style="font-size:16px;">${sym}</span> <span class="tag">${item._provider || ''}</span></div>
-          <div class="note">${notesStr}</div>
-          ${item.error ? `<div class="small" style="color:#fca5a5;">${item.error}</div>` : ''}
-        </td>
-        <td class="td">${price}</td>
-        <td class="td"><span class="pill ${pillClass} ${pulseClass}">${sig}</span></td>
-        <td class="td" style="min-width:140px;">
-          <div class="bar" id="score-${cssSafe(sym)}"><i></i></div>
-          <div class="small">Score <b>${score}</b> / 60</div>
-        </td>
-        <td class="td" style="min-width:130px;">
-          <div class="bar" id="conf-${cssSafe(sym)}"><i></i></div>
-          <div class="small">Confidence <b>${confPct}%</b></div>
-        </td>
-        <td class="td" style="min-width:150px;">
-          <div class="bar" id="sent-${cssSafe(sym)}">
-            <i class="bull"></i><i class="bear"></i>
-          </div>
-          <div class="small">Bull <b>${bullPct}%</b> · ${neuPct}% · Bear <b>${bearPct}%</b></div>
-        </td>
-        <td class="td">
-          <div class="badge">${trendLabel}</div>
-          <div class="small">${item.ta && item.ta.choppiness != null 
-            ? `CHOP ${Math.round(item.ta.choppiness)} · RSI ${item.ta.rsi != null ? Math.round(item.ta.rsi) : '—'} · AO ${item.ta.aoUp ? '↑' : item.ta.aoDown ? '↓' : '•'}`
-            : '—'}</div>
-        </td>
-        <td class="td">—</td>
-        <td class="td" style="min-width:130px;">
-          <details>
-            <summary>Details</summary>
-            <div class="small" style="margin:4px 0;">Updated: ${item.timestamp ? timestampToLocal(item.timestamp) : '—'}</div>
-            <div style="display:flex; gap:4px; flex-wrap: wrap; margin: 6px 0;">
-              <button class="btn" onclick="toggleJSON('${cssSafe(sym)}')">JSON</button>
-            </div>
-            <pre id="json-${cssSafe(sym)}" class="mono ghost" style="display:none; background:#0a0f1d; border:1px solid #1c2543; border-radius:8px; padding:8px; max-height:300px; overflow:auto;"></pre>
-          </details>
-        </td>
-      </tr>`;
-    tbody.insertAdjacentHTML('beforeend', rowHtml);
-    const scoreBar = document.querySelector(`#score-${cssSafe(sym)} i`);
-    const confBar  = document.querySelector(`#conf-${cssSafe(sym)} i`);
-    const sentBull = document.querySelector(`#sent-${cssSafe(sym)} .bull`);
-    const sentBear = document.querySelector(`#sent-${cssSafe(sym)} .bear`);
-    if (scoreBar) {
-      const scorePct = ((item.score || 0) + 60) / 120 * 100;
-      scoreBar.style.width = clamp(scorePct, 0, 100) + '%';
-    }
-    if (confBar) confBar.style.width = clamp(confPct, 0, 100) + '%';
-    if (sentBull && sentBear) {
-      sentBull.style.width = clamp(bullPct, 0, 100) + '%';
-      sentBear.style.width = clamp(bearPct, 0, 100) + '%';
-    }
-  }
-}
-
-/** Helpers **/
-function cssSafe(sym) { return sym.replace(/[^a-zA-Z0-9]/g, '_'); }
-function toggleJSON(idSafeSym) {
-  const pre = document.getElementById('json-' + idSafeSym);
-  if (!pre) return;
-  if (pre.textContent === "") {
-    const sym = idSafeSym.replace(/_/g, '');
-    const dataObj = rowsData.find(x => x.symbol && x.symbol.replace('/', '') === sym);
-    pre.textContent = JSON.stringify(dataObj, null, 2);
-  }
-  pre.style.display = (pre.style.display === 'none' ? 'block' : 'none');
-}
-
-/** Demo data (if you want a hard fallback, uncomment and wire) **/
-// const DEMO_DATA = [...]
-
-/** Events **/
-$('#goBtn').addEventListener('click', () => { persist(); loadSymbols($('#symbols').value); });
-$('#demoBtn').addEventListener('click', () => { /* set rowsData=DEMO_DATA; renderRows(); */ });
-$('#autoref').addEventListener('change', () => { persist(); restartAuto(); });
-$('#intervalSel').addEventListener('change', () => { persist(); restartAuto(); });
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'r' || e.key === 'R') loadSymbols($('#symbols').value);
-  else if (e.key === 'l' || e.key === 'L') { sortByScore = !sortByScore; renderRows(); }
+el("applyBtn").addEventListener("click", () => {
+  config.symbols = el("symbols").value.trim();
+  config.provider = el("provider").value;
+  saveLS(LS_KEYS.cfg, config);
+  startPolling(true);
+});
+el("resetBtn").addEventListener("click", () => {
+  perSym = {};
+  navHistory = [];
+  saveLS(LS_KEYS.per, perSym);
+  saveLS(LS_KEYS.hist, navHistory);
+  drawPortfolio(); renderLiveMetrics();
+  renderCards([]);
 });
 
-function restartAuto() {
-  if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
-  if ($('#autoref').checked) {
-    const interval = parseInt($('#intervalSel').value, 10) || 30;
-    autoTimer = setInterval(() => loadSymbols($('#symbols').value), interval * 1000);
+/* ========= CHART ========= */
+let eqChart;
+function initChart(){
+  const ctx = el("eqChart").getContext("2d");
+  eqChart = new Chart(ctx, {
+    type: "line",
+    data: { labels: [], datasets: [{ label: "Equity (NAV)", data: [], tension: .25, borderWidth: 2 }] },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      color: "#cbd5e1",
+      scales: { x: { ticks: { color:"#9aa3b2" } }, y:{ ticks:{ color:"#9aa3b2" } } },
+      plugins: {
+        legend: { labels: { color:"#e5e7eb" } },
+        tooltip: { callbacks: { label: (c)=>` ${c.parsed.y.toFixed(2)}` } }
+      },
+      elements: { point: { radius: 0 } }
+    }
+  });
+}
+initChart();
+
+/* ========= HELPERS ========= */
+const fmt = (n, d=2) => (n==null || !isFinite(n)) ? "—" : Number(n).toLocaleString(undefined,{maximumFractionDigits:d});
+const cssSignal = s => s==="BUY"?"buy":s==="SELL"?"sell":"hold";
+
+/* ========= PORTFOLIO ENGINE ========= */
+function updatePortfolio(rows){
+  const now = Date.now();
+  let realized = 0, unreal = 0;
+
+  for (const r of rows || []){
+    const sym = (r.symbol||"").toUpperCase(); if (!sym) continue;
+    if (!perSym[sym]) perSym[sym] = {pos:0, entry:0, qty:0, realized:0, last:null, trades:[]};
+
+    const ps = perSym[sym];
+    const price = (typeof r.price==='number') ? r.price : ps.last; if (price==null) continue;
+
+    // Decide target with confidence gate + hysteresis on score if available
+    let target = ps.pos;
+    if (typeof r.confidence === "number" && r.confidence >= CONF_GATE) {
+      if (r.signal === "BUY") target = +1;
+      else if (r.signal === "SELL") target = -1;
+    }
+    // Hysteresis: prevent immediate flip unless score crosses opposite th by buffer
+    const sc = typeof r.score === "number" ? r.score : 0;
+    if (ps.pos === +1 && sc > -(25) + HYST_BUF) target = +1;
+    if (ps.pos === -1 && sc < (25) - HYST_BUF) target = -1;
+
+    // Flip/close if changed
+    if (target !== ps.pos){
+      if (ps.pos !== 0 && ps.entry!=null && ps.qty>0){
+        const pnl = (price - ps.entry) * ps.qty * ps.pos;
+        ps.realized += pnl;
+        ps.trades.push({t:now, side:(ps.pos>0?'CloseLong':'CloseShort'), price, pnl});
+      }
+      if (target !== 0){
+        ps.entry = price;
+        ps.qty   = DOLLAR_NOTIONAL / Math.max(1e-9, price); // equal $ exposure
+        ps.trades.push({t:now, side:(target>0?'OpenLong':'OpenShort'), price, qty:ps.qty});
+      } else {
+        ps.qty = 0;
+      }
+      ps.pos = target;
+    }
+
+    if (ps.pos !== 0 && ps.entry!=null && ps.qty>0){
+      unreal += (price - ps.entry) * ps.qty * ps.pos;
+    }
+    realized += ps.realized;
+    ps.last = price;
+  }
+
+  // Book size & equity
+  const nSyms = Math.max(1, Object.keys(perSym).length);
+  const initialCapital = nSyms * DOLLAR_NOTIONAL;
+  const nav = realized + unreal;
+  const equity = initialCapital + nav;
+
+  navHistory.push({t:now, nav: equity});
+  if (navHistory.length > MAX_POINTS) navHistory = navHistory.slice(-MAX_POINTS);
+  saveLS(LS_KEYS.per, perSym);
+  saveLS(LS_KEYS.hist, navHistory);
+
+  el("navNow").textContent = `NAV ${nav>=0?'+':''}${fmt(nav,2)} (Equity ${fmt(equity,2)})`;
+  el("asOf").textContent = new Date(now).toLocaleString();
+  drawPortfolio(); renderLiveMetrics(initialCapital);
+}
+
+function drawPortfolio(){
+  if (!eqChart) return;
+  const labels = navHistory.map(p=> new Date(p.t).toLocaleTimeString());
+  const data = navHistory.map(p=> p.nav);
+  eqChart.data.labels = labels;
+  eqChart.data.datasets[0].data = data;
+  eqChart.update("none");
+}
+
+function renderLiveMetrics(initialCapitalGuess){
+  const eq = navHistory.map(p=>p.nav);
+  if (eq.length<2){
+    el("mRet").textContent="—";
+    el("mSharpe").textContent="—";
+    el("mDD").textContent="—";
+    el("mWin").textContent="—";
+    return;
+  }
+  const r=[]; for(let i=1;i<eq.length;i++){ r.push( (eq[i]-eq[i-1]) / Math.max(1e-9, eq[i-1]) ); }
+  const mean = r.reduce((a,b)=>a+b,0)/r.length;
+  const sd = Math.sqrt(r.reduce((a,b)=>a+(b-mean)*(b-mean),0)/Math.max(1,r.length-1));
+  const sharpe = sd ? (mean/sd)*Math.sqrt(1440) : 0;
+  const base = eq[0] || initialCapitalGuess || 1;
+  const cum = (eq.at(-1)-base)/Math.max(1e-9, base);
+  let peak=eq[0], maxDD=0; for(const v of eq){ peak=Math.max(peak,v); maxDD=Math.min(maxDD,(v-peak)/Math.max(1e-9,peak)); }
+
+  // Win rate from realized trades
+  let wins=0,losses=0;
+  for (const k in perSym){ for (const t of (perSym[k].trades||[])) if (typeof t.pnl==="number"){ if (t.pnl>0) wins++; else if (t.pnl<0) losses++; } }
+
+  el("mRet").textContent=`${(cum*100).toFixed(2)}%`;
+  el("mSharpe").textContent=`${isFinite(sharpe)?sharpe.toFixed(2):"0.00"}`;
+  el("mDD").textContent=`${(Math.abs(maxDD)*100).toFixed(2)}%`;
+  el("mWin").textContent=`${((wins/(wins+losses||1))*100).toFixed(0)}%`;
+}
+
+/* ========= SYMBOL CARDS ========= */
+function renderCards(rows){
+  const box = el("cards");
+  box.innerHTML = (rows||[]).map(r=>{
+    const sclass = cssSignal(r.signal||"HOLD");
+    const pos = perSym[(r.symbol||"").toUpperCase()]?.pos || 0;
+    const posTxt = pos>0? "Long" : pos<0? "Short" : "Flat";
+    const realized = perSym[(r.symbol||"").toUpperCase()]?.realized ?? 0;
+    const notes = (r.ta?.notes||[]).join(", ");
+    return `
+      <div class="card">
+        <div class="row" style="justify-content:space-between;margin-bottom:6px">
+          <div style="font-weight:900">${(r.symbol||'—').toUpperCase()}</div>
+          <span class="pill ${sclass}">${(r.signal||'HOLD')}</span>
+        </div>
+        <div class="muted mono">Price: ${fmt(r.price, r.price>1000?0:4)} &nbsp; • &nbsp; Score: ${fmt(r.score,0)}</div>
+        <div class="muted mono">Conf: ${fmt((r.confidence||0)*100,0)}% &nbsp; • &nbsp; Pos: ${posTxt}</div>
+        <div class="muted mono">Realized: ${fmt(realized,2)}</div>
+        <div class="muted" style="margin-top:6px">Provider: ${(r._provider||'—')} &nbsp; • &nbsp; TA notes: ${notes||'—'}</div>
+      </div>
+    `;
+  }).join("");
+}
+
+/* ========= POLLING ========= */
+async function pollOnce(){
+  const t0 = performance.now();
+  const csv = config.symbols;
+  const prov = config.provider || "okx";
+  const url = BATCH_EP(csv, prov);
+  el("statusChip").textContent = "status: …";
+  try{
+    const resp = await fetch(url, { headers: { "accept":"application/json" }});
+    const ms = Math.round(performance.now() - t0);
+    el("statusChip").textContent = `status: ${resp.status} in ${ms}ms (${prov})`;
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    const rows = Array.isArray(data)? data : [];
+    updatePortfolio(rows);
+    renderCards(rows);
+  }catch(e){
+    const ms = Math.round(performance.now() - t0);
+    el("statusChip").textContent = `network error in ${ms}ms (${prov})`;
+    // keep previous state; no throw
   }
 }
 
-/** Init **/
-(async function init() {
-  restore();
-  document.getElementById('baseUrlTxt').textContent = BASE_URL;
-  await pingProviders();
-  loadSymbols($('#symbols').value);
-  setInterval(pingProviders, 60000);
-  restartAuto();
-})();
+function startPolling(immediate=false){
+  if (timer) clearInterval(timer);
+  saveLS(LS_KEYS.cfg, config);
+  pollOnce();
+  timer = setInterval(pollOnce, POLL_MS);
+  if (immediate) pollOnce();
+}
+
+/* ========= BOOT ========= */
+startPolling(true);
 </script>
 </body>
 </html>
