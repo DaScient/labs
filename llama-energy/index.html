@@ -1,32 +1,244 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>LLaMA‑Energy | Hyper‑Unit Analytics</title>
-  <link rel="stylesheet" href="./styles.css" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>LLaMA-Energy • Hyper-Unit Analytics (Single-File)</title>
+<style>
+  :root{--bg:#0b1220;--panel:#0e1628;--ink:#e8ebf1;--mut:#9aa4b2;--line:#203047;--pri:#3b82f6;--ok:#10b981;--warn:#f59e0b;--bad:#ef4444}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu}
+  header{padding:20px 16px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#0f172a,#0b1220)}
+  h1{margin:0 0 6px;font-size:20px} .mut{color:var(--mut)} .wrap{max-width:1100px;margin:0 auto}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+  select,input,button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+  button{cursor:pointer;border-color:#2a3a55}
+  .btn{background:var(--pri);border-color:transparent} .btn:hover{filter:brightness(1.05)}
+  .grid{display:grid;grid-template-columns:1fr;gap:14px;padding:14px 16px}
+  @media (min-width:900px){.grid{grid-template-columns:1fr 1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
+  canvas{width:100%;height:320px;background:#0c1424;border:1px solid var(--line);border-radius:10px}
+  table{width:100%;border-collapse:collapse;font-size:13px} th,td{padding:8px;border-top:1px solid var(--line);text-align:left}
+  .row{display:flex;gap:12px;flex-wrap:wrap} .tag{font-size:12px;padding:4px 8px;border:1px solid var(--line);border-radius:999px;color:var(--mut)}
+  .pill{padding:4px 8px;border-radius:999px}
+  .ok{background:rgba(16,185,129,.12)} .warn{background:rgba(245,158,11,.15)} .bad{background:rgba(239,68,68,.15)}
+  footer{padding:16px 16px;color:var(--mut);border-top:1px solid var(--line)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+</style>
 </head>
 <body>
-  <header>
-    <h1>LLaMA‑Energy — Hyper‑Unit Analytics (VA)</h1>
-    <p>Explore EIA electricity disposition and hyper‑unit shares. Backend proxied by Cloudflare Workers.</p>
-  </header>
-  <section class="controls">
-    <label>State:
-      <select id="state">
-        <option value="VA" selected>Virginia (VA)</option>
-        <option value="MD">Maryland (MD)</option>
-        <option value="DC">District of Columbia (DC)</option>
-        <option value="NC">North Carolina (NC)</option>
-        <option value="WV">West Virginia (WV)</option>
-      </select>
-    </label>
-    <button id="loadBtn">Load Data</button>
-  </section>
-  <section><canvas id="chartLevels" height="260"></canvas></section>
-  <section><canvas id="chartShares" height="260"></canvas></section>
-  <footer><small>Data: EIA State Electricity Profiles (via Cloudflare Worker). © LLaMA‑Energy Labs.</small></footer>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="./app.js"></script>
+<header>
+  <div class="wrap">
+    <h1>LLaMA-Energy — Hyper-Unit Analytics</h1>
+    <div class="mut">State electricity disposition, hyper-unit shares, and compliance lookups — all in one minimal page.</div>
+  </div>
+</header>
+
+<!-- Controls -->
+<div class="wrap bar">
+  <label>State
+    <select id="state">
+      <option value="VA" selected>Virginia (VA)</option>
+      <option>MD</option><option>DC</option><option>NC</option><option>WV</option><option>PA</option>
+    </select>
+  </label>
+
+  <label>Series
+    <select id="series" multiple size="4" title="Ctrl/Cmd-click to multi-select">
+      <option value="direct-use" selected>Direct Use</option>
+      <option value="facility-direct" selected>Facility Direct</option>
+      <option value="independent-power-producers" selected>Independent Power Producers</option>
+      <option value="estimated-losses" selected>Estimated Losses</option>
+      <option value="total-supply" selected>Total Supply</option>
+      <option value="total-disposition">Total Disposition</option>
+    </select>
+  </label>
+
+  <button class="btn" id="load">Load</button>
+  <button id="exportCsv">Export CSV</button>
+  <button id="copyApi">Copy API URL</button>
+  <span id="meta" class="mut"></span>
+</div>
+
+<!-- Charts + Tables -->
+<div class="wrap grid">
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <strong>Absolute Levels (MWh)</strong>
+      <span class="mut">Direct Use • Facility Direct • IPPs • Losses</span>
+    </div>
+    <canvas id="levels"></canvas>
+  </div>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <strong>Shares of Total Supply (%)</strong>
+      <span class="mut">If Total Supply present</span>
+    </div>
+    <canvas id="shares"></canvas>
+  </div>
+
+  <div class="card">
+    <strong>Latest Records</strong>
+    <div class="mut" id="summary"></div>
+    <table id="tbl"><thead></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card">
+    <strong>Regulatory Doc (FERC eLibrary → docinfo)</strong>
+    <div class="row" style="align-items:center">
+      <input id="accession" placeholder="e.g., 20110106-3009" class="mono" />
+      <button id="fetchDoc">Fetch</button>
+      <span class="mut">Returns raw docinfo HTML for deep parsing downstream</span>
+    </div>
+    <div id="docinfo" class="mut" style="margin-top:10px;max-height:300px;overflow:auto;border:1px solid var(--line);padding:10px;border-radius:10px;background:#0c1424"></div>
+  </div>
+</div>
+
+<footer class="wrap">
+  <div>Pro tips: Multi-select more series to compare. Use Export CSV for offline work. Copy API URL to integrate elsewhere.</div>
+</footer>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script>
+const $ = sel => document.querySelector(sel);
+const chartColors = ['#60a5fa','#f59e0b','#10b981','#ef4444','#a78bfa','#f472b6'];
+
+let levelsChart, sharesChart, lastPayload;
+
+/* Compose Worker API URL */
+function apiUrl() {
+  const state = $('#state').value || 'VA';
+  const series = Array.from($('#series').selectedOptions).map(o=>o.value);
+  const qs = new URLSearchParams({ state, series: series.join(',') });
+  return `/api/eia?${qs}`;
+}
+
+/* Fetch EIA via Worker */
+async function loadData() {
+  const url = apiUrl();
+  const res = await fetch(url, { headers: { 'Accept':'application/json' }});
+  if (!res.ok) throw new Error(`API ${res.status}: ${await res.text()}`);
+  const payload = await res.json();
+  lastPayload = payload;
+  render(payload);
+}
+
+/* Render charts and table */
+function render({ periods, levels, shares, meta }) {
+  // Meta
+  $('#meta').textContent = `State: ${meta?.state ?? '—'} • Records: ${meta?.records ?? '—'}`;
+
+  // Prepare Levels datasets
+  const levelKeys = Object.keys(levels || {});
+  const levelSets = levelKeys.map((k,i)=>({
+    label: k, data: (levels[k]||[]).map(n => n ?? null),
+    borderColor: chartColors[i%chartColors.length],
+    backgroundColor: chartColors[i%chartColors.length]+'66',
+    fill:false, tension:0.2, pointRadius:2
+  }));
+
+  // Draw Levels
+  if (levelsChart) levelsChart.destroy();
+  levelsChart = new Chart($('#levels'), {
+    type:'line',
+    data:{ labels: periods, datasets: levelSets },
+    options:{
+      plugins:{ legend:{ position:'bottom'} },
+      scales:{ y:{ title:{ display:true, text:'MWh'} } }
+    }
+  });
+
+  // Prepare Shares datasets
+  const shareKeys = Object.keys(shares || {});
+  const shareSets = shareKeys.map((k,i)=>({
+    label: k, data: (shares[k]||[]).map(n => Number.isFinite(n)? Number(n.toFixed(2)) : 0),
+    borderColor: chartColors[i%chartColors.length],
+    backgroundColor: chartColors[i%chartColors.length]+'33',
+    fill:true, tension:0.2, pointRadius:2
+  }));
+
+  if (sharesChart) sharesChart.destroy();
+  sharesChart = new Chart($('#shares'), {
+    type:'line',
+    data:{ labels: periods, datasets: shareSets },
+    options:{
+      plugins:{ legend:{ position:'bottom'} },
+      scales:{ y:{ title:{ display:true, text:'% of Total Supply'} } }
+    }
+  });
+
+  // Table (latest year)
+  const n = periods.length;
+  const latestIdx = n ? n-1 : -1;
+  const thead = $('#tbl thead'); const tbody = $('#tbl tbody');
+  thead.innerHTML = '<tr><th>Period</th><th>Metric</th><th>Value</th></tr>';
+  tbody.innerHTML = '';
+  if (latestIdx >= 0) {
+    const yr = periods[latestIdx];
+    const rows = [];
+    for (const k of levelKeys) rows.push([yr, k, fmt(levels[k][latestIdx])]);
+    for (const k of shareKeys) rows.push([yr, k, (shares[k][latestIdx]??0).toFixed(2)+' %']);
+    $('#summary').innerHTML = `Year <b>${yr}</b>: Direct & Facility direct track hyper-unit load; IPPs reflect merchant supply growth; Losses indicate T&D efficiency envelope.`;
+
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      r.forEach(cell => {
+        const td = document.createElement('td');
+        td.textContent = cell; tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+  } else {
+    $('#summary').textContent = 'No data.';
+  }
+}
+
+function fmt(n){ if(n==null||isNaN(n)) return '—'; return Number(n).toLocaleString() }
+
+/* Export CSV */
+function exportCsv() {
+  if (!lastPayload) return alert('Load data first.');
+  const { periods, levels, shares } = lastPayload;
+  const cols = ['period', ...Object.keys(levels||{}), ...Object.keys(shares||{})];
+  const rows = [cols.join(',')];
+  for (let i=0;i<periods.length;i++){
+    const row = [periods[i]];
+    Object.keys(levels||{}).forEach(k=> row.push(levels[k][i] ?? ''));
+    Object.keys(shares||{}).forEach(k=> row.push( (shares[k][i]??'') ));
+    rows.push(row.join(','));
+  }
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = `llama-energy_${($('#state').value||'VA')}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+/* Copy API URL */
+async function copyApi() {
+  const url = location.origin + apiUrl();
+  try { await navigator.clipboard.writeText(url); alert('API URL copied to clipboard.'); }
+  catch { prompt('Copy this URL:', url); }
+}
+
+/* FERC docinfo (raw HTML passthrough) */
+async function fetchDocinfo() {
+  const acc = ($('#accession').value || '').trim();
+  if(!/^\d{8}-\d{4}$/.test(acc)) return alert('Enter accession like 20110106-3009');
+  const u = `/api/ferc/docinfo?accession=${encodeURIComponent(acc)}`;
+  const r = await fetch(u); if(!r.ok) return $('#docinfo').textContent = `Error ${r.status}`;
+  const html = await r.text();
+  // Show minimal preview as plain text (avoid executing remote HTML)
+  $('#docinfo').textContent = html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').slice(0, 10000);
+}
+
+/* Wire up */
+$('#load').addEventListener('click', loadData);
+$('#exportCsv').addEventListener('click', exportCsv);
+$('#copyApi').addEventListener('click', copyApi);
+$('#fetchDoc').addEventListener('click', fetchDocinfo);
+
+/* Auto-load on first paint */
+window.addEventListener('load', loadData);
+</script>
 </body>
 </html>
