@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LLaMA-Energy • Chat & Compliance Console</title>
+<style>
+:root{--bg:#0b1220;--panel:#0f172a;--ink:#e8ebf1;--mut:#9aa4b2;--line:#1e2a3e;--pri:#3b82f6;--ok:#10b981;--warn:#f59e0b;--bad:#ef4444}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
+header{padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101a2e,#0b1220)}
+.wrap{max-width:1200px;margin:0 auto}
+h1{margin:0 0 4px;font-size:18px}.mut{color:var(--mut)}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+main{max-width:1200px;margin:14px auto;padding:0 20px;display:grid;grid-template-columns:320px 1fr;gap:14px}
+@media (max-width:980px){main{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
+.hd{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.bd{padding:12px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kv3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+input,select,textarea,button{background:#0b1426;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}
+button{cursor:pointer}.btn{background:var(--pri);border-color:transparent}.ghost{background:#16233f;border-color:#213455}
+.small{font-size:12px}
+.badge{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
+.chatlog{height:62vh;min-height:380px;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#0b1426;border:1px solid var(--line);border-radius:10px;padding:10px}
+.msg{max-width:84%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);white-space:pre-wrap}
+.u{align-self:flex-end;background:#162443}.a{align-self:flex-start;background:#121f33}
+.hl{background:rgba(59,130,246,.15);padding:0 4px;border-radius:4px}
+.table{width:100%;border-collapse:collapse;font-size:13px}
+.table th,.table td{padding:6px 8px;border-top:1px solid var(--line);text-align:left}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>LLaMA-Energy — Chat & Compliance Console</h1>
+    <div class="mut">Conversational reasoning with tariff/compliance context for hyper-unit strategy.</div>
+  </div>
+</header>
+
+<main>
+  <!-- LEFT: Controls / Routines / Diagnostics -->
+  <section class="card">
+    <div class="hd"><strong>Controls</strong><span id="status" class="mut small">idle</span></div>
+    <div class="bd">
+      <div class="kv">
+        <label>State
+          <select id="state">
+            <option value="VA" selected>VA</option><option>MD</option><option>DC</option><option>NC</option><option>WV</option><option>PA</option>
+          </select>
+        </label>
+        <label>Temperature
+          <input id="temp" type="range" min="0" max="1" step="0.05" value="0.2" oninput="document.getElementById('tval').textContent=this.value">
+        </label>
+      </div>
+      <div class="small mut" style="margin-top:-6px;margin-bottom:6px">T=<span id="tval">0.2</span></div>
+      <div class="kv3">
+        <label>Persona
+          <select id="persona">
+            <option value="hyper-unit" selected>Hyper-unit</option>
+            <option value="utility">Utility</option>
+            <option value="regulator">Regulator</option>
+          </select>
+        </label>
+        <label>Jurisdiction
+          <select id="jurisdiction">
+            <option value="FERC" selected>FERC</option>
+            <option value="State">State</option>
+          </select>
+        </label>
+        <label>Region
+          <select id="region">
+            <option value="PJM-VA" selected>PJM-VA</option>
+            <option>PJM-MD</option><option>PJM-PA</option><option>SERC-NC</option>
+          </select>
+        </label>
+      </div>
+      <div class="kv">
+        <label>Deadline Window (days)
+          <input id="deadline_days" type="number" min="0" value="180" class="mono">
+        </label>
+        <label>
+          <span class="row" style="justify-content:space-between">
+            <span>Obligation Focus</span>
+            <input id="obligation_only" type="checkbox" checked>
+          </span>
+        </label>
+      </div>
+      <label>System prompt (optional)
+        <textarea id="system" rows="3" placeholder="You are an energy analyst. Cite EIA series, eTariff records, FERC docket/accession numbers. Avoid unsafe field instructions."></textarea>
+      </label>
+      <label class="small" style="display:block;margin-top:8px">Chat API
+        <input id="api" value="https://llama-energy.aristocles24.workers.dev/api/rag">
+      </label>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+
+      <div class="small">Pre-built routines</div>
+      <div class="row" style="margin-top:6px">
+        <button class="ghost small" data-routine="snapshot">Hyper-unit Snapshot</button>
+        <button class="ghost small" data-routine="tariff">Tariff Drivers</button>
+        <button class="ghost small" data-routine="compliance">Compliance Sweep</button>
+        <button class="ghost small" data-routine="docinfo">FERC Docinfo Parse</button>
+      </div>
+
+      <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+      <div class="small row" style="justify-content:space-between;align-items:center">
+        <strong>Live diagnostics</strong>
+        <button id="runDiag" class="small">Run</button>
+      </div>
+      <div id="diag" class="mut small" style="margin-top:6px;line-height:1.6">
+        <div>API Base: <span class="mono" id="apiBaseTxt">https://llama-energy.aristocles24.workers.dev</span></div>
+        <div>Health: <span id="dHealth" class="badge">—</span></div>
+        <div>EIA test: <span id="dEia" class="badge">—</span></div>
+        <div>Latency: <span id="dLat" class="badge">—</span></div>
+        <div>CORS: <span id="dCors" class="badge">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RIGHT: Chat -->
+  <section class="card">
+    <div class="hd"><strong>Chat</strong><button id="clear" class="small">Clear</button></div>
+    <div class="bd">
+      <div id="chatlog" class="chatlog" aria-live="polite"></div>
+      <div class="row" style="margin-top:8px">
+        <textarea id="prompt" rows="3" style="flex:1" placeholder="Ask: Compare VA direct-use vs IPPs since 2018 with % of supply and grid risks…"></textarea>
+        <button id="send" class="btn">Send</button>
+      </div>
+      <div class="small mut" style="margin-top:6px">Tip: ⌘/Ctrl+Enter to send • Shift+Enter = newline</div>
+      <div class="small mut" style="margin-top:8px">Server accepts SSE/NDJSON or JSON. Payload includes persona, jurisdiction, region, deadline window, and obligation focus.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+/* ===== CONFIG ===== */
+const API_BASE = "https://llama-energy.aristocles24.workers.dev"; // your Worker
+document.getElementById('apiBaseTxt').textContent = API_BASE;
+
+/* ===== UTIL ===== */
+const $ = id => document.getElementById(id);
+const chatlog = $('chatlog'); const statusEl = $('status');
+function push(role, text, sources){
+  const b = document.createElement('div'); b.className = 'msg ' + (role==='user'?'u':'a');
+  const body = document.createElement('div'); body.innerText = text || ''; b.appendChild(body);
+  if (sources && sources.length){
+    const s = document.createElement('div'); s.className='small mut';
+    s.innerText = 'Sources: ' + sources.map(x=>x.accession||x.docket||x.url||x.id).join(', ');
+    b.appendChild(s);
+  }
+  chatlog.appendChild(b); chatlog.scrollTop = chatlog.scrollHeight;
+}
+function qs(o){return new URLSearchParams(o).toString()}
+function now(){return performance.now()}
+function badge(el, txt, cls){ el.textContent = txt; el.className = 'badge ' + (cls||''); }
+
+/* ===== PAYLOAD ===== */
+function baseContext(){
+  return {
+    persona: $('persona').value || 'hyper-unit',
+    jurisdiction: $('jurisdiction').value || 'FERC',
+    region: $('region').value || 'PJM-VA',
+    deadline_days: parseInt($('deadline_days').value || '180', 10),
+    obligation_only: $('obligation_only').checked
+  };
+}
+function makePayload(question){
+  return {
+    question,
+    state: $('state').value || 'VA',
+    temperature: parseFloat($('temp').value || '0.2'),
+    system: $('system').value || undefined,
+    context: baseContext()
+  };
+}
+
+/* ===== CHAT SEND (SSE/NDJSON/JSON) ===== */
+let liveMsg=null;
+function renderStream(text){
+  if(!liveMsg){ liveMsg = document.createElement('div'); liveMsg.className='msg a'; chatlog.appendChild(liveMsg); }
+  liveMsg.innerText = text; chatlog.scrollTop = chatlog.scrollHeight;
+}
+function finalize(text, sources){ if(liveMsg){ liveMsg=null; } push('assistant', text, sources); statusEl.textContent='idle'; }
+
+async function send(){
+  const url = document.getElementById('api').value.trim(); // e.g. https://llama-energy.../api/rag
+  const res = await fetch(url, {
+    method:'POST',
+    headers:{ 'content-type':'application/json' },
+    body: JSON.stringify(makePayload(question))
+  });
+
+  const ctype = (res.headers.get('content-type') || '').toLowerCase();
+
+  // SSE
+  if (ctype.includes('text/event-stream')) { /* ... stream reader as you already had ... */ return; }
+
+  // NDJSON
+  if (ctype.includes('application/x-ndjson')) { /* ... ndjson loop ... */ return; }
+
+  // JSON
+  if (ctype.includes('application/json')) {
+    const j = await res.json();
+    finalize(j.answer || j.output || JSON.stringify(j, null, 2), j.sources || []);
+    return;
+  }
+
+  // Anything else (likely HTML error page)
+  const txt = await res.text();
+  finalize(`Non-JSON response (${res.status}). Check CORS/URL.\n\nPreview:\n${txt.slice(0,400)}`, []);
+}
+  // NDJSON
+    if (ctype.includes('application/x-ndjson')){
+      const r = res.body.getReader(); const dec = new TextDecoder();
+      while(true){ const {value, done} = await r.read(); if(done) break;
+        dec.decode(value,{stream:true}).split('\n').filter(Boolean).forEach(L=>{
+          try{ const m = JSON.parse(L); if(m.delta){ answer += m.delta; renderStream(answer); } if(m.sources) sources=m.sources; }catch{}
+        });
+      }
+      return finalize(answer, sources);
+    }
+    // JSON
+    const j = await res.json(); answer = j.answer || j.output || JSON.stringify(j,null,2); sources = j.sources || [];
+    return finalize(answer, sources);
+  }catch(e){
+    return finalize("Unable to reach chat API. Check CORS/URL.\n"+e.message, []);
+  }
+}
+
+/* ===== ROUTINES ===== */
+const routines = {
+  snapshot: () => `Provide a hyper-unit snapshot for ${$('state').value}. Summarize Direct Use vs IPPs since 2018, % of total supply, losses trend, and cite EIA series names.`,
+  tariff: () => `List tariff cost drivers for a ${$('region').value} data center (assume 25 MW, TOU). Estimate demand vs energy share and 3 actions to reduce demand charges; cite any eTariff items if available.`,
+  compliance: () => `Compliance sweep for ${$('region').value}: list top proceedings/dockets affecting transmission costs, interconnection, deliverability, or loss factors within ${$('deadline_days').value} days. Prioritize obligations; cite docket/accession.`,
+  docinfo: () => `Parse FERC docinfo accession 20110106-3009. Extract docket, doc type, obligations/deadlines, and give a one-paragraph impact for ${$('persona').value} in ${$('region').value}.`
+};
+document.querySelectorAll('button[data-routine]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ $('prompt').value = routines[btn.dataset.routine](); $('prompt').focus(); });
+});
+
+/* ===== DIAGNOSTICS ===== */
+async function runDiagnostics(){
+  const dHealth = $('dHealth'), dEia = $('dEia'), dLat = $('dLat'), dCors = $('dCors');
+  badge(dHealth,'…'); badge(dEia,'…'); badge(dLat,'…'); badge(dCors,'…');
+
+  // Health
+  let t0 = now(); try{
+    const r = await fetch(API_BASE + '/api/status', {mode:'cors'}); const ok = r.ok;
+    const j = ok ? await r.json() : {}; const ms = Math.max(1, Math.round(now()-t0));
+    badge(dHealth, ok?'ok':'fail', ok?'ok':'bad'); badge(dLat, ms+' ms', ok?'ok':'bad');
+    badge(dCors, r.headers.get('access-control-allow-origin') ? 'enabled' : 'missing', r.headers.get('access-control-allow-origin') ? 'ok' : 'warn');
+  }catch{ badge(dHealth,'fail','bad'); }
+
+  // EIA sample
+  try{
+    const url = API_BASE + '/api/eia?' + qs({state:'VA',series:'direct-use,total-supply'});
+    const r = await fetch(url,{mode:'cors'}); if(!r.ok) throw new Error();
+    const j = await r.json(); const has = (j?.periods?.length>0) && j?.levels?.['Direct Use'];
+    badge(dEia, has?'ok':'empty', has?'ok':'warn');
+  }catch{ badge(dEia,'fail','bad'); }
+}
+$('runDiag').addEventListener('click', runDiagnostics);
+
+/* ===== WIRING ===== */
+$('send').addEventListener('click', send);
+$('prompt').addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey) && e.key==='Enter'){ e.preventDefault(); send(); }});
+$('clear').addEventListener('click', ()=> chatlog.innerHTML='' );
+
+/* ===== WELCOME ===== */
+push('assistant', "Welcome. Use the controls to set persona/jurisdiction/region and run a routine, or ask free-form questions.\nExamples:\n• “Compare VA direct-use vs IPPs since 2018 and cite EIA.”\n• “Compliance sweep for PJM-VA, obligations next 180 days.”\n• “Parse FERC docinfo 20110106-3009 with impacts.”");
+runDiagnostics();
+</script>
+</body>
+</html>
