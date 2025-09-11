@@ -2,186 +2,76 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LLaMA-Energy • Chat</title>
+<title>LLaMA-Energy Chat</title>
 <style>
-:root{--bg:#0b1220;--panel:#0f172a;--ink:#e8ebf1;--mut:#9aa4b2;--line:#1e2a3e;--pri:#3b82f6}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
-.wrap{max-width:1100px;margin:0 auto;padding:18px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-input,select,textarea,button{background:#0b1426;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}
-button{cursor:pointer;background:var(--pri);border-color:transparent}
-.small{font-size:12px}.mut{color:var(--mut)}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-.chatlog{height:60vh;min-height:340px;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#0b1426;border:1px solid var(--line);border-radius:10px;padding:10px}
-.msg{max-width:84%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);white-space:pre-wrap}
-.u{align-self:flex-end;background:#162443}.a{align-self:flex-start;background:#121f33}
+  :root{--bg:#0b1220;--panel:#0f172a;--ink:#e8ebf1;--mut:#9aa4b2;--accent:#2563eb}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,Roboto}
+  header{padding:12px 16px;background:#101b2d;font-weight:600} .mut{color:var(--mut)}
+  #chat{height:64vh;min-height:320px;overflow:auto;padding:12px 16px}
+  .msg{max-width:80%;padding:10px 12px;border-radius:10px;margin:8px 0;white-space:pre-wrap;line-height:1.45}
+  .u{margin-left:auto;background:#14325f} .a{margin-right:auto;background:#132036}
+  #bar{display:flex;gap:8px;padding:10px 12px;background:#101b2d;position:sticky;bottom:0}
+  select,input,button{border:none;border-radius:8px}
+  select{background:#132036;color:var(--ink);padding:8px}
+  #q{flex:1;padding:10px;background:#0b1426;color:var(--ink)}
+  button{padding:10px 14px;background:var(--accent);color:#fff;cursor:pointer}
+  #status{padding:4px 16px;font-size:12px} .src{font-size:12px;color:var(--mut);margin-top:4px}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>LLaMA-Energy — Conversational Console</h1>
-  <p class="mut">Streams when available; JSON fallback otherwise. The Chat API is pre-set to your Worker.</p>
+<header>⚡ LLaMA-Energy Chat <span class="mut">• EIA-grounded / FERC-aware</span></header>
 
-  <div class="card" style="margin-bottom:12px">
-    <div class="row">
-      <label>State
-        <select id="state">
-          <option value="VA" selected>VA</option><option>MD</option><option>DC</option><option>NC</option><option>WV</option><option>PA</option>
-        </select>
-      </label>
-      <label>Persona
-        <select id="persona">
-          <option value="hyper-unit" selected>Hyper-unit</option>
-          <option value="utility">Utility</option>
-          <option value="regulator">Regulator</option>
-        </select>
-      </label>
-      <label>Region
-        <select id="region">
-          <option value="PJM-VA" selected>PJM-VA</option>
-          <option>PJM-MD</option><option>PJM-PA</option><option>SERC-NC</option>
-        </select>
-      </label>
-      <label>Temperature
-        <input id="temp" type="range" min="0" max="1" step="0.05" value="0.2" oninput="document.getElementById('tval').textContent=this.value">
-      </label>
-      <span class="mut small">T=<span id="tval">0.2</span></span>
-    </div>
-    <label style="display:block;margin-top:8px">System prompt (optional)
-      <textarea id="system" rows="2" placeholder="You are an energy analyst. Cite EIA series and FERC docket/accession when used. Avoid unsafe field instructions."></textarea>
-    </label>
-    <div class="row" style="margin-top:8px">
-      <label class="small">Chat API (pre-set)
-        <input id="api" class="mono" style="min-width:520px" readonly
-               value="https://llama-energy.aristocles24.workers.dev/api/rag">
-      </label>
-      <span id="status" class="mut small">idle</span>
-    </div>
-  </div>
+<div id="chat" aria-live="polite"></div>
+<div id="status" class="mut">Ready.</div>
 
-  <div class="card">
-    <div id="chatlog" class="chatlog" aria-live="polite"></div>
-    <div class="row" style="margin-top:8px">
-      <textarea id="prompt" rows="3" style="flex:1" placeholder="Ask: Compare VA direct-use vs IPPs since 2018; % of supply (if available); cite EIA & FERC…"></textarea>
-      <button id="send">Send</button>
-    </div>
-    <div class="mut small" style="margin-top:6px">Tip: ⌘/Ctrl+Enter to send • Shift+Enter = newline</div>
-  </div>
+<div id="bar">
+  <select id="state" title="State">
+    <option value="VA" selected>VA</option><option>CA</option><option>TX</option><option>NY</option>
+    <option>IL</option><option>WA</option><option>FL</option><option>NC</option><option>MD</option>
+  </select>
+  <input id="q" placeholder="Ask about disposition, IPPs, losses, % of supply, or cite FERC dockets…" />
+  <button id="send">Send</button>
 </div>
 
 <script>
-/* ---------- helpers ---------- */
-const $ = id => document.getElementById(id);
-const chatlog = $('chatlog'); const statusEl = $('status');
-function push(role, text, sources){
-  const b = document.createElement('div'); b.className = 'msg ' + (role==='user'?'u':'a');
-  const body = document.createElement('div'); body.innerText = text || ''; b.appendChild(body);
-  if (Array.isArray(sources) && sources.length){
-    const s = document.createElement('div'); s.className='small mut';
-    s.innerText = 'Sources: ' + sources.map(x=>x.accession||x.docket||x.series||x.url||x.id).join(', ');
-    b.appendChild(s);
-  }
-  chatlog.appendChild(b); chatlog.scrollTop = chatlog.scrollHeight;
-}
-function baseContext(){
-  return {
-    persona: $('persona').value || 'hyper-unit',
-    region: $('region').value || 'PJM-VA'
-  };
-}
-function makePayload(question, {stream=false}={}){
-  return {
-    question,
-    state: $('state').value || 'VA',
-    temperature: parseFloat($('temp').value || '0.2'),
-    system: $('system').value || undefined,
-    context: baseContext(),
-    stream
-  };
+const API = "https://llama-energy.aristocles24.workers.dev/api/rag";
+const chat = document.getElementById('chat'), q = document.getElementById('q');
+const statusEl = document.getElementById('status'), stateSel = document.getElementById('state');
+
+function add(role, text, sources){
+  const b=document.createElement('div'); b.className='msg '+(role==='user'?'u':'a'); b.textContent=text||''; chat.appendChild(b);
+  if(Array.isArray(sources)&&sources.length){ const s=document.createElement('div'); s.className='src'; s.textContent='Sources: '+sources.map(x=>x.accession||x.series||x.url||x.source).join(', '); chat.appendChild(s); }
+  chat.scrollTop=chat.scrollHeight;
 }
 
-/* ---------- streaming UI ---------- */
-let liveMsg=null;
-function renderStream(text){
-  if(!liveMsg){ liveMsg = document.createElement('div'); liveMsg.className='msg a'; chatlog.appendChild(liveMsg); }
-  liveMsg.innerText = text; chatlog.scrollTop = chatlog.scrollHeight;
-}
-function finalize(text, sources){ if(liveMsg){ liveMsg=null; } push('assistant', text, sources); statusEl.textContent='idle'; }
-
-/* ---------- send (BUG FIX: define apiUrl before fetch) ---------- */
-async function send(payloadOverride){
-  const q = $('prompt').value.trim();
-  if(!q && !payloadOverride) return;
-  const question = payloadOverride?.question || q;
-  const stream = !!payloadOverride?.stream;
-  if(!payloadOverride){ $('prompt').value = ''; }
-  push('user', question); statusEl.textContent='thinking…';
-
-  // FIX: use a defined variable
-  const apiUrl = ($('api').value || '').trim();
-  let answer = '', sources = [];
-
+async function send(){
+  const text=q.value.trim(); if(!text) return;
+  const state=stateSel.value;
+  add('user', text); q.value=''; statusEl.textContent='⏳ querying…';
   try{
-    const res = await fetch(apiUrl, {
-      method:'POST',
-      headers:{ 'content-type':'application/json' },
-      body: JSON.stringify(makePayload(question, {stream}))
-    });
-    const ctype = (res.headers.get('content-type') || '').toLowerCase();
-
-    // SSE
-    if (ctype.includes('text/event-stream')) {
-      const reader = res.body.getReader(); const dec = new TextDecoder();
-      while(true){ const {value, done} = await reader.read(); if(done) break;
-        dec.decode(value,{stream:true}).split('\n').forEach(line=>{
-          if(line.startsWith('data:')){ try{
-            const m = JSON.parse(line.slice(5).trim());
-            if (m.delta) { answer += m.delta; renderStream(answer); }
-            if (m.sources) sources = m.sources;
-          }catch{} }
-        });
-      }
-      return finalize(answer, sources);
+    const res=await fetch(API,{method:'POST',headers:{'content-type':'application/json'},
+      body:JSON.stringify({question:text,state,context:{persona:'hyper-unit',region:`PJM-${state}`}})});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const ct=(res.headers.get('content-type')||'').toLowerCase();
+    if(ct.includes('application/json')){
+      const j=await res.json();
+      add('assistant', j.answer || '[no answer]', j.sources||[]);
+      statusEl.textContent='✔ ' + new Date().toLocaleTimeString();
+    }else{
+      const t=await res.text();
+      add('assistant', `Non-JSON (${res.status}). Preview:\n`+t.slice(0,400));
+      statusEl.textContent='⚠ Non-JSON';
     }
-
-    // NDJSON
-    if (ctype.includes('application/x-ndjson')) {
-      const reader = res.body.getReader(); const dec = new TextDecoder();
-      while(true){ const {value, done} = await reader.read(); if(done) break;
-        dec.decode(value,{stream:true}).split('\n').filter(Boolean).forEach(L=>{
-          try{ const m = JSON.parse(L);
-            if(m.delta){ answer += m.delta; renderStream(answer); }
-            if(m.sources) sources=m.sources;
-          }catch{}
-        });
-      }
-      return finalize(answer, sources);
-    }
-
-    // JSON
-    if (ctype.includes('application/json')) {
-      const j = await res.json();
-      answer = j.answer || j.output || JSON.stringify(j,null,2);
-      sources = j.sources || [];
-      return finalize(answer, sources);
-    }
-
-    // Anything else (likely HTML error)
-    const txt = await res.text();
-    return finalize(`Non-JSON response (${res.status}). Check CORS/URL.\n\nPreview:\n${txt.slice(0,400)}`, []);
   }catch(e){
-    return finalize("Unable to reach chat API. Check CORS/URL.\n"+e.message, []);
+    add('assistant','Error: '+e.message); statusEl.textContent='⚠ '+e.message;
   }
 }
 
-/* ---------- wiring ---------- */
-$('send').addEventListener('click', ()=>send());
-$('prompt').addEventListener('keydown', e=>{
-  if((e.metaKey||e.ctrlKey) && e.key==='Enter'){ e.preventDefault(); send(); }
-});
+document.getElementById('send').onclick=send;
+q.addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
 
-/* ---------- welcome ---------- */
-push('assistant', "Ready. Ask a question or paste a routine.\nExamples:\n• Compare VA direct-use vs IPPs since 2018; add % of supply (if available) and cite EIA.\n• Compliance sweep for PJM-VA: near-term obligations with dockets/accessions.");
+// welcome
+add('assistant','Ask for a snapshot (latest year, YoY, and % of supply) or request docket-aware context. Try: "VA IPPs vs direct-use since 2018; cite EIA."');
 </script>
 </body>
 </html>
