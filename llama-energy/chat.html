@@ -2,165 +2,77 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LLaMA-Energy • Chat & Console</title>
+<title>LLaMA-Energy • Chat</title>
 <style>
-:root{--bg:#0b1220;--panel:#0f172a;--ink:#e8ebf1;--mut:#9aa4b2;--line:#1e2a3e;--pri:#3b82f6;--ok:#10b981;--warn:#f59e0b;--bad:#ef4444}
+:root{--bg:#0b1220;--panel:#0f172a;--ink:#e8ebf1;--mut:#9aa4b2;--line:#1e2a3e;--pri:#3b82f6}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto}
-header{padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#101a2e,#0b1220)}
-.wrap{max-width:1200px;margin:0 auto}
-h1{margin:0 0 4px;font-size:18px}.mut{color:var(--mut)}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
-main{max-width:1200px;margin:14px auto;padding:0 20px;display:grid;grid-template-columns:340px 1fr;gap:14px}
-@media (max-width:980px){main{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px}
-.hd{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
-.bd{padding:12px}
+.wrap{max-width:1100px;margin:0 auto;padding:18px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.kv3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 input,select,textarea,button{background:#0b1426;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:9px}
-button{cursor:pointer}.btn{background:var(--pri);border-color:transparent}.ghost{background:#16233f;border-color:#213455}
-.small{font-size:12px}
-.badge{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
-.ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}
-.chatlog{height:64vh;min-height:380px;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#0b1426;border:1px solid var(--line);border-radius:10px;padding:10px}
+button{cursor:pointer;background:var(--pri);border-color:transparent}
+.small{font-size:12px}.mut{color:var(--mut)}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.chatlog{height:60vh;min-height:340px;overflow:auto;display:flex;flex-direction:column;gap:10px;background:#0b1426;border:1px solid var(--line);border-radius:10px;padding:10px}
 .msg{max-width:84%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);white-space:pre-wrap}
 .u{align-self:flex-end;background:#162443}.a{align-self:flex-start;background:#121f33}
-pre{margin:0;white-space:pre-wrap}
-a.link{color:#93c5fd;text-decoration:none}
-hr.sep{border:0;border-top:1px solid var(--line);margin:10px 0}
-.table{width:100%;border-collapse:collapse;font-size:13px}
-.table th,.table td{padding:6px 8px;border-top:1px solid var(--line);text-align:left}
 </style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <h1>LLaMA-Energy — Conversational Console</h1>
-    <div class="mut">Tariff/compliance-aware chat for hyperscale strategy. Streams when available; JSON fallback otherwise.</div>
+<div class="wrap">
+  <h1>LLaMA-Energy — Conversational Console</h1>
+  <p class="mut">Streams when available; JSON fallback otherwise. The Chat API is pre-set to your Worker.</p>
+
+  <div class="card" style="margin-bottom:12px">
+    <div class="row">
+      <label>State
+        <select id="state">
+          <option value="VA" selected>VA</option><option>MD</option><option>DC</option><option>NC</option><option>WV</option><option>PA</option>
+        </select>
+      </label>
+      <label>Persona
+        <select id="persona">
+          <option value="hyper-unit" selected>Hyper-unit</option>
+          <option value="utility">Utility</option>
+          <option value="regulator">Regulator</option>
+        </select>
+      </label>
+      <label>Region
+        <select id="region">
+          <option value="PJM-VA" selected>PJM-VA</option>
+          <option>PJM-MD</option><option>PJM-PA</option><option>SERC-NC</option>
+        </select>
+      </label>
+      <label>Temperature
+        <input id="temp" type="range" min="0" max="1" step="0.05" value="0.2" oninput="document.getElementById('tval').textContent=this.value">
+      </label>
+      <span class="mut small">T=<span id="tval">0.2</span></span>
+    </div>
+    <label style="display:block;margin-top:8px">System prompt (optional)
+      <textarea id="system" rows="2" placeholder="You are an energy analyst. Cite EIA series and FERC docket/accession when used. Avoid unsafe field instructions."></textarea>
+    </label>
+    <div class="row" style="margin-top:8px">
+      <label class="small">Chat API (pre-set)
+        <input id="api" class="mono" style="min-width:520px" readonly
+               value="https://llama-energy.aristocles24.workers.dev/api/rag">
+      </label>
+      <span id="status" class="mut small">idle</span>
+    </div>
   </div>
-</header>
 
-<main>
-  <!-- LEFT: Controls / Routines / Diagnostics / EIA Peek -->
-  <section class="card">
-    <div class="hd"><strong>Controls</strong><span id="status" class="mut small">idle</span></div>
-    <div class="bd">
-      <div class="kv">
-        <label>State
-          <select id="state">
-            <option value="VA" selected>VA</option><option>MD</option><option>DC</option>
-            <option>NC</option><option>WV</option><option>PA</option><option>DE</option>
-          </select>
-        </label>
-        <label>Temperature
-          <input id="temp" type="range" min="0" max="1" step="0.05" value="0.2" oninput="document.getElementById('tval').textContent=this.value">
-        </label>
-      </div>
-      <div class="small mut" style="margin-top:-6px;margin-bottom:6px">T=<span id="tval">0.2</span></div>
-      <div class="kv3">
-        <label>Persona
-          <select id="persona">
-            <option value="hyper-unit" selected>Hyper-unit</option>
-            <option value="utility">Utility</option>
-            <option value="regulator">Regulator</option>
-          </select>
-        </label>
-        <label>Jurisdiction
-          <select id="jurisdiction">
-            <option value="FERC" selected>FERC</option>
-            <option value="State">State</option>
-          </select>
-        </label>
-        <label>Region
-          <select id="region">
-            <option value="PJM-VA" selected>PJM-VA</option>
-            <option>PJM-MD</option><option>PJM-PA</option><option>SERC-NC</option>
-          </select>
-        </label>
-      </div>
-      <div class="kv">
-        <label>Deadline Window (days)
-          <input id="deadline_days" type="number" min="0" value="180" class="mono">
-        </label>
-        <label>
-          <span class="row" style="justify-content:space-between">
-            <span>Obligations only</span>
-            <input id="obligation_only" type="checkbox" checked>
-          </span>
-        </label>
-      </div>
-      <label>System prompt (optional)
-        <textarea id="system" rows="3" placeholder="You are an energy analyst. Cite EIA series and FERC docket/accession when used. Avoid unsafe field instructions."></textarea>
-      </label>
-      <label class="small" style="display:block;margin-top:8px">Chat API
-        <input id="api" value="https://llama-energy.aristocles24.workers.dev/api/rag">
-      </label>
-
-      <hr class="sep">
-
-      <div class="small">Prebuilt routines</div>
-      <div class="row" style="margin-top:6px">
-        <button class="ghost small" data-routine="snapshot">Hyper-unit Snapshot</button>
-        <button class="ghost small" data-routine="tariff">Tariff Drivers</button>
-        <button class="ghost small" data-routine="compliance">Compliance Sweep</button>
-        <button class="ghost small" data-routine="docinfo">FERC Docinfo Parse</button>
-        <button class="ghost small" data-routine="sse">Test SSE</button>
-      </div>
-
-      <hr class="sep">
-      <div class="small row" style="justify-content:space-between;align-items:center">
-        <strong>Live diagnostics</strong>
-        <button id="runDiag" class="small">Run</button>
-      </div>
-      <div id="diag" class="mut small" style="margin-top:6px;line-height:1.6">
-        <div>API Base: <span class="mono" id="apiBaseTxt">—</span></div>
-        <div>Health: <span id="dHealth" class="badge">—</span></div>
-        <div>EIA test: <span id="dEia" class="badge">—</span></div>
-        <div>Latency: <span id="dLat" class="badge">—</span></div>
-        <div>CORS: <span id="dCors" class="badge">—</span></div>
-      </div>
-
-      <hr class="sep">
-      <div class="small row" style="justify-content:space-between;align-items:center">
-        <strong>EIA peek</strong>
-        <button id="peekEia" class="small">Refresh</button>
-      </div>
-      <table id="peekTable" class="table" aria-live="polite">
-        <thead><tr><th>Metric</th><th>Latest</th><th class="mut">Note</th></tr></thead>
-        <tbody id="peekBody"><tr><td colspan="3" class="mut">No data yet.</td></tr></tbody>
-      </table>
+  <div class="card">
+    <div id="chatlog" class="chatlog" aria-live="polite"></div>
+    <div class="row" style="margin-top:8px">
+      <textarea id="prompt" rows="3" style="flex:1" placeholder="Ask: Compare VA direct-use vs IPPs since 2018; % of supply (if available); cite EIA & FERC…"></textarea>
+      <button id="send">Send</button>
     </div>
-  </section>
-
-  <!-- RIGHT: Chat -->
-  <section class="card">
-    <div class="hd"><strong>Chat</strong>
-      <div class="row">
-        <button id="copy" class="small ghost">Copy</button>
-        <button id="clear" class="small">Clear</button>
-      </div>
-    </div>
-    <div class="bd">
-      <div id="chatlog" class="chatlog" aria-live="polite"></div>
-      <div class="row" style="margin-top:8px">
-        <textarea id="prompt" rows="3" style="flex:1" placeholder="Ask: Compare VA direct-use vs IPPs since 2018; % of supply (if available); cite EIA & FERC…"></textarea>
-        <button id="send" class="btn">Send</button>
-      </div>
-      <div class="small mut" style="margin-top:6px">Tip: ⌘/Ctrl+Enter to send • Shift+Enter = newline</div>
-      <div class="small mut" style="margin-top:8px">Supports <code>SSE</code> / <code>NDJSON</code> streaming, or plain <code>JSON</code>.</div>
-    </div>
-  </section>
-</main>
+    <div class="mut small" style="margin-top:6px">Tip: ⌘/Ctrl+Enter to send • Shift+Enter = newline</div>
+  </div>
+</div>
 
 <script>
-/* ===== Defaults ===== */
-const DEFAULT_BASE = "https://llama-energy.aristocles24.workers.dev";
-document.getElementById('apiBaseTxt').textContent = DEFAULT_BASE;
-
-/* ===== Helpers ===== */
+/* ---------- helpers ---------- */
 const $ = id => document.getElementById(id);
 const chatlog = $('chatlog'); const statusEl = $('status');
-
 function push(role, text, sources){
   const b = document.createElement('div'); b.className = 'msg ' + (role==='user'?'u':'a');
   const body = document.createElement('div'); body.innerText = text || ''; b.appendChild(body);
@@ -171,15 +83,10 @@ function push(role, text, sources){
   }
   chatlog.appendChild(b); chatlog.scrollTop = chatlog.scrollHeight;
 }
-function now(){return performance.now()}
-function badge(el, txt, cls){ el.textContent = txt; el.className = 'badge ' + (cls||''); }
 function baseContext(){
   return {
     persona: $('persona').value || 'hyper-unit',
-    jurisdiction: $('jurisdiction').value || 'FERC',
-    region: $('region').value || 'PJM-VA',
-    deadline_days: parseInt($('deadline_days').value || '180', 10),
-    obligation_only: $('obligation_only').checked
+    region: $('region').value || 'PJM-VA'
   };
 }
 function makePayload(question, {stream=false}={}){
@@ -193,7 +100,7 @@ function makePayload(question, {stream=false}={}){
   };
 }
 
-/* ===== Chat send with SSE/NDJSON/JSON handling ===== */
+/* ---------- streaming UI ---------- */
 let liveMsg=null;
 function renderStream(text){
   if(!liveMsg){ liveMsg = document.createElement('div'); liveMsg.className='msg a'; chatlog.appendChild(liveMsg); }
@@ -201,6 +108,7 @@ function renderStream(text){
 }
 function finalize(text, sources){ if(liveMsg){ liveMsg=null; } push('assistant', text, sources); statusEl.textContent='idle'; }
 
+/* ---------- send (BUG FIX: define apiUrl before fetch) ---------- */
 async function send(payloadOverride){
   const q = $('prompt').value.trim();
   if(!q && !payloadOverride) return;
@@ -209,13 +117,14 @@ async function send(payloadOverride){
   if(!payloadOverride){ $('prompt').value = ''; }
   push('user', question); statusEl.textContent='thinking…';
 
-  const url = ($('api').value || (DEFAULT_BASE + '/api/rag')).trim();
+  // FIX: use a defined variable
+  const apiUrl = ($('api').value || '').trim();
   let answer = '', sources = [];
 
   try{
-    const res = await fetch(url, {
+    const res = await fetch(apiUrl, {
       method:'POST',
-      headers:{'content-type':'application/json'},
+      headers:{ 'content-type':'application/json' },
       body: JSON.stringify(makePayload(question, {stream}))
     });
     const ctype = (res.headers.get('content-type') || '').toLowerCase();
@@ -265,96 +174,14 @@ async function send(payloadOverride){
   }
 }
 
-/* ===== Routines ===== */
-const routines = {
-  snapshot: () => `Provide a hyper-unit snapshot for ${$('state').value}. Compare Direct Use vs IPPs since 2018, compute % of total supply (if total-supply available), discuss losses, and cite EIA series.`,
-  tariff: () => `List tariff cost drivers for a ${$('region').value} data center (assume 25 MW, TOU). Estimate energy vs demand share and give 3 actions to reduce demand charges; cite eTariff if used.`,
-  compliance: () => `Compliance sweep for ${$('region').value}: list top proceedings/dockets affecting transmission costs, interconnection, deliverability, or loss factors within ${$('deadline_days').value} days. Prioritize obligations; cite docket/accession.`,
-  docinfo: () => `Parse FERC docinfo accession 20110106-3009. Extract docket, doc type, obligations/deadlines, and a one-paragraph impact for ${$('persona').value} in ${$('region').value}.`,
-  sse: () => ({ question: "Run streaming demo", stream: true })
-};
-document.querySelectorAll('button[data-routine]').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    const key = btn.dataset.routine;
-    const spec = routines[key]();
-    if (typeof spec === 'string') { $('prompt').value = spec; $('prompt').focus(); }
-    else { send(spec); } // e.g., SSE demo
-  });
-});
-
-/* ===== Diagnostics ===== */
-async function runDiagnostics(){
-  const base = new URL(($('api').value|| (DEFAULT_BASE + '/api/rag'))).origin;
-  $('apiBaseTxt').textContent = base;
-  const dHealth=$('dHealth'), dEia=$('dEia'), dLat=$('dLat'), dCors=$('dCors');
-  badge(dHealth,'…'); badge(dEia,'…'); badge(dLat,'…'); badge(dCors,'…');
-
-  // Health
-  let t0 = now();
-  try{
-    const r = await fetch(base + '/api/status', {mode:'cors'});
-    const ms = Math.max(1, Math.round(now()-t0));
-    const ok = r.ok; badge(dLat, ms+' ms', ok?'ok':'bad');
-    const cors = !!r.headers.get('access-control-allow-origin');
-    badge(dCors, cors?'enabled':'missing', cors?'ok':'warn');
-    badge(dHealth, ok?'ok':'fail', ok?'ok':'bad');
-  }catch{ badge(dHealth,'fail','bad'); }
-
-  // EIA sample
-  try{
-    const url = base + '/api/eia?state=VA&series=direct-use,total-supply,independent-power-producers,estimated-losses';
-    const r = await fetch(url,{mode:'cors'}); if(!r.ok) throw new Error();
-    const j = await r.json(); const has = (j?.periods?.length>0) && j?.levels?.['Direct Use'];
-    badge(dEia, has?'ok':'empty', has?'ok':'warn');
-  }catch{ badge(dEia,'fail','bad'); }
-}
-
-/* ===== EIA Peek (truthful mini-panel) ===== */
-async function peekEia(){
-  const base = new URL(($('api').value|| (DEFAULT_BASE + '/api/rag'))).origin;
-  const state = $('state').value || 'VA';
-  const url = `${base}/api/eia?state=${encodeURIComponent(state)}&series=direct-use,independent-power-producers,estimated-losses,total-supply`;
-  const tb = $('peekBody');
-  tb.innerHTML = `<tr><td colspan="3" class="mut">Loading…</td></tr>`;
-  try{
-    const r = await fetch(url); if(!r.ok) throw new Error(`HTTP ${r.status}`);
-    const j = await r.json();
-    const p = j.periods||[]; const i = p.length-1;
-    if (i<0) { tb.innerHTML = `<tr><td colspan="3" class="mut">No data returned.</td></tr>`; return; }
-    const lev = j.levels||{}; const sh = j.shares||null;
-    const rows = [];
-    if (lev["Direct Use"]) rows.push(["Direct Use (MWh)", num(lev["Direct Use"][i]), "EIA source-disposition"]);
-    if (lev["Independent Power Producers"]) rows.push(["IPPs (MWh)", num(lev["Independent Power Producers"][i]), "EIA source-disposition"]);
-    if (lev["Estimated Losses"]) rows.push(["Estimated Losses (MWh)", num(lev["Estimated Losses"][i]), "EIA source-disposition"]);
-    if (sh && sh["Direct Use %"]) rows.push(["Direct Use (% of supply)", pct(sh["Direct Use %"][i]), "computed (requires total-supply)"]);
-    if (sh && sh["IPPs %"]) rows.push(["IPPs (% of supply)", pct(sh["IPPs %"][i]), "computed (requires total-supply)"]);
-    if (sh && sh["Losses %"]) rows.push(["Losses (% of supply)", pct(sh["Losses %"][i]), "computed (requires total-supply)"]);
-    tb.innerHTML = rows.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td class="mut">${r[2]}</td></tr>`).join("") ||
-                   `<tr><td colspan="3" class="mut">No recognized series.</td></tr>`;
-  }catch(e){
-    tb.innerHTML = `<tr><td colspan="3" class="mut">EIA peek failed: ${e.message}</td></tr>`;
-  }
-}
-const num = v => (v==null||isNaN(v)) ? '—' : Number(v).toLocaleString();
-const pct = v => (v==null||isNaN(v)) ? '—' : `${Number(v).toFixed(2)} %`;
-
-/* ===== Wiring ===== */
+/* ---------- wiring ---------- */
 $('send').addEventListener('click', ()=>send());
 $('prompt').addEventListener('keydown', e=>{
   if((e.metaKey||e.ctrlKey) && e.key==='Enter'){ e.preventDefault(); send(); }
 });
-$('clear').addEventListener('click', ()=> chatlog.innerHTML='' );
-$('copy').addEventListener('click', async ()=>{
-  const all = [...document.querySelectorAll('#chatlog .msg')].map(n=>n.innerText).join('\n\n');
-  try{ await navigator.clipboard.writeText(all); }catch{}
-});
-$('runDiag').addEventListener('click', runDiagnostics);
-$('peekEia').addEventListener('click', peekEia);
-$('state').addEventListener('change', peekEia);
 
-/* ===== Welcome ===== */
-push('assistant', "Welcome. Set persona/jurisdiction/region, run a routine, or ask free-form questions.\nExamples:\n• “Compare VA direct-use vs IPPs since 2018 and cite EIA.”\n• “Compliance sweep for PJM-VA, obligations next 180 days.”\n• “Parse FERC docinfo 20110106-3009 with impacts.”");
-runDiagnostics(); peekEia();
+/* ---------- welcome ---------- */
+push('assistant', "Ready. Ask a question or paste a routine.\nExamples:\n• Compare VA direct-use vs IPPs since 2018; add % of supply (if available) and cite EIA.\n• Compliance sweep for PJM-VA: near-term obligations with dockets/accessions.");
 </script>
 </body>
 </html>
