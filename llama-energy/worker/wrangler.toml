@@ -1,0 +1,8 @@
+name = "llama-energy-worker"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+account_id = "YOUR_CLOUDFLARE_ACCOUNT_ID"
+
+[vars]
+RAG_ORIGIN = ""  # optional
+# Remember: add EIA_API_KEY as a secret with `wrangler secret put EIA_API_KEY`
