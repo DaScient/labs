@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LLaMA‑Energy | Hyper‑Unit Analytics</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header>
+    <h1>LLaMA‑Energy — Hyper‑Unit Analytics (VA)</h1>
+    <p>Explore EIA electricity disposition and hyper‑unit shares. Backend proxied by Cloudflare Workers.</p>
+  </header>
+  <section class="controls">
+    <label>State:
+      <select id="state">
+        <option value="VA" selected>Virginia (VA)</option>
+        <option value="MD">Maryland (MD)</option>
+        <option value="DC">District of Columbia (DC)</option>
+        <option value="NC">North Carolina (NC)</option>
+        <option value="WV">West Virginia (WV)</option>
+      </select>
+    </label>
+    <button id="loadBtn">Load Data</button>
+  </section>
+  <section><canvas id="chartLevels" height="260"></canvas></section>
+  <section><canvas id="chartShares" height="260"></canvas></section>
+  <footer><small>Data: EIA State Electricity Profiles (via Cloudflare Worker). © LLaMA‑Energy Labs.</small></footer>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
