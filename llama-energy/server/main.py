@@ -3,6 +3,9 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 import requests
 
+from .etariff import router as etariff_router
+app.include_router(etariff_router, prefix="")
+
 app = FastAPI(title="LLaMA-Energy API", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
