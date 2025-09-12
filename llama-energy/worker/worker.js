@@ -113,12 +113,12 @@ export default {
         return cors(json({ periods, levels, shares, meta }));
       }
 
-      /* ========== RAG / CHAT ========== */
+      // ========== RAG / CHAT (EIA-backed summary) ==========
       if (url.pathname === "/api/rag" && request.method === "POST") {
         const body = await safeJson(request);
         if (!body || !body.question) return cors(json({ error: "missing 'question' in body" }, 400));
 
-        // If a backend is configured, proxy to it (SSE/NDJSON/JSON passthrough)
+        // If a custom backend exists, proxy to it; otherwise do EIA summary.
         if (env.RAG_BASE) {
           const target = new URL("/chat", env.RAG_BASE).toString();
           const upstream = await fetch(target, {
@@ -131,14 +131,9 @@ export default {
           if (ct.includes("text/event-stream") || ct.includes("application/x-ndjson")) {
             return cors(new Response(upstream.body, {
               status: upstream.status,
-              headers: {
-                "content-type": ct,
-                "cache-control": "no-cache",
-                "connection": "keep-alive",
-              }
+              headers: { "content-type": ct, "cache-control": "no-cache", "connection": "keep-alive" }
             }));
           }
-
           const bytes = await upstream.arrayBuffer();
           return cors(new Response(bytes, {
             status: upstream.status,
@@ -146,21 +141,27 @@ export default {
           }));
         }
 
-        // Deterministic EIA-backed fallback (non-stub)
+        // Deterministic EIA-only fallback
         const state = (body.state || "VA").toUpperCase();
         const series = [
           "direct-use","independent-power-producers","estimated-losses",
           "total-supply","total-disposition"
         ].join(",");
-        const eiaRes = await fetch(`${url.origin}/api/eia?state=${encodeURIComponent(state)}&series=${series}`, {
-          cf: { cacheTtl: 120, cacheEverything: true }
-        });
+
+        const eiaUrl = `${url.origin}/api/eia?state=${encodeURIComponent(state)}&series=${series}`;
+        const eiaRes = await fetch(eiaUrl, { cf: { cacheTtl: 120, cacheEverything: true } });
+
         if (!eiaRes.ok) {
+          const ct = (eiaRes.headers.get("content-type")||"").toLowerCase();
+          const preview = ct.includes("application/json") ? JSON.stringify(await eiaRes.json()).slice(0,400)
+                                                          : (await eiaRes.text()).slice(0,400);
           return cors(json({
-            answer: `Could not retrieve EIA data for ${state}.`,
-            sources: [{ source: "EIA", url: `${url.origin}/api/eia?state=${state}&series=${series}` }]
+            answer: `Could not retrieve EIA data for ${state}. Upstream HTTP ${eiaRes.status}.`,
+            detail: preview,
+            sources: [{ source: "EIA proxy", url: eiaUrl }]
           }, 200));
         }
+
         const eia = await eiaRes.json();
         const P = eia.periods || [];
         const L = eia.levels || {};
@@ -168,23 +169,26 @@ export default {
         const n = Math.min(P.length, 5);
         const lastYears = P.slice(-n);
         const last = lastYears.at(-1);
-        const di = L["Direct Use"]?.slice(-n) || [];
-        const ip = L["Independent Power Producers"]?.slice(-n) || [];
-        const lo = L["Estimated Losses"]?.slice(-n) || [];
-        const dps = S["Direct Use %"]?.slice(-n) || [];
-        const ips = S["IPPs %"]?.slice(-n) || [];
-        const lps = S["Losses %"]?.slice(-n) || [];
-        const fmt = v => (v==null? "—" : Number(v).toLocaleString());
+
+        const di = (L["Direct Use"]||[]).slice(-n);
+        const ip = (L["Independent Power Producers"]||[]).slice(-n);
+        const lo = (L["Estimated Losses"]||[]).slice(-n);
+        const dps = (S["Direct Use %"]||[]).slice(-n);
+        const ips = (S["IPPs %"]||[]).slice(-n);
+        const lps = (S["Losses %"]||[]).slice(-n);
+
+        const fmt = v => (v==null ? "—" : Number(v).toLocaleString());
         const delta = arr => (arr?.length>=2 && arr.at(-1)!=null && arr.at(-2)!=null)
           ? (arr.at(-1) - arr.at(-2)) : null;
+        const median = a => { const x=a.filter(v=>v!=null&&isFinite(v)).sort((a,b)=>a-b); if(!x.length) return null; const m=Math.floor(x.length/2); return x.length%2?x[m]:(x[m-1]+x[m])/2; };
 
+        const dDi = delta(di), dIp = delta(ip), dLo = delta(lo);
         const lines = [];
         lines.push(`State: ${state} • Persona: ${body?.context?.persona || "hyper-unit"} • Region: ${body?.context?.region || ""}`.trim());
         lines.push(`Latest ${last}: Direct Use ${fmt(di.at(-1))} MWh (${dps.at(-1)?.toFixed?.(2) ?? "–"}%), IPPs ${fmt(ip.at(-1))} MWh (${ips.at(-1)?.toFixed?.(2) ?? "–"}%), Losses ${fmt(lo.at(-1))} MWh (${lps.at(-1)?.toFixed?.(2) ?? "–"}%).`);
-        const dDi = delta(di), dIp = delta(ip), dLo = delta(lo);
         lines.push(`YoY: Direct Use ${dDi==null?"–":(dDi>=0?"+":"") + dDi.toLocaleString()} MWh; IPPs ${dIp==null?"–":(dIp>=0?"+":"") + dIp.toLocaleString()} MWh; Losses ${dLo==null?"–":(dLo>=0?"+":"") + dLo.toLocaleString()} MWh.`);
         lines.push(`Window ${lastYears[0]}–${lastYears.at(-1)} median shares: Direct Use ${(median(dps)||0).toFixed(2)}%, IPPs ${(median(ips)||0).toFixed(2)}%, Losses ${(median(lps)||0).toFixed(2)}%.`);
-        lines.push(`Implications: scale interconnection & offtake with IPP growth; watch losses vs. local constraints; size behind-the-meter direct-use using share, not gross supply.`);
+        lines.push(`Implications: scale interconnection & offtake with IPP growth; watch losses vs local constraints; size behind-the-meter direct-use by share, not gross supply.`);
 
         return cors(json({
           answer: lines.join("\n"),
