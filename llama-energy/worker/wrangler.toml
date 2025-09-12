@@ -8,7 +8,7 @@ workers_dev = true
 # ]
 
 # Cloudflare account
-account_id = "YOUR_ACCOUNT_ID"
+account_id = "Aristocles24@gmail.com"
 
 # Optional: Miniflare local dev options
 [dev]
