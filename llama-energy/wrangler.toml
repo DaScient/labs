@@ -13,7 +13,7 @@ binding = "ASSETS"
 # ]
 
 # Cloudflare account
-#account_id = ""
+account_id = "22202ff07e559347483b0526ded1fd31"
 
 # Optional: Miniflare local dev options
 [dev]
