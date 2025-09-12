@@ -1,0 +1,34 @@
+name = "llama-energy"
+main = "worker.js"
+compatibility_date = "2025-09-11"
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# Uncomment and set if routing under your own domain:
+# routes = [
+#   { pattern = "api.yourdomain.com/*", zone_id = "YOUR_ZONE_ID" }
+# ]
+
+# Cloudflare account
+account_id = "Aristocles24@gmail.com"
+
+# Optional: Miniflare local dev options
+[dev]
+port = 8787
+
+# Plain text vars (NOT secrets)
+[vars]
+# If set, /api/rag will proxy to this backend (FastAPI, etc.)
+RAG_BASE = "https://your-rag-backend.example.com"
+
+# Durable Object / KV / R2 etc can go here later if needed
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Secrets: set at deploy time (not stored in toml)
+#   wrangler secret put EIA_API_KEY
+#   wrangler secret put HF_TOKEN        # if your backend or worker needs it
