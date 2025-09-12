@@ -13,7 +13,7 @@ binding = "ASSETS"
 # ]
 
 # Cloudflare account
-account_id = "Aristocles24@gmail.com"
+#account_id = ""
 
 # Optional: Miniflare local dev options
 [dev]
