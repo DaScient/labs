@@ -6,12 +6,12 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // If this isn't an /api/* path, serve static files from ASSETS.
+    // Serve static files unless path starts with /api/
     if (!url.pathname.startsWith("/api/")) {
       return env.ASSETS.fetch(request);
     }
 
-    // ---- CORS preflight for API routes ----
+    // CORS preflight
     if (request.method === "OPTIONS") {
       return cors(new Response(null, { status: 204 }));
     }
@@ -113,7 +113,7 @@ export default {
         return cors(json({ periods, levels, shares, meta }));
       }
 
-      // ========== RAG / CHAT (EIA-backed summary) ==========
+      // ========== RAG / CHAT (EIA-backed summary, no self-fetch) ==========
       if (url.pathname === "/api/rag" && request.method === "POST") {
         const body = await safeJson(request);
         if (!body || !body.question) return cors(json({ error: "missing 'question' in body" }, 400));
@@ -141,28 +141,23 @@ export default {
           }));
         }
 
-        // Deterministic EIA-only fallback
+        // Deterministic EIA-only fallback (direct EIA call; avoids /api/eia self-fetch)
         const state = (body.state || "VA").toUpperCase();
-        const series = [
+        const seriesArr = [
           "direct-use","independent-power-producers","estimated-losses",
           "total-supply","total-disposition"
-        ].join(",");
+        ];
 
-        const eiaUrl = `${url.origin}/api/eia?state=${encodeURIComponent(state)}&series=${series}`;
-        const eiaRes = await fetch(eiaUrl, { cf: { cacheTtl: 120, cacheEverything: true } });
-
-        if (!eiaRes.ok) {
-          const ct = (eiaRes.headers.get("content-type")||"").toLowerCase();
-          const preview = ct.includes("application/json") ? JSON.stringify(await eiaRes.json()).slice(0,400)
-                                                          : (await eiaRes.text()).slice(0,400);
+        let eia;
+        try {
+          eia = await fetchEIAState(env, state, seriesArr);
+        } catch (e) {
           return cors(json({
-            answer: `Could not retrieve EIA data for ${state}. Upstream HTTP ${eiaRes.status}.`,
-            detail: preview,
-            sources: [{ source: "EIA proxy", url: eiaUrl }]
+            answer: `Could not retrieve EIA data for ${state}. ${e.message}`,
+            sources: [{ source: "EIA", note: "direct call from /api/rag" }]
           }, 200));
         }
 
-        const eia = await eiaRes.json();
         const P = eia.periods || [];
         const L = eia.levels || {};
         const S = eia.shares || {};
@@ -340,6 +335,61 @@ function backoff(attempt) {
   return base + jitter;
 }
 
+/* ---- EIA direct helper (used by /api/rag to avoid self-fetch) ---- */
+async function fetchEIAState(env, state, seriesArr) {
+  if (!env.EIA_API_KEY) throw new Error("EIA_API_KEY not configured");
+  const base = "https://api.eia.gov/v2/electricity/state-electricity-profiles/source-disposition/data/";
+  const params = new URLSearchParams({ frequency: "annual", "facets[state][]": state });
+  params.set("sort[0][column]", "period");
+  params.set("sort[0][direction]", "asc");
+  params.set("api_key", env.EIA_API_KEY);
+  seriesArr.forEach((s, i) => params.set(`data[${i}]`, s));
+
+  const r = await fetch(`${base}?${params}`, { cf: { cacheTtl: 300, cacheEverything: true } });
+  if (!r.ok) throw new Error(`EIA upstream ${r.status}: ${(await r.text()).slice(0,300)}`);
+  const body = await r.json();
+  const rows = body?.response?.data || [];
+
+  const periods = rows.map(r => r.period);
+  const toNum = x => (x == null || x === "" ? null : Number(x));
+  const getV = (row, key) => toNum(row[key]);
+
+  const labelMap = {
+    "direct-use": "Direct Use",
+    "facility-direct": "Facility Direct",
+    "independent-power-producers": "Independent Power Producers",
+    "estimated-losses": "Estimated Losses",
+  };
+  const levels = {};
+  for (const [key, label] of Object.entries(labelMap)) {
+    if (seriesArr.includes(key)) levels[label] = rows.map(r => getV(r, key));
+  }
+
+  let shares = null;
+  if (seriesArr.includes("total-supply")) {
+    const supply = rows.map(r => getV(r, "total-supply"));
+    const pct = arr => arr?.map((v,i)=> (supply[i] && v!=null) ? 100*v/supply[i] : null);
+    shares = {};
+    if (levels["Direct Use"]) shares["Direct Use %"] = pct(levels["Direct Use"]);
+    if (levels["Facility Direct"]) shares["Facility Direct %"] = pct(levels["Facility Direct"]);
+    if (levels["Independent Power Producers"]) shares["IPPs %"] = pct(levels["Independent Power Producers"]);
+    if (levels["Estimated Losses"]) shares["Losses %"] = pct(levels["Estimated Losses"]);
+  }
+
+  return {
+    periods,
+    levels,
+    shares,
+    meta: {
+      state,
+      seriesRequested: seriesArr,
+      apiVersion: body?.apiVersion || null,
+      records: rows.length,
+      source: `${base}?${params}`
+    }
+  };
+}
+
 /**
  * Call HF Inference with rotation + failover.
  * Retries on 429/5xx/network; fails fast on 401/403.
@@ -367,7 +417,6 @@ async function callHfWithFailover({ env, model, payload, maxAttempts = 4, signal
         signal
       });
 
-      // Auth/gated → return immediately with detail
       if (r.status === 401 || r.status === 403) {
         const t = await r.text();
         return new Response(JSON.stringify({
@@ -377,14 +426,12 @@ async function callHfWithFailover({ env, model, payload, maxAttempts = 4, signal
         }), { status: r.status, headers: { "content-type": "application/json" }});
       }
 
-      // Retry on 429/5xx
       if (r.status === 429 || (r.status >= 500 && r.status <= 599)) {
         lastErrTxt = await r.text();
         await new Promise(res => setTimeout(res, backoff(attempt)));
         continue;
       }
 
-      // Success passthrough
       return new Response(r.body, {
         status: r.status,
         headers: { "content-type": r.headers.get("content-type") || "application/json" }
