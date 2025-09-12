@@ -2,13 +2,18 @@ name = "llama-energy"
 main = "worker.js"
 compatibility_date = "2025-09-11"
 workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
 # Uncomment and set if routing under your own domain:
 # routes = [
 #   { pattern = "api.yourdomain.com/*", zone_id = "YOUR_ZONE_ID" }
 # ]
 
 # Cloudflare account
-account_id = "Aristocles24@gmail.com"
+#account_id = ""
 
 # Optional: Miniflare local dev options
 [dev]
