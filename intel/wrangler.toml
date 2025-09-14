@@ -2,24 +2,10 @@ name = "worldwide-intel-api"
 main = "worker.js"
 compatibility_date = "2025-09-01"
 
-[vars]
-# API_SECRET = "change-me"        # optional HMAC signing
-
 [[kv_namespaces]]
 binding = "NEWS_KV"
 id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
 [triggers]
 crons = ["*/10 * * * *"]
-
-HF_TOKEN = "hf_xxx_your_personal_or_org_token"   # required
-HF_USE_ENDPOINTS = "false"                       # set "true" if using dedicated endpoints
-
-# If you have dedicated Inference Endpoints for reliability/throughput,
-# add per-task URLs; otherwise leave blank to use public Inference API.
-HF_EP_ZEROSHOT = ""        # e.g., "https://xxxxx.us-east-1.aws.endpoints.huggingface.cloud"
-HF_EP_SUMMARIZE = ""
-HF_EP_TRANSLATE = ""
-HF_EP_LANG_DETECT = ""
-HF_EP_SENTIMENT = ""
-HF_EP_NER = ""
+         # set "true" if using dedicated endpoints
