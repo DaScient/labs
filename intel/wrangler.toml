@@ -1,0 +1,13 @@
+name = "worldwide-intel-api"
+main = "worker.js"
+compatibility_date = "2025-09-01"
+
+[vars]
+# API_SECRET = "change-me"        # optional HMAC signing
+
+[[kv_namespaces]]
+binding = "NEWS_KV"
+id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[triggers]
+crons = ["*/10 * * * *"]
