@@ -121,6 +121,110 @@ curl "https://intel.aristocles24.workers.dev/api/clusters/enriched?sinceHours=24
 curl -N "https://intel.aristocles24.workers.dev/api/stream"
 
 
+⸻
+
+Mermaid Chart
+flowchart LR
+  subgraph Feeds["Global Sources"]
+    A1[AP]:::src -->|RSS/Atom| ING
+    A2[Reuters]:::src -->|RSS/Atom| ING
+    A3[BBC]:::src -->|RSS/Atom| ING
+    A4[Al Jazeera]:::src -->|RSS/Atom| ING
+    A5[DW / France24 / NHK / Yonhap / ABC AU / News24 ZA / Anadolu / JPost / CNN]:::src -->|RSS/Atom| ING
+  end
+
+  subgraph Worker["Cloudflare Worker (edge)"]
+    ING[Ingestion<br/>• retries/timeouts<br/>• XML parse<br/>• per-source weights] --> TAG[Heuristics<br/>• NIPF topic tagging<br/>• Geo tagging]
+    TAG --> SCORE[Scoring<br/>Impact × Confidence × Urgency]
+    SCORE --> DEDUP[De-dup + Clustering<br/>• normalized keys<br/>• Jaccard merge<br/>• corroboration boost]
+    DEDUP --> ENRICH[HF Enrichment (optional)<br/>• lang detect/translate→EN<br/>• zero-shot topics<br/>• summarization<br/>• sentiment & NER]
+    ENRICH --> CACHE[KV Cache<br/>• first-seen<br/>• enrichment cache]
+    DEDUP --> CACHE
+  end
+
+  subgraph Outputs["API & Streaming"]
+    API1[/GET /api/feeds/]:::api
+    API2[/GET /api/clusters/]:::api
+    API3[/GET /api/enrich/]:::api
+    API4[/GET /api/clusters/enriched/]:::api
+    API5[/GET /api/search/]:::api
+    API6[/GET /api/topics/]:::api
+    API7[/GET /api/feargreed/]:::api
+    API8[/GET /api/live/]:::api
+    API9[/GET /api/stream (SSE)/]:::api
+  end
+
+  CACHE --> API1
+  CACHE --> API2
+  CACHE --> API3
+  CACHE --> API4
+  CACHE --> API5
+  CACHE --> API6
+  CACHE --> API7
+  CACHE --> API8
+  CACHE --> API9
+
+  subgraph HF["Hugging Face (Inference API or Endpoints)"]
+    ZS[Zero-shot<br/>bart-large-mnli]:::hf
+    LD[Language detect<br/>xlm-roberta]:::hf
+    TR[Translate<br/>M2M100/NLLB]:::hf
+    SM[Summarize<br/>bart-large-cnn]:::hf
+    ST[Sentiment<br/>roberta-sentiment]:::hf
+    NR[NER<br/>bert-base-NER]:::hf
+  end
+
+  ENRICH <--> LD
+  ENRICH <--> TR
+  ENRICH <--> ZS
+  ENRICH <--> SM
+  ENRICH <--> ST
+  ENRICH <--> NR
+
+  subgraph Ops["Ops & Freshness"]
+    CRON[[Cron: */10]]:::ops --> ING
+    SIGN[[X-Signature (HMAC)]]:::ops --> API1
+    SIGN --> API2
+    SIGN --> API3
+    SIGN --> API4
+    ETag[[ETag/Cache]]:::ops --> API1
+    ETag --> API2
+  end
+
+  classDef src fill:#f5faff,stroke:#7aa6d9,stroke-width:1px,color:#0b3b66;
+  classDef api fill:#eefcf3,stroke:#52a86d,stroke-width:1px,color:#0b3a1c;
+  classDef hf fill:#fff7f0,stroke:#c58a54,stroke-width:1px,color:#61370c;
+  classDef ops fill:#f3f0ff,stroke:#8b7fd1,stroke-width:1px,color:#2d246b;
+
+⸻
+
+ASCII Chart
+[Global Feeds] --RSS/Atom--> [Ingestion @ Worker]
+      | retries/timeouts, XML parse, weights
+      v
+[Heuristic Tags: NIPF + Geo]
+      v
+[Scoring: Impact x Confidence x Urgency]
+      v
+[De-dup + Clustering] --corroboration boost-->
+      |                             \
+      |                              \-> [KV Cache: first-seen, enrichment]
+      v
+[HF Enrichment (optional)]
+  |-- lang detect/translate -> EN
+  |-- zero-shot topics (NIPF reinforcement)
+  |-- summarization (2–3 sentences)
+  |-- sentiment / NER
+      v
+[KV Cache]
+      v
+[APIs]
+  /api/feeds, /api/clusters, /api/enrich, /api/clusters/enriched,
+  /api/search, /api/topics, /api/feargreed, /api/live, /api/stream (SSE)
+
+[Ops]
+  Cron */10 -> warm cache
+  HMAC X-Signature + ETag
+  CORS/CSP hardened
 
 ⸻
 
