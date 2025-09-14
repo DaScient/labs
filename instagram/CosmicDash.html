@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <title>DASCIENT – CosmicDashboard</title>
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+ <!-- Enable full-screen app mode on iOS -->
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <style>
+   /* Global reset & cosmic look */
+   html, body {
+     margin: 0;
+     overflow: hidden;
+     height: 100%;
+     font-family: monospace;
+     background: #000;
+     color: #0f0;
+   }
+   canvas {
+     display: block;
+   }
+   /* Terminal overlay styling */
+   #terminal {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 20%;
+     background: rgba(0, 0, 0, 0.5);
+     padding: 10px;
+     overflow-y: auto;
+     font-size: 13px;
+     pointer-events: none;
+     z-index: 10;
+     white-space: pre-wrap;
+   }
+   /* Control panel styling (bottom left) */
+   #controls {
+     position: absolute;
+     bottom: 20px;
+     left: 20px;
+     z-index: 20;
+     background: rgba(0, 0, 0, 0.8);
+     padding: 10px;
+     border-radius: 5px;
+     color: #fff;
+     font-family: Arial, sans-serif;
+     transition: opacity 0.5s ease;
+     opacity: 0;
+   }
+   #controls:hover { opacity: 1; }
+   .button, label {
+     font-size: 13px;
+     margin: 4px;
+   }
+   .button {
+     background: #444;
+     border: none;
+     padding: 6px 10px;
+     cursor: pointer;
+     color: #fff;
+   }
+   .button:hover { background: #666; }
+   select, input[type="checkbox"] {
+     margin: 4px;
+     padding: 2px;
+   }
+   /* Left panel styling for website links */
+   #leftPanel {
+     position: absolute;
+     top: 50%;
+     left: 0;
+     transform: translate(0, -50%);
+     background: rgba(0, 0, 0, 0.5);
+     padding: 10px;
+     border-top-right-radius: 10px;
+     border-bottom-right-radius: 10px;
+     opacity: 0;
+     transition: opacity 0.5s ease;
+     z-index: 20;
+   }
+   #leftPanel:hover { opacity: 1; }
+   .leftLink {
+     color: #fff;
+     text-decoration: none;
+     font-size: 14px;
+     margin: 5px 0;
+     display: block;
+     transition: color 0.3s ease;
+   }
+   .leftLink:hover { color: #0f0; }
+   /* Glitch effect CSS (optional) */
+   @keyframes glitch {
+     0% { filter: none; }
+     25% { filter: contrast(150%) brightness(150%); }
+     50% { filter: none; }
+     75% { filter: contrast(200%) brightness(120%); }
+     100% { filter: none; }
+   }
+   .glitch {
+     animation: glitch 0.5s infinite;
+   }
+ </style>
+</head>
+<body>
+ <!-- Three.js canvas -->
+ <canvas id="cosmicCanvas"></canvas>
+ <!-- Terminal overlay -->
+ <div id="terminal">COSMIC DASHBOARD INITIALIZING...</div>
+ <!-- Control Panel (bottom left, hover to reveal) -->
+ <div id="controls">
+   <label for="resolutionSelector">Resolution:</label>
+   <select id="resolutionSelector">
+     <option value="low">Low</option>
+     <option value="medium" selected>Medium</option>
+     <option value="high">High</option>
+     <option value="ultra">Ultra</option>
+     <option value="grandmaster">Grandmaster</option>
+   </select>
+   <button class="button" id="fullscreenBtn">Fullscreen</button>
+   <button class="button" id="grandmasterBtn">Grandmaster</button>
+   <br>
+   <label><input type="checkbox" id="toggleAudio" checked> Audio Sensitivity</label>
+   <label><input type="checkbox" id="toggleOrientation" checked> Device Orientation</label>
+   <label><input type="checkbox" id="toggleTouch" checked> Touch Controls</label>
+   <!-- New Auto-Camera Angling Option -->
+   <label><input type="checkbox" id="toggleAutoCamera"> Auto-Camera Angling</label>
+   <label><input type="checkbox" id="toggleGlitch"> Glitch Effects</label>
+   <label><input type="checkbox" id="toggleDynamic" checked> Dynamic Colors</label>
+   <br>
+   <label for="colorSchemeSelector">Color Scheme:</label>
+   <select id="colorSchemeSelector">
+     <option value="vibrant" selected>Vibrant</option>
+     <option value="pastel">Pastel</option>
+     <option value="neon">Neon</option>
+     <option value="cosmic">Cosmic</option>
+   </select>
+ </div>
+ <!-- Left Panel with Website Links (hover over the left edge to reveal) -->
+ <div id="leftPanel">
+   <a href="https://donutz.ai" target="_blank" class="leftLink">donutz.ai</a>
+   <a href="https://dascient.com" target="_blank" class="leftLink">dascient.com</a>
+   <a href="https://gozaddy.ai" target="_blank" class="leftLink">gozaddy.ai</a>
+ </div>
+
+ <!-- Include Three.js from a CDN -->
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+ <script>
+   /***********************************************************************
+    * DASCIENT – CosmicDashboard (Augmented Reality Edition)
+    *
+    * This cosmic dashboard has been enhanced to allow you to freely swim
+    * and rotate through a living, breathing universe. In addition to fluid
+    * navigation, nebulas, particles, UFOs, audio responsiveness, and auto-camera
+    * angling, we now introduce several exquisite, shimmering stars.
+    *
+    * Each interactive star is dynamic and vibrant. When clicked or hovered
+    * over for longer than 3.1415 seconds, a zooming-in cosmic animation is triggered,
+    * and you are redirected to:
+    *
+    * • A brilliant star: https://donutz.ai/stocks  
+    * • An enigmatic star: https://donutz.ai/crypto  
+    * • A wicked enigma: https://gozaddy.ai  
+    * • A dark, glitched, anti-philosophical cosmic entity: https://xXDaemonLoverXx.ai  
+    *
+    * Enjoy the transcendent journey.
+    ***********************************************************************/
+
+   // Global variables
+   let scene, camera, renderer, particleSystem, particleMaterial;
+   let particleCount;
+   const resolutionSettings = {
+     low: 10000,
+     medium: 20000,
+     high: 50000,
+     ultra: 100000,
+     grandmaster: 200000
+   };
+
+   // Optional feature flags (from UI toggles)
+   let audioEnabled = document.getElementById('toggleAudio').checked;
+   let orientationEnabled = document.getElementById('toggleOrientation').checked;
+   let touchEnabled = document.getElementById('toggleTouch').checked;
+   let glitchEnabled = document.getElementById('toggleGlitch').checked;
+   let dynamicColorsEnabled = document.getElementById('toggleDynamic').checked;
+   let autoCameraEnabled = document.getElementById('toggleAutoCamera').checked;  // New auto-camera flag
+
+   // Color scheme presets
+   const colorSchemes = {
+     vibrant: { r: 1.0, g: 0.2, b: 0.8 },
+     pastel:  { r: 0.7, g: 0.5, b: 0.9 },
+     neon:    { r: 0.0, g: 1.0, b: 0.8 },
+     cosmic:  { r: 0.2, g: 0.0, b: 0.5 }
+   };
+   let selectedColorScheme = document.getElementById('colorSchemeSelector').value;
+   let baseColor = Object.assign({}, colorSchemes[selectedColorScheme]);
+
+   // Global variable for audio amplitude (0-256)
+   let audioAverage = 0;
+
+   // Randomize the background gradient on each refresh
+   function randomBackground() {
+     const randomColor = () => Math.floor(Math.random() * 156) + 100;
+     const c1 = `rgb(${randomColor()}, ${randomColor()}, ${randomColor()})`;
+     const c2 = `rgb(${randomColor()}, ${randomColor()}, ${randomColor()})`;
+     document.body.style.background = `radial-gradient(circle, ${c1}, ${c2})`;
+   }
+   randomBackground();
+
+   // Set up Three.js renderer, scene, and camera
+   const canvas = document.getElementById('cosmicCanvas');
+   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+   renderer.setPixelRatio(window.devicePixelRatio);
+   renderer.setSize(window.innerWidth, window.innerHeight);
+   scene = new THREE.Scene();
+   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
+   camera.position.z = 1000;
+
+   // For organic navigation: target positions and rotations
+   let targetCameraPosition = new THREE.Vector3().copy(camera.position);
+   let targetCameraRotation = new THREE.Euler().copy(camera.rotation);
+
+   // Enable right-click drag for rotation (prevent default context menu)
+   canvas.addEventListener('contextmenu', (e) => { e.preventDefault(); }, false);
+   let isRotating = false, previousMouseRotation = { x: 0, y: 0 };
+   canvas.addEventListener('mousedown', (e) => {
+     // Use right mouse button for rotation
+     if (e.button === 2) {
+       isRotating = true;
+       previousMouseRotation = { x: e.clientX, y: e.clientY };
+     }
+   });
+   canvas.addEventListener('mousemove', (e) => {
+     if (isRotating && !autoCameraEnabled) {  // Allow manual control when auto-camera is off
+       let deltaX = e.clientX - previousMouseRotation.x;
+       let deltaY = e.clientY - previousMouseRotation.y;
+       targetCameraRotation.y -= deltaX * 0.005;
+       targetCameraRotation.x -= deltaY * 0.005;
+       previousMouseRotation = { x: e.clientX, y: e.clientY };
+     }
+   });
+   canvas.addEventListener('mouseup', (e) => {
+     if (e.button === 2) { isRotating = false; }
+   });
+
+   // Create a particle system with gravitational physics and chaotic behavior
+   function createParticles(count) {
+     if (particleSystem) scene.remove(particleSystem);
+
+     const geometry = new THREE.BufferGeometry();
+     const positions = new Float32Array(count * 3);
+     const velocities = new Float32Array(count * 3);
+     const colors = new Float32Array(count * 3);
+
+     for (let i = 0; i < count; i++) {
+       positions[i * 3]     = (Math.random() - 0.5) * 2000;
+       positions[i * 3 + 1] = (Math.random() - 0.5) * 2000;
+       positions[i * 3 + 2] = (Math.random() - 0.5) * 2000;
+       velocities[i * 3]     = (Math.random() - 0.5) * 0.1;
+       velocities[i * 3 + 1] = (Math.random() - 0.5) * 0.1;
+       velocities[i * 3 + 2] = (Math.random() - 0.5) * 0.1;
+       // Initialize with white; will be modulated dynamically
+       colors[i * 3]     = 1.0;
+       colors[i * 3 + 1] = 1.0;
+       colors[i * 3 + 2] = 1.0;
+     }
+
+     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+     geometry.setAttribute('velocity', new THREE.BufferAttribute(velocities, 3));
+     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+     particleMaterial = new THREE.PointsMaterial({
+       size: 2,
+       vertexColors: true,
+       transparent: true,
+       opacity: 0.7
+     });
+
+     particleSystem = new THREE.Points(geometry, particleMaterial);
+     scene.add(particleSystem);
+   }
+   // Default to medium resolution (20,000 particles)
+   particleCount = resolutionSettings.medium;
+   createParticles(particleCount);
+
+   // Global audio multiplier (affects visual vibrance)
+   let audioMultiplier = 1;
+
+   // Array to hold nebula objects
+   const nebulas = [];
+
+   // Create nebulas/galactic formations (irregular, pulsating, organic)
+   function createNebulas() {
+     // Create 5 nebulas
+     for (let i = 0; i < 5; i++) {
+       const nebulaCanvas = document.createElement('canvas');
+       nebulaCanvas.width = 256;
+       nebulaCanvas.height = 256;
+       const ctx = nebulaCanvas.getContext('2d');
+       const gradient = ctx.createRadialGradient(128, 128, 20, 128, 128, 128 + Math.random() * 50);
+       gradient.addColorStop(0, "rgba(255,255,255,0.8)");
+       gradient.addColorStop(0.3, "rgba(" +
+         (Math.floor(Math.random()*100)+155) + "," +
+         (Math.floor(Math.random()*100)+155) + "," +
+         (Math.floor(Math.random()*100)+155) + ",0.6)");
+       gradient.addColorStop(0.7, "rgba(50,50,200,0.3)");
+       gradient.addColorStop(1, "rgba(0,0,0,0)");
+       ctx.fillStyle = gradient;
+       ctx.fillRect(0, 0, 256, 256);
+       const texture = new THREE.CanvasTexture(nebulaCanvas);
+       const material = new THREE.SpriteMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending });
+       const sprite = new THREE.Sprite(material);
+       sprite.position.set((Math.random()-0.5)*1500, (Math.random()-0.5)*1500, (Math.random()-0.5)*1500);
+       sprite.scale.set(300, 300, 1);
+       sprite.userData = {
+         velocity: new THREE.Vector3((Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2, (Math.random()-0.5)*0.2),
+         pulsationAmplitude: Math.random() * 0.5 + 0.5,
+         pulsationPhase: Math.random() * Math.PI * 2
+       };
+       scene.add(sprite);
+       nebulas.push(sprite);
+     }
+   }
+   createNebulas();
+
+   /********************************************************************
+    * INTERACTIVE SHIMMERING STARS
+    ********************************************************************/
+   // Array to hold our interactive stars
+   const interactiveStars = [];
+
+   // Create a shimmering star (as a THREE.Sprite) that when hovered or clicked zooms in and redirects
+   // position: THREE.Vector3, color: an object with r,g,b (0-255), url: redirection URL,
+   // size: base size in pixels, isDark (optional): flag for the dark matter star
+   function createInteractiveStar(position, color, url, size = 50, isDark = false) {
+     const starCanvas = document.createElement('canvas');
+     starCanvas.width = 128;
+     starCanvas.height = 128;
+     const ctx = starCanvas.getContext('2d');
+     const gradient = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+     if (isDark) {
+       // For the dark matter star: deep, glitched colors
+       gradient.addColorStop(0, "rgba(20,20,20,1)");
+       gradient.addColorStop(0.5, "rgba(10,10,10,0.8)");
+       gradient.addColorStop(1, "rgba(0,0,0,0)");
+     } else {
+       // For the vibrant stars: use the provided color values
+       gradient.addColorStop(0, `rgba(${color.r},${color.g},${color.b},1)`);
+       gradient.addColorStop(0.5, `rgba(${color.r},${color.g},${color.b},0.5)`);
+       gradient.addColorStop(1, "rgba(0,0,0,0)");
+     }
+     ctx.fillStyle = gradient;
+     ctx.fillRect(0, 0, 128, 128);
+
+     const texture = new THREE.CanvasTexture(starCanvas);
+     const material = new THREE.SpriteMaterial({ map: texture, transparent: true, blending: THREE.AdditiveBlending });
+     const sprite = new THREE.Sprite(material);
+     sprite.position.copy(position);
+     sprite.scale.set(size, size, 1);
+     // Store the URL and set up hover tracking variables
+     sprite.userData = { url: url, hoverStart: null, triggered: false, isDark: isDark };
+     interactiveStars.push(sprite);
+     scene.add(sprite);
+     return sprite;
+   }
+
+   // Create our exquisite stars:
+   // 1. A brilliant star (redirects to stocks)
+   createInteractiveStar(new THREE.Vector3(-500, 300, 0), {r:255, g:200, b:50}, "https://donutz.ai/stocks", 50);
+   // 2. An enigmatic star (redirects to crypto)
+   createInteractiveStar(new THREE.Vector3(400, -200, 0), {r:50, g:255, b:200}, "https://donutz.ai/crypto", 50);
+   // 3. A wicked, eclectic star (redirects to GoDaddy)
+   createInteractiveStar(new THREE.Vector3(200, 400, 0), {r:200, g:50, b:255}, "https://gozaddy.ai", 50);
+   // 4. A dark matter, glitched star (redirects to the anti-philosophical domain)
+   createInteractiveStar(new THREE.Vector3(0, -400, 0), {r:20, g:20, b:20}, "https://xXDaemonLoverXx.ai", 70, true);
+
+   // Raycaster and mouse vector for detecting interactions
+   const raycaster = new THREE.Raycaster();
+   const mouse = new THREE.Vector2();
+
+   // Update mouse coordinates on move (needed for both control panel and star interactions)
+   document.addEventListener('mousemove', (event) => {
+     mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+     mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+   });
+
+   // On click: if an interactive star is clicked, trigger its zoom animation and redirect
+   document.addEventListener('click', (event) => {
+     raycaster.setFromCamera(mouse, camera);
+     const intersects = raycaster.intersectObjects(interactiveStars);
+     if (intersects.length > 0) {
+       const star = intersects[0].object;
+       zoomToStar(star, star.userData.url);
+     }
+   });
+
+   // Function to animate a zoom-in effect toward a star before redirecting
+   function zoomToStar(star, url) {
+     const duration = 1500; // in milliseconds
+     const startTime = performance.now();
+     const startPos = camera.position.clone();
+     const targetPos = star.position.clone();
+     function animateZoom() {
+       const t = (performance.now() - startTime) / duration;
+       if (t < 1) {
+         camera.position.lerpVectors(startPos, targetPos, t);
+         requestAnimationFrame(animateZoom);
+       } else {
+         window.location.href = url;
+       }
+     }
+     animateZoom();
+   }
+
+   /********************************************************************
+    * MAIN ANIMATION LOOP
+    ********************************************************************/
+   function animate() {
+     requestAnimationFrame(animate);
+     const time = performance.now() * 0.001;
+
+     // Auto-Camera Angling (modulated by audio beats)
+     if (autoCameraEnabled) {
+       let audioFactor = (audioAverage / 256 - 0.5) * 0.5;
+       targetCameraRotation.x = Math.sin(time * 0.5) * 0.3 + audioFactor;
+       targetCameraRotation.y = Math.cos(time * 0.5) * 0.3 + audioFactor;
+     }
+
+     // Smoothly update camera position and rotation (using a slightly lower lerp factor for smoother motion)
+     camera.position.lerp(targetCameraPosition, 0.08);
+     camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetCameraRotation.x, 0.08);
+     camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetCameraRotation.y, 0.08);
+
+     // Update base color (dynamic or preset)
+     if (dynamicColorsEnabled) {
+       baseColor.r = Math.abs(Math.sin(time + 0));
+       baseColor.g = Math.abs(Math.sin(time + 2));
+       baseColor.b = Math.abs(Math.sin(time + 4));
+     } else {
+       const scheme = colorSchemes[selectedColorScheme];
+       baseColor.r = scheme.r;
+       baseColor.g = scheme.g;
+       baseColor.b = scheme.b;
+     }
+
+     // Update particles: gravitational pull, chaos factor, and audio responsiveness
+     const positions = particleSystem.geometry.attributes.position.array;
+     const velocities = particleSystem.geometry.attributes.velocity.array;
+     const colors = particleSystem.geometry.attributes.color.array;
+     const chaosFactor = 1 + 0.5 * Math.sin(time * 0.2);
+     for (let i = 0; i < particleCount; i++) {
+       const idx = i * 3;
+       let x = positions[idx], y = positions[idx + 1], z = positions[idx + 2];
+       const dx = -x, dy = -y, dz = -z;
+       const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.0001;
+       const force = (0.05 * chaosFactor) / (dist * dist);
+       velocities[idx]     += (dx / dist) * force;
+       velocities[idx + 1] += (dy / dist) * force;
+       velocities[idx + 2] += (dz / dist) * force;
+       positions[idx]     += velocities[idx];
+       positions[idx + 1] += velocities[idx + 1];
+       positions[idx + 2] += velocities[idx + 2];
+       if (dist < 50) {
+         colors[idx]     *= 0.99;
+         colors[idx + 1] *= 0.99;
+         colors[idx + 2] *= 0.99;
+       }
+       const boundary = 1000;
+       if (x > boundary || x < -boundary) positions[idx] = -x;
+       if (y > boundary || y < -boundary) positions[idx + 1] = -y;
+       if (z > boundary || z < -boundary) positions[idx + 2] = -z;
+       const speed = Math.sqrt(velocities[idx]**2 + velocities[idx+1]**2 + velocities[idx+2]**2);
+       const intensity = Math.min(speed * 50 * audioMultiplier, 1);
+       const shimmer = 0.05 * Math.sin(time * 10 + i);
+       colors[idx]     = Math.min(1, baseColor.r * (0.5 + 0.5 * intensity) + shimmer);
+       colors[idx + 1] = Math.min(1, baseColor.g * (0.5 + 0.5 * intensity) + shimmer);
+       colors[idx + 2] = Math.min(1, baseColor.b * (0.5 + 0.5 * intensity) + shimmer);
+     }
+     particleSystem.geometry.attributes.position.needsUpdate = true;
+     particleSystem.geometry.attributes.color.needsUpdate = true;
+
+     // Update nebulas: pulsate and drift
+     for (let i = 0; i < nebulas.length; i++) {
+       let nebula = nebulas[i];
+       let gravForce = nebula.position.clone().normalize().multiplyScalar(-0.001);
+       nebula.userData.velocity.add(gravForce);
+       nebula.position.add(nebula.userData.velocity);
+       let scaleFactor = 1 + Math.sin(time * nebula.userData.pulsationAmplitude + nebula.userData.pulsationPhase) * 0.2;
+       nebula.scale.set(300 * scaleFactor, 300 * scaleFactor, 1);
+     }
+
+     // Occasionally spawn a UFO
+     if (Math.random() < 0.001) {
+       spawnUFO();
+     }
+
+     // Process interactive star hover events using raycasting:
+     raycaster.setFromCamera(mouse, camera);
+     const starIntersects = raycaster.intersectObjects(interactiveStars);
+     const now = performance.now();
+     for (let star of interactiveStars) {
+       // If the star is under the mouse pointer…
+       if (starIntersects.find(i => i.object === star)) {
+         if (!star.userData.hoverStart) star.userData.hoverStart = now;
+         // If hovered for longer than 3.1415 seconds and not yet triggered, zoom in & redirect
+         if (!star.userData.triggered && (now - star.userData.hoverStart) > 3141.5) {
+           star.userData.triggered = true;
+           zoomToStar(star, star.userData.url);
+         }
+       } else {
+         star.userData.hoverStart = null;
+         star.userData.triggered = false;
+       }
+       // Add a pulsing (shimmering) effect to each star:
+       let pulse = 1 + 0.2 * Math.sin(time * 5 + star.position.x);
+       let baseSize = star.userData.isDark ? 70 : 50;
+       star.scale.set(baseSize * pulse, baseSize * pulse, 1);
+     }
+
+     // Render the scene
+     renderer.render(scene, camera);
+   }
+   animate();
+
+   // Adjust canvas on window resize
+   window.addEventListener('resize', () => {
+     camera.aspect = window.innerWidth / window.innerHeight;
+     camera.updateProjectionMatrix();
+     renderer.setSize(window.innerWidth, window.innerHeight);
+   });
+
+   /****************************
+    * Audio Sensitivity Module (Enhanced)
+    ****************************/
+   let audioContext, analyser;
+   function initAudio() {
+     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && audioEnabled) {
+       navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+         audioContext = new (window.AudioContext || window.webkitAudioContext)();
+         analyser = audioContext.createAnalyser();
+         const microphone = audioContext.createMediaStreamSource(stream);
+         microphone.connect(analyser);
+         analyser.fftSize = 256;
+         const bufferLength = analyser.frequencyBinCount;
+         const dataArray = new Uint8Array(bufferLength);
+         function analyzeAudio() {
+           if (!audioEnabled) return;
+           analyser.getByteFrequencyData(dataArray);
+           let sum = 0;
+           for (let i = 0; i < bufferLength; i++) {
+             sum += dataArray[i];
+           }
+           const average = sum / bufferLength;
+           audioAverage = average;
+           particleMaterial.size = 2 + average / 40;
+           particleMaterial.opacity = 0.5 + average / 400;
+           audioMultiplier = 1 + (average / 256);
+           requestAnimationFrame(analyzeAudio);
+         }
+         analyzeAudio();
+         logToTerminal("Audio input initialized. The cosmic AI listens to your every sound.");
+       }).catch((err) => {
+         logToTerminal("Audio input error: " + err);
+       });
+     }
+   }
+   initAudio();
+
+   // Resume audio context on user interaction
+   document.addEventListener('click', () => {
+     if (audioContext && audioContext.state === 'suspended') {
+       audioContext.resume();
+     }
+   });
+
+   /****************************
+    * Device Orientation & Touch Controls
+    ****************************/
+   if (orientationEnabled) {
+     window.addEventListener('deviceorientation', (event) => {
+       if (!orientationEnabled || autoCameraEnabled) return;
+       const beta = event.beta || 0;
+       const gamma = event.gamma || 0;
+       targetCameraRotation.x = THREE.MathUtils.lerp(targetCameraRotation.x, (beta / 90) * 0.5, 0.1);
+       targetCameraRotation.y = THREE.MathUtils.lerp(targetCameraRotation.y, (gamma / 90) * 0.5, 0.1);
+     });
+   }
+
+   // Left mouse button drag for translation
+   let isDragging = false;
+   let previousMousePosition = { x: 0, y: 0 };
+   renderer.domElement.addEventListener('mousedown', (e) => {
+     if (e.button === 0) {
+       isDragging = true;
+       previousMousePosition = { x: e.clientX, y: e.clientY };
+     }
+   });
+   renderer.domElement.addEventListener('mousemove', (e) => {
+     if (isDragging) {
+       const deltaMove = { x: e.clientX - previousMousePosition.x, y: e.clientY - previousMousePosition.y };
+       targetCameraPosition.x -= deltaMove.x;
+       targetCameraPosition.y += deltaMove.y;
+       previousMousePosition = { x: e.clientX, y: e.clientY };
+     }
+   });
+   renderer.domElement.addEventListener('mouseup', () => { isDragging = false; });
+
+   // Touch controls: drag for translation and pinch-to-zoom
+   let lastTouch = null;
+   let lastTouchDistance = null;
+   renderer.domElement.addEventListener('touchstart', (e) => {
+     if (e.touches.length === 2) {
+       const dx = e.touches[0].pageX - e.touches[1].pageX;
+       const dy = e.touches[0].pageY - e.touches[1].pageY;
+       lastTouchDistance = Math.hypot(dx, dy);
+     } else if (e.touches.length === 1) {
+       lastTouch = e.touches[0];
+     }
+   }, { passive: false });
+   renderer.domElement.addEventListener('touchmove', (e) => {
+     if (e.touches.length === 2) {
+       const dx = e.touches[0].pageX - e.touches[1].pageX;
+       const dy = e.touches[0].pageY - e.touches[1].pageY;
+       const currentDistance = Math.hypot(dx, dy);
+       if (lastTouchDistance !== null) {
+         const delta = currentDistance - lastTouchDistance;
+         targetCameraPosition.z = camera.position.z - delta * 0.5;
+         lastTouchDistance = currentDistance;
+       }
+       e.preventDefault();
+     } else if (e.touches.length === 1 && touchEnabled) {
+       const touch = e.touches[0];
+       if (lastTouch) {
+         const deltaMove = { x: touch.clientX - lastTouch.clientX, y: touch.clientY - lastTouch.clientY };
+         targetCameraPosition.x -= deltaMove.x;
+         targetCameraPosition.y += deltaMove.y;
+       }
+       lastTouch = touch;
+     }
+   }, { passive: false });
+
+   // Trackpad / Mouse Wheel Zoom for desktop
+   document.addEventListener("wheel", (e) => {
+     targetCameraPosition.z = camera.position.z + e.deltaY * 0.5;
+   });
+
+   /****************************
+    * UI Controls and Optional Feature Toggles
+    ****************************/
+   let controlsTimeout;
+   document.addEventListener("mousemove", () => {
+     const controlsDiv = document.getElementById("controls");
+     controlsDiv.style.opacity = 1;
+     clearTimeout(controlsTimeout);
+     controlsTimeout = setTimeout(() => { controlsDiv.style.opacity = 0; }, 3000);
+   });
+
+   document.getElementById('resolutionSelector').addEventListener('change', (e) => {
+     const res = e.target.value;
+     particleCount = resolutionSettings[res];
+     createParticles(particleCount);
+     logToTerminal("Resolution set to: " + res + " (" + particleCount + " particles)");
+   });
+
+   document.getElementById('grandmasterBtn').addEventListener('click', () => {
+     particleCount = resolutionSettings.grandmaster;
+     createParticles(particleCount);
+     logToTerminal("GRANDMASTER RESOLUTION activated: " + particleCount + " particles");
+   });
+
+   document.getElementById('fullscreenBtn').addEventListener('click', () => {
+     if (!document.fullscreenElement) {
+       document.documentElement.requestFullscreen();
+     } else {
+       document.exitFullscreen();
+     }
+   });
+
+   // Optional feature toggles
+   document.getElementById('toggleAudio').addEventListener('change', (e) => {
+     audioEnabled = e.target.checked;
+     if (audioEnabled) initAudio();
+     logToTerminal("Audio Sensitivity " + (audioEnabled ? "enabled" : "disabled") + ".");
+   });
+   document.getElementById('toggleOrientation').addEventListener('change', (e) => {
+     orientationEnabled = e.target.checked;
+     logToTerminal("Device Orientation " + (orientationEnabled ? "enabled" : "disabled") + ".");
+   });
+   document.getElementById('toggleTouch').addEventListener('change', (e) => {
+     touchEnabled = e.target.checked;
+     logToTerminal("Touch Controls " + (touchEnabled ? "enabled" : "disabled") + ".");
+   });
+   document.getElementById('toggleAutoCamera').addEventListener('change', (e) => {
+     autoCameraEnabled = e.target.checked;
+     logToTerminal("Auto-Camera Angling " + (autoCameraEnabled ? "enabled" : "disabled") + ".");
+   });
+   document.getElementById('toggleGlitch').addEventListener('change', (e) => {
+     glitchEnabled = e.target.checked;
+     canvas.classList.toggle('glitch', glitchEnabled);
+     logToTerminal("Glitch Effects " + (glitchEnabled ? "enabled" : "disabled") + ".");
+   });
+   document.getElementById('toggleDynamic').addEventListener('change', (e) => {
+     dynamicColorsEnabled = e.target.checked;
+     logToTerminal("Dynamic Colors " + (dynamicColorsEnabled ? "enabled" : "disabled") + ".");
+   });
+   document.getElementById('colorSchemeSelector').addEventListener('change', (e) => {
+     selectedColorScheme = e.target.value;
+     logToTerminal("Color scheme set to: " + selectedColorScheme);
+   });
+
+   function logToTerminal(message) {
+     const terminal = document.getElementById('terminal');
+     terminal.innerText += "\n" + message;
+     terminal.scrollTop = terminal.scrollHeight;
+   }
+
+   logToTerminal("CosmicDashboard initialized. Welcome to your Cosmic Dashboard! Swim freely within this living, breathing, augmented hyper-dimensional AI-Interface. Enjoy the transcendent journey through exquisite stars and dark matter mysteries.");
+ </script>
+</body>
+</html>
