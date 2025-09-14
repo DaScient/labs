@@ -5,50 +5,50 @@ A Cloudflare Worker providing global, real-time news and intel coverage with NIP
 ⸻
 
 🚀 Features
-	•	Global Sources: AP, Reuters, BBC, DW, France24, NHK, Al Jazeera, CNN, Yonhap, ABC AU, News24 ZA, Anadolu, JPost, and more.
-	•	Robust ingestion: retries, timeouts, XML parsing, per-source weights.
-	•	Tagging:
-	•	NIPF topic tagging (PRC/China, Russia/Ukraine, Cyber, etc.)
-	•	Heuristic region tagging (Asia, Europe, MEA, Africa, Americas, Oceania)
-	•	Scoring: Impact × Confidence × Urgency + corroboration boost.
-	•	Clustering: de-duplication by normalized title keys + Jaccard merging.
-	•	Enrichment (Hugging Face):
-	•	Zero-shot classification to reinforce NIPF topics
-	•	Multilingual language detection & translation → English normalization
-	•	Abstractive summarization (2–3 sentences, dashboard-ready)
-	•	Sentiment analysis & NER (entities: people, orgs, places)
-	•	APIs:
-	•	/api/feeds — items with scores/tags
-	•	/api/clusters — corroborated story clusters
-	•	/api/enrich — enriched items (summary, sentiment, NER)
-	•	/api/clusters/enriched — enriched clusters
-	•	/api/search — query by keyword/tags
-	•	/api/topics — available tags/regions
-	•	/api/feargreed — CNN Fear & Greed scrape
-	•	/api/live — licensed YouTube live news
-	•	/api/stream — SSE stream (near-real-time pushes)
-	•	Reliability:
-	•	KV persistence (first-seen, enrichment cache)
-	•	Cron warm-cache for freshness
-	•	Optional HMAC-SHA256 signatures (X-Signature header)
-	•	Hardened CORS + CSP
+	* Global Sources: AP, Reuters, BBC, DW, France24, NHK, Al Jazeera, CNN, Yonhap, ABC AU, News24 ZA, Anadolu, JPost, and more.
+	* Robust ingestion: retries, timeouts, XML parsing, per-source weights.
+	* Tagging:
+	* NIPF topic tagging (PRC/China, Russia/Ukraine, Cyber, etc.)
+	* Heuristic region tagging (Asia, Europe, MEA, Africa, Americas, Oceania)
+	* Scoring: Impact × Confidence × Urgency + corroboration boost.
+	* Clustering: de-duplication by normalized title keys + Jaccard merging.
+	* Enrichment (Hugging Face):
+	* Zero-shot classification to reinforce NIPF topics
+	* Multilingual language detection & translation → English normalization
+	* Abstractive summarization (2–3 sentences, dashboard-ready)
+	* Sentiment analysis & NER (entities: people, orgs, places)
+	* APIs:
+	* /api/feeds — items with scores/tags
+	* /api/clusters — corroborated story clusters
+	* /api/enrich — enriched items (summary, sentiment, NER)
+	* /api/clusters/enriched — enriched clusters
+	* /api/search — query by keyword/tags
+	* /api/topics — available tags/regions
+	* /api/feargreed — CNN Fear & Greed scrape
+	* /api/live — licensed YouTube live news
+	* /api/stream — SSE stream (near-real-time pushes)
+	* Reliability:
+	* KV persistence (first-seen, enrichment cache)
+	* Cron warm-cache for freshness
+	* Optional HMAC-SHA256 signatures (X-Signature header)
+	* Hardened CORS + CSP
 
 ⸻
 
 📂 Routes
 
-GET  /api/health
-GET  /api/sources
-GET  /api/feeds?sinceHours=24&limit=80
-GET  /api/clusters?sinceHours=24&limit=80&minSources=1
-GET  /api/enrich?sinceHours=24&limit=40
-GET  /api/clusters/enriched?sinceHours=24&limit=40&minSources=2
-GET  /api/search?q=cyber&sinceHours=48
-GET  /api/topics
-GET  /api/feargreed
-GET  /api/live
-GET  /api/stream (SSE)
-OPTIONS * (CORS preflight)
+* GET  /api/health
+* GET  /api/sources
+* GET  /api/feeds?sinceHours=24&limit=80
+* GET  /api/clusters?sinceHours=24&limit=80&minSources=1
+* GET  /api/enrich?sinceHours=24&limit=40
+* GET  /api/clusters/enriched?sinceHours=24&limit=40&minSources=2
+* GET  /api/search?q=cyber&sinceHours=48
+* GET  /api/topics
+* GET  /api/feargreed
+* GET  /api/live
+* GET  /api/stream (SSE)
+* OPTIONS * (CORS preflight)
 
 
 ⸻
@@ -108,17 +108,17 @@ Swap any model via Wrangler vars or point to Inference Endpoints for scale/relia
 ⸻
 
 🧪 Example Calls
-	•	Enriched items (last 18h):
+	* Enriched items (last 18h):
 
 curl "https://intel.aristocles24.workers.dev/api/enrich?sinceHours=18&limit=20"
 
 
-	•	Enriched corroborated clusters (min 2 sources):
+	* Enriched corroborated clusters (min 2 sources):
 
 curl "https://intel.aristocles24.workers.dev/api/clusters/enriched?sinceHours=24&limit=40&minSources=2"
 
 
-	•	SSE stream (new items, every ~4s):
+	* SSE stream (new items, every ~4s):
 
 curl -N "https://intel.aristocles24.workers.dev/api/stream"
 
@@ -127,10 +127,10 @@ curl -N "https://intel.aristocles24.workers.dev/api/stream"
 ⸻
 
 🔐 Notes
-	•	KV caching reduces Hugging Face API calls (lower cost, lower latency).
-	•	Limit per-call enrichment with HF.MAX_HF_ENRICH (default: 25).
-	•	Responses can be signed with X-Signature if API_SECRET is set.
-	•	SSE streams auto-close after ~90s (Cloudflare edge guard).
+	* KV caching reduces Hugging Face API calls (lower cost, lower latency).
+	* Limit per-call enrichment with HF.MAX_HF_ENRICH (default: 25).
+	* Responses can be signed with X-Signature if API_SECRET is set.
+	* SSE streams auto-close after ~90s (Cloudflare edge guard).
 
 ⸻
 
