@@ -80,6 +80,26 @@ const GEO = [
   { geo: "Oceania",  kws: ["australia","new zealand","papua","solomon islands","fiji","samoa","tonga","vanuatu"] },
 ];
 
+// ---- HF Config ----
+const HF = {
+  // Public Inference API base:
+  BASE: "https://api-inference.huggingface.co",
+  // Models (swap to taste)
+  MODELS: {
+    ZEROSHOT: "facebook/bart-large-mnli",
+    LANG_DETECT: "papluca/xlm-roberta-base-language-detection",
+    TRANSLATE: "facebook/m2m100_418M",
+    SUMMARIZE: "facebook/bart-large-cnn",
+    SENTIMENT: "cardiffnlp/twitter-roberta-base-sentiment-latest",
+    NER: "dslim/bert-base-NER",
+  },
+  // Timeouts / rate caps
+  TIMEOUT_MS: 8000,
+  MAX_HF_ENRICH: 25,       // max items per response to enrich (cost control)
+  CACHE_TTL_S: 60 * 60,    // 1h for enrichment cache
+};
+
+
 // ------------------------ Utilities & glue ---------------------------
 
 function corsHeaders() {
@@ -389,6 +409,23 @@ export default {
         const limit = +(url.searchParams.get("limit") || DEFAULT_LIMIT);
         const minSources = +(url.searchParams.get("minSources") || 1);
 
+      if (url.pathname === "/api/enrich") {
+        const sinceHours = +(url.searchParams.get("sinceHours") || DEFAULT_SINCE_HOURS);
+        const limit = +(url.searchParams.get("limit") || 40);
+        const { items } = await aggregateFeeds(env, sinceHours, limit);
+        const out = await enrichItems(env, items, HF.MAX_HF_ENRICH);
+        return jsonResponse({ count: out.length, items: out }, 200, { "cache-control": "no-store" });
+      }
+
+      if (url.pathname === "/api/clusters/enriched") {
+        const sinceHours = +(url.searchParams.get("sinceHours") || DEFAULT_SINCE_HOURS);
+        const limit = +(url.searchParams.get("limit") || DEFAULT_LIMIT);
+        const minSources = +(url.searchParams.get("minSources") || 1);
+        const { items } = await aggregateFeeds(env, sinceHours, limit * 2);
+        const enriched = await enrichItems(env, items, HF.MAX_HF_ENRICH);
+        const clusters = clusterItems(enriched).filter(c => (c.sources?.length || 0) >= minSources).slice(0, limit);
+        return jsonResponse(clusters, 200, { "cache-control": "no-store" });
+      }
         const { items, clusters } = await aggregateFeeds(env, sinceHours, limit);
         let body;
         if (url.pathname.endsWith("clusters")) {
@@ -461,4 +498,174 @@ async function digestHex(s) {
   const data = new TextEncoder().encode(s);
   const d = await crypto.subtle.digest("SHA-256", data);
   return [...new Uint8Array(d)].map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+// HF helpers
+function withHFHeaders(env) {
+  return {
+    headers: {
+      "authorization": `Bearer ${env.HF_TOKEN}`,
+      "content-type": "application/json",
+    }
+  };
+}
+function hfURL(env, model, fallbackBase = HF.BASE) {
+  // If using dedicated Inference Endpoints per task, those are full URLs.
+  // Otherwise call public Inference API for /models/{repo_id}
+  return env.HF_USE_ENDPOINTS === "true" && model.startsWith("http")
+    ? model
+    : `${fallbackBase}/models/${encodeURIComponent(model)}`;
+}
+
+async function hfPOST(env, url, body, timeoutMs = HF.TIMEOUT_MS) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort("timeout"), timeoutMs);
+  try {
+    const r = await fetch(url, { method: "POST", body: JSON.stringify(body), signal: ctrl.signal, ...withHFHeaders(env) });
+    const text = await r.text();
+    if (!r.ok) throw new Error(`HF ${url} -> ${r.status} ${text.slice(0, 200)}`);
+    try { return JSON.parse(text); } catch { return text; }
+  } finally { clearTimeout(t); }
+}
+
+// Task wrappers
+async function hfZeroShot(env, text, labels) {
+  const url = hfURL(env, env.HF_EP_ZEROSHOT || HF.MODELS.ZEROSHOT);
+  return hfPOST(env, url, { inputs: text, parameters: { candidate_labels: labels, multi_label: true } });
+}
+async function hfLangDetect(env, text) {
+  const url = hfURL(env, env.HF_EP_LANG_DETECT || HF.MODELS.LANG_DETECT);
+  return hfPOST(env, url, { inputs: text });
+}
+async function hfTranslate(env, text, src = null, tgt = "en") {
+  const url = hfURL(env, env.HF_EP_TRANSLATE || HF.MODELS.TRANSLATE);
+  const parameters = {};
+  if (src) parameters.src_lang = src;
+  if (tgt) parameters.tgt_lang = tgt;
+  return hfPOST(env, url, { inputs: text, parameters });
+}
+async function hfSummarize(env, text, maxLen = 120, minLen = 40) {
+  const url = hfURL(env, env.HF_EP_SUMMARIZE || HF.MODELS.SUMMARIZE);
+  return hfPOST(env, url, { inputs: text, parameters: { max_length: maxLen, min_length: minLen, do_sample: false } });
+}
+async function hfSentiment(env, text) {
+  const url = hfURL(env, env.HF_EP_SENTIMENT || HF.MODELS.SENTIMENT);
+  return hfPOST(env, url, { inputs: text });
+}
+async function hfNER(env, text) {
+  const url = hfURL(env, env.HF_EP_NER || HF.MODELS.NER);
+  return hfPOST(env, url, { inputs: text });
+}
+
+// Map TOPICS tags to zero-shot labels.
+const ZS_LABELS = TOPICS.map(t => t.tag);
+
+// Normalize HF outputs
+function topLabel(zsOut, thresh = 0.4) {
+  try {
+    if (!Array.isArray(zsOut?.labels) || !Array.isArray(zsOut?.scores)) return [];
+    return zsOut.labels.map((lab, i) => ({ label: lab, score: zsOut.scores[i] }))
+                       .filter(x => x.score >= thresh)
+                       .slice(0, 5);
+  } catch { return []; }
+}
+function parseLang(det) {
+  // det: [[{label:"en", score:0.99}, ...]] or [{label:"en",score:...}]
+  const arr = Array.isArray(det) ? det.flat() : [];
+  return arr.sort((a,b)=> (b.score||0)-(a.score||0))[0]?.label || "en";
+}
+
+// KV key builders
+const kvKey = (prefix, id) => `${prefix}:${digestBase64Url(id).slice(0,44)}`;
+async function digestBase64Url(s){
+  const data = new TextEncoder().encode(s);
+  const d = await crypto.subtle.digest("SHA-256", data);
+  return btoa(String.fromCharCode(...new Uint8Array(d))).replaceAll("+","-").replaceAll("/","_").replace(/=+$/,"");
+}
+
+async function enrichItem(env, it) {
+  // Try KV
+  const id = it.link || it.key || it.title;
+  const K = kvKey("enrich", id);
+  if (env.NEWS_KV) {
+    const cached = await env.NEWS_KV.get(K, "json");
+    if (cached) return { ...it, ...cached, enriched: true };
+  }
+
+  const text = `${it.title}. ${it.desc || ""}`.slice(0, 3500);
+
+  // 1) Language detect
+  let lang = "en";
+  try {
+    const det = await hfLangDetect(env, text);
+    lang = parseLang(det) || "en";
+  } catch {}
+
+  // 2) Translate if needed
+  let normalized = text;
+  if (lang !== "en") {
+    try {
+      const tr = await hfTranslate(env, text, null, "en");
+      // API returns array of { translation_text } or similar
+      if (Array.isArray(tr) && tr[0]?.translation_text) normalized = tr[0].translation_text;
+      else if (typeof tr === "string") normalized = tr;
+    } catch {}
+  }
+
+  // 3) Zero-shot topics
+  let zs = null, zsTop = [];
+  try {
+    zs = await hfZeroShot(env, normalized, ZS_LABELS);
+    zsTop = topLabel(zs, 0.35).map(x => x.label);
+  } catch {}
+
+  // 4) Summarize
+  let summary = "";
+  try {
+    const sm = await hfSummarize(env, normalized);
+    if (Array.isArray(sm) && sm[0]?.summary_text) summary = sm[0].summary_text;
+    else if (typeof sm === "string") summary = sm;
+  } catch {}
+
+  // 5) Optional sentiment & NER
+  let sentiment = null, entities = [];
+  try {
+    const s = await hfSentiment(env, normalized);
+    sentiment = s;
+  } catch {}
+  try {
+    const e = await hfNER(env, normalized);
+    if (Array.isArray(e)) entities = e;
+  } catch {}
+
+  // Merge tags: original + zero-shot
+  const mergedTags = Array.from(new Set([...(it.tags||[]), ...(zsTop||[])]));
+
+  const enrich = {
+    lang,
+    translated: lang !== "en",
+    normalizedText: normalized.slice(0, 2000),
+    summary,
+    zsLabels: zsTop,
+    sentiment,
+    entities,
+    tags: mergedTags,
+  };
+
+  if (env.NEWS_KV) {
+    await env.NEWS_KV.put(K, JSON.stringify(enrich), { expirationTtl: HF.CACHE_TTL_S });
+  }
+  return { ...it, ...enrich, enriched: true };
+}
+
+// Batch enrichment with caps
+async function enrichItems(env, items, cap = HF.MAX_HF_ENRICH) {
+  const head = items.slice(0, cap);
+  const rest = items.slice(cap);
+  const enriched = [];
+  for (const it of head) {
+    try { enriched.push(await enrichItem(env, it)); }
+    catch { enriched.push(it); }
+  }
+  return enriched.concat(rest);
 }
