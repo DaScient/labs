@@ -1,5 +1,5 @@
 // ===== CONFIG =====
-const API_BASE = "https://intel.aristocles24.workers.dev"; 
+const API_BASE = "https://intel.aristocles24.workers.dev"; // set to your Worker URL or "" if same origin
 
 // ===== STATE =====
 let regionChart, topicChart;
@@ -13,7 +13,62 @@ async function jget(url) {
   if (!r.ok) throw new Error(url + " -> " + r.status);
   return r.json();
 }
+const rel = (iso) => {
+  if (!iso) return "—";
+  const d = new Date(iso); const s = Math.max(0, (Date.now() - d.getTime())/1000);
+  if (s < 60) return `${Math.floor(s)}s ago`;
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return d.toLocaleString();
+};
 
+// ===== STATUS BAR =====
+function led(label, state, tooltip = "") {
+  const cls = state === true ? "ok" : state === "warn" ? "warn" : "bad";
+  const title = tooltip ? ` title="${tooltip.replace(/"/g,"'")}"` : "";
+  return `<span class="led ${cls}"${title}>
+    <span class="led-dot"></span><span>${label}</span>
+  </span>`;
+}
+function renderStatus(s) {
+  const el = $("statusBar");
+  if (!el) return;
+  const f = s?.features || {};
+  const feeds = s?.feeds?.sample || [];
+
+  const hfMs = f.hf?.ms != null ? `${f.hf.ms}ms` : "";
+  const cronStr = s?.cron?.enabled ? `cron: ${rel(s.cron.last)}` : "cron: off";
+
+  const parts = [
+    `<div class="statusbar">`,
+      `<div class="status-group">`,
+        led("KV", !!f.kv),
+        led("HMAC", !!f.hmac),
+        led("SSE", !!f.sse),
+        led("Search", !!f.search),
+        led("Fear/Greed", f.fearGreed?.ok === true),
+        led("HF", f.hf?.enabled ? (f.hf?.ok ? true : false) : false, hfMs),
+      `</div>`,
+      `<span class="status-spacer"></span>`,
+      `<div class="status-group">`,
+        ...feeds.map(fp => led(fp.src, fp.ok === true, `${fp.ms}ms`)),
+      `</div>`,
+      `<span class="status-spacer"></span>`,
+      `<span class="smallmuted">v${s.version} • ${cronStr}</span>`,
+    `</div>`
+  ];
+  el.innerHTML = parts.join("");
+}
+async function loadStatus() {
+  try {
+    const s = await jget(api("/api/status"));
+    renderStatus(s);
+  } catch (e) {
+    $("statusBar").innerHTML = `<div class="statusbar">${led("Status", false, e.message || "error")}</div>`;
+  }
+}
+
+// ===== FEEDS / CLUSTERS UI =====
 function renderFeeds(items) {
   const grid = $("feedsGrid"); grid.innerHTML = "";
   items.forEach((it) => {
@@ -22,17 +77,16 @@ function renderFeeds(items) {
     card.style.background = "var(--card)";
     card.innerHTML = `
       <div class="flex items-center justify-between gap-3 mb-2">
-        <div class="text-sm text-[var(--muted)] truncate">${it.src} — ${(it.lang||"en").toUpperCase()}</div>
-        <div class="text-xs">${it.ageH ? (it.ageH.toFixed ? it.ageH.toFixed(1) : it.ageH) : ""}h</div>
+        <div class="text-sm smallmuted truncate">${it.src} — ${(it.lang||"en").toUpperCase()}</div>
+        <div class="text-xs smallmuted">${it.ageH ? (it.ageH.toFixed ? it.ageH.toFixed(1) : it.ageH) : ""}h</div>
       </div>
       <a href="${it.link}" target="_blank" rel="noopener" class="block font-semibold hover:underline mb-2">${it.title}</a>
-      ${it.summary ? `<p class="text-sm text-[var(--muted)] mb-2">${it.summary}</p>` : ""}
+      ${it.summary ? `<p class="text-sm smallmuted mb-2">${it.summary}</p>` : ""}
       <div class="flex flex-wrap gap-2">${(it.tags||[]).slice(0,6).map(t=>`<span class="chip">${t}</span>`).join("")}</div>
     `;
     grid.appendChild(card);
   });
 }
-
 function renderClusters(clusters) {
   const grid = $("clustersGrid"); grid.innerHTML = "";
   clusters.forEach(c => {
@@ -42,15 +96,15 @@ function renderClusters(clusters) {
     const head = c.items && c.items[0] ? c.items[0].title : "(no title)";
     a.innerHTML = `
       <div class="font-semibold text-sm mb-1 line-clamp-2">${head}</div>
-      <div class="text-xs text-[var(--muted)] mb-2">Sources: ${c.sources.join(", ")}</div>
+      <div class="text-xs smallmuted mb-2">Sources: ${c.sources.join(", ")}</div>
       <div class="flex flex-wrap gap-2">${(c.tags||[]).slice(0,8).map(t=>`<span class="chip">${t}</span>`).join("")}</div>
     `;
     grid.appendChild(a);
   });
 }
 
+// ===== CHARTS =====
 function buildCharts(regionCounts, topicCounts) {
-  // Region pie
   const rc = $("regionChart").getContext("2d");
   if (regionChart) regionChart.destroy();
   regionChart = new Chart(rc, {
@@ -59,7 +113,6 @@ function buildCharts(regionCounts, topicCounts) {
     options: { responsive: true, plugins: { legend: { labels: { color: "#cbd5e1" } } } }
   });
 
-  // Topics bar
   const tc = $("topicChart").getContext("2d");
   if (topicChart) topicChart.destroy();
   topicChart = new Chart(tc, {
@@ -67,21 +120,22 @@ function buildCharts(regionCounts, topicCounts) {
     data: { labels: topicCounts.map(d=>d.name), datasets: [{ label: "Count", data: topicCounts.map(d=>d.value) }] },
     options: {
       responsive: true,
-      scales: {
-        x: { ticks: { color: "#cbd5e1", maxRotation: 0, minRotation: 0 } },
-        y: { ticks: { color: "#cbd5e1" } }
-      },
+      scales: { x: { ticks: { color: "#cbd5e1" } }, y: { ticks: { color: "#cbd5e1" } } },
       plugins: { legend: { display:false } }
     }
   });
 }
 
+// ===== DATA LOAD =====
 async function loadAll() {
+  // status first (paints LEDs fast)
+  loadStatus().catch(()=>{});
+
   const sinceHours = +$("sinceHours").value || 12;
   const limit = +$("limit").value || 18;
   $("windowInfo").textContent = `window: ${sinceHours}h • limit: ${limit}`;
 
-  // Sources for filter dropdown
+  // Sources list (for filter dropdown)
   const sources = await jget(api("/api/sources")).catch(()=>[]);
   const srcSel = $("sourceFilter");
   if (srcSel.options.length <= 1 && Array.isArray(sources)) {
@@ -101,9 +155,8 @@ async function loadAll() {
   let items = enrich.items || [];
   let cls = Array.isArray(clusters) ? clusters : [];
 
-  // Build topic filter options from items
-  const tset = new Set();
-  items.forEach(i => (i.tags||[]).forEach(t => tset.add(t)));
+  // Topic options from items
+  const tset = new Set(); items.forEach(i => (i.tags||[]).forEach(t => tset.add(t)));
   const topicSel = $("topicFilter");
   if (topicSel.options.length <= 1) {
     [...tset].sort().forEach(t => {
@@ -125,11 +178,11 @@ async function loadAll() {
     cls = cls.filter(c => (c.sources||[]).includes(source));
   }
 
-  // Render UI
+  // Render
   renderFeeds(items);
   renderClusters(cls);
 
-  // Aggregate for charts
+  // Charts
   const tMap = new Map(), gMap = new Map();
   items.forEach(i => {
     (i.tags||[]).forEach(t => tMap.set(t, (tMap.get(t)||0)+1));
@@ -140,7 +193,7 @@ async function loadAll() {
   buildCharts(regionCounts, topicCounts);
 }
 
-// SSE ticker
+// ===== SSE ticker =====
 function startTicker() {
   const el = $("ticker");
   try {
@@ -164,7 +217,7 @@ function startTicker() {
   }
 }
 
-// Wire controls & init
+// ===== Wire controls & init =====
 window.addEventListener("DOMContentLoaded", () => {
   $("refreshBtn").addEventListener("click", loadAll);
   $("sinceHours").addEventListener("change", loadAll);
