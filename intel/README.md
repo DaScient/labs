@@ -1,6 +1,6 @@
 🌐 Worldwide Intel Coverage API (v3)
 
-A Cloudflare Worker providing global, real-time news and intel coverage with NIPF-aligned tagging, clustering, corroboration, and Hugging Face AI enrichment (translation, summaries, sentiment, NER). Lives in /labs/intel.
+An API worker providing global, real-time news and intel coverage with NIPF-aligned tagging, clustering, corroboration, and Hugging Face AI enrichment (translation, summaries, sentiment, NER). Lives in /labs/intel.
 
 ⸻
 
