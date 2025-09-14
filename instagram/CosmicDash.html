@@ -101,12 +101,50 @@
      animation: glitch 0.5s infinite;
    }
  </style>
+
+  <!-- ⬇ Enhancements injected: meta + terminal hover CSS (non-destructive) -->
+  <meta name="description" content="DaScient Cosmic Dashboard — hyperspectral, multidimensional visuals." />
+  <link rel="icon" href="./assets/logo.svg" type="image/svg+xml" />
+  <meta property="og:title" content="DaScient • Cosmic Universe" />
+  <meta property="og:description" content="Swim through a living, breathing hyperspace. Enter." />
+  <meta property="og:image" content="./assets/og-preview.png" />
+
+  <style>
+    /* ===== Terminal → hover/keyboard toggle ===== */
+    #hudHover{
+      position:fixed; top:0; left:0; width:100%; height:10px;
+      z-index:10001; background:transparent; pointer-events:auto;
+    }
+    #terminal{
+      position:fixed; top:0; left:0; width:100%; max-height:30vh;
+      background:rgba(0,0,0,.6); padding:10px; overflow:auto;
+      font:13px/1.45 monospace; color:#00ff7b; z-index:10000;
+      transform:translateY(-100%); opacity:0; transition:transform .22s ease, opacity .22s ease;
+      box-shadow:0 14px 40px rgba(0,0,0,.35);
+      border-bottom:1px solid rgba(255,255,255,.08);
+      backdrop-filter:saturate(120%) blur(6px);
+    }
+    #terminal.is-open{ transform:translateY(0); opacity:1; }
+    /* Reveal on edge hover OR hovering the panel */
+    #hudHover:hover ~ #terminal, #terminal:hover{ transform:translateY(0); opacity:1; }
+
+    /* Minimal toggle button (optional) */
+    #termToggle{
+      position:fixed; top:12px; right:12px; z-index:10002;
+      background:#0f1220; color:#00ff7b; border:1px solid #264;
+      border-radius:10px; padding:6px 10px; font:12px monospace; opacity:.85; cursor:pointer;
+    }
+    #termToggle:hover{ opacity:1 }
+  </style>
+
 </head>
 <body>
  <!-- Three.js canvas -->
  <canvas id="cosmicCanvas"></canvas>
  <!-- Terminal overlay -->
- <div id="terminal">COSMIC DASHBOARD INITIALIZING...</div>
+ <div id="hudHover" aria-hidden="true"></div>
+<button id="termToggle" type="button" title="Toggle console (T)">LOG</button>
+<div id="terminal">COSMIC DASHBOARD INITIALIZING...</div>
  <!-- Control Panel (bottom left, hover to reveal) -->
  <div id="controls">
    <label for="resolutionSelector">Resolution:</label>
@@ -158,10 +196,10 @@
     * over for longer than 3.1415 seconds, a zooming-in cosmic animation is triggered,
     * and you are redirected to:
     *
-    * • A brilliant star: https://donutz.ai/stocks  
-    * • An enigmatic star: https://donutz.ai/crypto  
-    * • A wicked enigma: https://gozaddy.ai  
-    * • A dark, glitched, anti-philosophical cosmic entity: https://xXDaemonLoverXx.ai  
+    * • A brilliant star: https://donutz.ai/stocks
+    * • An enigmatic star: https://donutz.ai/crypto
+    * • A wicked enigma: https://gozaddy.ai
+    * • A dark, glitched, anti-philosophical cosmic entity: https://xXDaemonLoverXx.ai
     *
     * Enjoy the transcendent journey.
     ***********************************************************************/
@@ -716,5 +754,36 @@
 
    logToTerminal("CosmicDashboard initialized. Welcome to your Cosmic Dashboard! Swim freely within this living, breathing, augmented hyper-dimensional AI-Interface. Enjoy the transcendent journey through exquisite stars and dark matter mysteries.");
  </script>
+
+  <!-- ⬇ Terminal toggle & helpers (non-destructive) -->
+  <script>
+  (function(){
+    const term = document.getElementById('terminal');
+    const btn  = document.getElementById('termToggle');
+
+    function toggleTerm(){ if(!term) return; term.classList.toggle('is-open'); }
+    if(btn) btn.addEventListener('click', toggleTerm);
+    window.addEventListener('keydown', (e)=>{ if(e.key==='t' || e.key==='T') toggleTerm(); });
+
+    // Safe logger shim (keeps only last 500 lines)
+    if (term && !window.logToTerminal) {
+      window.logToTerminal = function(message){
+        try{
+          term.textContent += (term.textContent ? "\n" : "") + String(message);
+          const lines = term.textContent.split("\n");
+          if(lines.length > 500) term.textContent = lines.slice(-500).join("\n");
+          term.scrollTop = term.scrollHeight;
+        }catch(e){ /* no-op */ }
+      };
+    }
+
+    // Perf hints: dispatch pause/resume events other scripts can listen to (optional).
+    document.addEventListener('visibilitychange', ()=>{
+      const ev = new Event(document.hidden ? 'cosmic:pause' : 'cosmic:resume');
+      document.dispatchEvent(ev);
+    });
+  })();
+  </script>
+
 </body>
 </html>
