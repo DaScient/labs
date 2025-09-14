@@ -5,35 +5,33 @@ An API worker providing global, real-time news and intel coverage with NIPF-alig
 ⸻
 
 🚀 Features
-	* Global Sources: AP, Reuters, BBC, DW, France24, NHK, Al Jazeera, CNN, Yonhap, ABC AU, News24 ZA, Anadolu, JPost, and more.
-	* Robust ingestion: retries, timeouts, XML parsing, per-source weights.
-	* Tagging:
-	* NIPF topic tagging (PRC/China, Russia/Ukraine, Cyber, etc.)
-	* Heuristic region tagging (Asia, Europe, MEA, Africa, Americas, Oceania)
-	* Scoring: Impact × Confidence × Urgency + corroboration boost.
-	* Clustering: de-duplication by normalized title keys + Jaccard merging.
-	* Enrichment (Hugging Face):
-	* Zero-shot classification to reinforce NIPF topics
-	* Multilingual language detection & translation → English normalization
-	* Abstractive summarization (2–3 sentences, dashboard-ready)
-	* Sentiment analysis & NER (entities: people, orgs, places)
-	* APIs:
-	* /api/feeds — items with scores/tags
-	* /api/clusters — corroborated story clusters
-	* /api/enrich — enriched items (summary, sentiment, NER)
-	* /api/clusters/enriched — enriched clusters
-	* /api/search — query by keyword/tags
-	* /api/topics — available tags/regions
-	* /api/feargreed — CNN Fear & Greed scrape
-	* /api/live — licensed YouTube live news
-	* /api/stream — SSE stream (near-real-time pushes)
-	* Reliability:
-	* KV persistence (first-seen, enrichment cache)
-	* Cron warm-cache for freshness
-	* Optional HMAC-SHA256 signatures (X-Signature header)
-	* Hardened CORS + CSP
-
-⸻
+	•	Global Sources: AP, Reuters, BBC, DW, France24, NHK, Al Jazeera, CNN, Yonhap, ABC AU, News24 ZA, Anadolu, JPost, and more.
+	•	Robust ingestion: retries, timeouts, XML parsing, per-source weights.
+	•	Tagging:
+	•	NIPF topic tagging (PRC/China, Russia/Ukraine, Cyber, etc.)
+	•	Heuristic region tagging (Asia, Europe, MEA, Africa, Americas, Oceania)
+	•	Scoring: Impact × Confidence × Urgency + corroboration boost.
+	•	Clustering: de-duplication by normalized title keys + Jaccard merging.
+	•	Enrichment (Hugging Face):
+	•	Zero-shot classification to reinforce NIPF topics
+	•	Multilingual language detection & translation → English normalization
+	•	Abstractive summarization (2–3 sentences, dashboard-ready)
+	•	Sentiment analysis & NER (entities: people, orgs, places)
+	•	APIs:
+	•	/api/feeds — items with scores/tags
+	•	/api/clusters — corroborated story clusters
+	•	/api/enrich — enriched items (summary, sentiment, NER)
+	•	/api/clusters/enriched — enriched clusters
+	•	/api/search — query by keyword/tags
+	•	/api/topics — available tags/regions
+	•	/api/feargreed — CNN Fear & Greed scrape
+	•	/api/live — licensed YouTube live news
+	•	/api/stream — SSE stream (near-real-time pushes)
+	•	Reliability:
+	•	KV persistence (first-seen, enrichment cache)
+	•	Cron warm-cache for freshness
+	•	Optional HMAC-SHA256 signatures (X-Signature header)
+	•	Hardened CORS + CSP⸻
 
 📂 Routes
 
