@@ -1,4 +1,4 @@
-// worker.js — Worldwide Intel Coverage API (v2)
+// worker.js — Worldwide Intel Coverage API (v3)
 // Cloudflare Workers
 // Routes:
 //   GET  /api/health
@@ -9,25 +9,41 @@
 //   GET  /api/topics
 //   GET  /api/feargreed
 //   GET  /api/live
-//   GET  /api/stream  (Server-Sent Events: near-real-time items)
+//   GET  /api/stream          (Server-Sent Events: near-real-time items)
+//   GET  /api/enrich          (HF-enhanced items: translation, tags, summaries, sentiment, NER)
+//   GET  /api/clusters/enriched (HF-enriched clusters, boosted w/ zero-shot tags)
 //   OPTIONS * (CORS preflight)
+//
 // Features:
-// - Global RSS/Atom coverage + configurable weights per source.
+// - Global RSS/Atom coverage + configurable weights per source (AP, BBC, Reuters, DW, NHK, etc.).
 // - Robust parsing w/ retries, timeouts, content hashing, first-seen persistence (KV).
-// - Topic & simple geo tagging; NIPF-aligned tags + region heuristics.
+// - Topic & geo tagging: NIPF-aligned tags + heuristic region classification.
+// - Hugging Face integration (via Inference API or Endpoints) for:
+//     • Zero-shot classification (NIPF topics reinforcement)
+//     • Language detection + optional translation to English
+//     • Abstractive summarization (dashboard blurbs)
+//     • Sentiment & NER enrichment
 // - Impact/Urgency/Confidence scoring + corroboration (multi-source) boost.
 // - Jaccard-based de-dup & clustering using normalized title keys.
 // - Search (title/desc/tags) over recent cache.
-// - SSE stream that pushes new items as they arrive.
-// - Scheduled warm-cache (exported `scheduled`) for freshness.
-// - Optional HMAC-SHA256 response signing (header: X-Signature) if env.API_SECRET is set.
-// - CORS + CSP hardened. Sensible caching headers.
+// - SSE stream pushes updates in near-real-time.
+// - Scheduled warm-cache (via `scheduled`) for freshness.
+// - Optional HMAC-SHA256 signing of responses (X-Signature) if env.API_SECRET set.
+// - KV caching of enrichment results to reduce API costs and latency.
+// - CORS + CSP hardened; sensible caching headers.
 // - CNN Fear & Greed scrape with fallback.
-
+//
 // ---------------------------- Config ---------------------------------
 
 // Expanded global feed map (safe, reputable, world coverage).
 // Adjust weights (0..1) to reflect your trust/confidence priors.
+// 8) Notes on reliability, cost, and latency
+//	•	For throughput/SLAs, flip HF_USE_ENDPOINTS="true" and point the HF_EP_* variables at your dedicated Inference Endpoints (autoscaling, region-pinned). The code already supports both modes.  ￼
+//	•	Keep HF.MAX_HF_ENRICH conservative (e.g., 20–30) to cap spend/latency per call. The rest of the items still flow through with the original heuristics.
+//	•	KV caching avoids re-enrichment on refreshes or repeated polling.
+//	•	If you need multilingual zero-shot (labels in English, texts in other languages), we’re already normalizing to English via translation first.
+//	•	If you prefer a single SDK: @huggingface/inference JS wrapper exists, but raw fetch keeps Workers lean and avoids bundling. (The task definitions and bearer usage are the same.)  ￼
+
 const FEEDS = [
   // Global wires / multi-region
   { src: "Reuters",    url: "https://feeds.reuters.com/Reuters/worldNews",           weight: 0.98, region: "Global" },
