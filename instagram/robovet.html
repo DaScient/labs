@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>RoboVet — GenAI Veterinary Helper (Mobile-Optimized, Relay Secured)</title>
+<meta name="description" content="RoboVet is a safety-first GenAI veterinary helper with a community board. Educational only—no diagnoses, prescriptions, or drug dosages." />
+<meta name="theme-color" content="#0b1220" />
+<style>
+  :root{
+    --bg:#0b1220; --bg2:#0f172a; --panel:#111a2b; --soft:#0f1627; --ink:#e8eeff;
+    --muted:#a9b4d0; --accent:#7ad7ff; --accent2:#62ffa8; --warn:#ffb84d; --danger:#ff6b6b; --ok:#46d27c;
+    --card:#0e1629; --border:#1f2846; --focus:#b5e3ff; --shadow:0 16px 36px rgba(0,0,0,.35);
+    --fs-1: clamp(14px, 3.5vw, 16px);
+    --fs-2: clamp(15px, 4.2vw, 18px);
+    --fs-h: clamp(18px, 5.6vw, 22px);
+    --lh: 1.55;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,rgba(65,156,255,.12),transparent 60%),linear-gradient(180deg,var(--bg),var(--bg2));color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;font-size:var(--fs-1);line-height:var(--lh)}
+  a{color:var(--accent)} a:hover{text-decoration:underline}
+  img{max-width:100%;height:auto}
+  header{position:sticky;top:0;z-index:10;background:linear-gradient(180deg,rgba(2,9,20,.65),rgba(2,9,20,.25));backdrop-filter:saturate(130%) blur(6px);border-bottom:1px solid var(--border)}
+  .wrap{max-width:1120px;margin:0 auto;padding:12px 14px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo-img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 6px 14px rgba(0,0,0,.35))}
+  .title{font-weight:800;letter-spacing:.2px;font-size:var(--fs-h)}
+  .sub{color:var(--muted);font-size:var(--fs-1)}
+  .hero{display:flex;align-items:center;gap:12px;margin-top:10px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(180deg,var(--panel),var(--card))}
+  .pill{font-size:.78rem;color:#06202a;background:linear-gradient(180deg,#7ad7ff,#3eb8ff);padding:4px 10px;border-radius:999px;font-weight:700}
+
+  /* Donation banner */
+  .donationbar{
+    display:flex;gap:10px;align-items:center;justify-content:center;
+    padding:8px 12px;margin-top:10px;border:1px solid var(--border);border-radius:12px;
+    background:linear-gradient(180deg,#0d2038,#0c1a2e);
+    color:var(--ink); font-size:0.95rem
+  }
+  .donationbar a{font-weight:700}
+
+  .grid{display:grid;grid-template-columns:1fr;gap:16px;margin-top:14px}
+  .panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+  .panel h2{margin:0;padding:12px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg,var(--panel),var(--card));font-size:var(--fs-2)}
+  .panel .body{padding:12px 14px}
+  .hint{color:var(--muted)}
+  .ok{color:var(--ok);font-weight:700}.bad{color:var(--danger);font-weight:700}
+
+  .btn{appearance:none;border:1px solid var(--border);background:linear-gradient(180deg,#1a2744,#13213b);color:var(--ink);padding:11px 14px;border-radius:12px;cursor:pointer;font-size:var(--fs-1)}
+  .btn:hover{filter:brightness(1.06)}
+  .btn.primary{border-color:transparent;background:linear-gradient(180deg,#28a9ff,#0f8ad6);color:#041524}
+  .btn.ghost{background:transparent}
+  input[type="text"],input[type="url"],textarea,select,input[type="number"]{width:100%;padding:11px 12px;background:var(--soft);color:var(--ink);border:1px solid var(--border);border-radius:10px;outline:none;font-size:var(--fs-1)}
+  textarea{min-height:80px;resize:none}
+  input:focus,textarea:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px rgba(98,198,255,.15)}
+  :focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:10px}
+
+  /* Chat (user requests list) */
+  .chat{display:flex;flex-direction:column;gap:10px}
+  .chat-stream{overflow:auto;background:linear-gradient(180deg,#0c1426,#0b1323);border:1px solid var(--border);border-radius:12px;padding:10px;max-height:28vh}
+  @media (min-width: 900px){.grid{grid-template-columns:1.15fr .85fr}.chat-stream{max-height:30vh}}
+  .msg{display:flex;gap:10px;margin:10px 0;overflow-wrap:break-word}
+  .avatar{flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#1a2850;display:inline-grid;place-items:center;font-size:.85rem;border:1px solid var(--border)}
+  .bubble{background:#0b1428;border:1px solid var(--border);padding:12px;border-radius:12px;max-width:100%;line-height:1.55}
+  .me .bubble{background:#0f213f}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+  .chip{background:#18223a;border:1px dashed var(--border);color:var(--muted);padding:7px 10px;border-radius:999px;font-size:var(--fs-1);cursor:pointer}
+
+  /* Scrollable AI answer pane */
+  .answer-wrap{background:linear-gradient(180deg,#0c1426,#0b1323);border:1px solid var(--border);border-radius:12px;padding:10px}
+  .answer-title{margin:0 0 6px 0;font-size:var(--fs-2)}
+  .answer-scroll{max-height:min(56vh,520px);overflow:auto;border:1px solid var(--border);border-radius:10px;padding:12px;background:#0b1428}
+  .answer-scroll h1,.answer-scroll h2,.answer-scroll h3{margin:10px 0 6px}
+  .answer-scroll ul{padding-left:18px}
+  .answer-scroll p{margin:8px 0}
+  @media (max-width: 420px){.wrap{padding:14px}.logo-img{width:48px;height:48px}.chips .chip{padding:8px 12px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="brand" role="banner" aria-label="RoboVet">
+      <img class="logo-img" src="https://raw.githubusercontent.com/dascient/labs/main/assets/robovet-logo.jpeg" alt="RoboVet logo"/>
+      <div>
+        <div class="title">RoboVet</div>
+        <div class="sub">GenAI veterinary helper • Educational only • Relay-secured</div>
+      </div>
+      <span class="pill" style="margin-left:auto" aria-hidden="true">NEW</span>
+    </div>
+
+    <!-- Donation banner (top) -->
+    <div class="donationbar" role="note" aria-label="Support RoboVet">
+      <span class="hint">If RoboVet helps you, consider a small donation:</span>
+      <a href="https://cash.app/$dascient" target="_blank" rel="noopener">cash.app/$dascient</a>
+    </div>
+
+    <div class="hero" role="note" aria-label="Emergency notice">
+      <div class="hint">
+        <strong>Emergency triage:</strong> if your animal is <span class="bad">not breathing, unconscious, seizing, bleeding heavily, suspected poisoned, in heat stroke, or hit by a vehicle</span>, go to an emergency veterinarian now.
+        <div style="margin-top:6px">
+          <a href="https://veccs.org/certified-facility-directory/" target="_blank" rel="noopener">Find an emergency/critical-care hospital (VECCS directory)</a>
+          • <a href="https://www.aspca.org/pet-care/aspca-poison-control" target="_blank" rel="noopener">ASPCA Animal Poison Control (888-426-4435)</a>
+          • <a href="https://www.petpoisonhelpline.com/" target="_blank" rel="noopener">Pet Poison Helpline (855-764-7661)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <!-- LEFT: AI ASSISTANT -->
+    <section class="panel" aria-label="AI assistant">
+      <h2>GenAI Veterinary Bot</h2>
+      <div class="body" style="display:grid;gap:12px">
+        <!-- Triage -->
+        <form id="triage" class="hint" style="display:grid;gap:8px;border:1px dashed var(--border);padding:10px;border-radius:12px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <select id="sp" title="Species" aria-label="Species">
+              <option value="">Species</option>
+              <option>Dog</option><option>Cat</option><option>Rabbit</option>
+              <option>Bird</option><option>Reptile</option><option>Ferret</option><option>Other</option>
+            </select>
+
+            <!-- Age -->
+            <input id="age" type="number" min="0" placeholder="Age" style="max-width:110px" aria-label="Age value" />
+            <select id="ageUnit" title="Age unit" style="max-width:130px" aria-label="Age unit">
+              <option value="years">Years</option>
+              <option value="months">Months</option>
+              <option value="weeks">Weeks</option>
+              <option value="days">Days</option>
+            </select>
+
+            <input id="wt" type="text" placeholder="Weight (kg)" aria-label="Weight in kilograms" />
+            <select id="concern" title="Primary concern" aria-label="Primary concern">
+              <option value="">Concern</option>
+              <option>Vomiting/Diarrhea</option><option>Coughing/Sneezing</option>
+              <option>Limping/Pain</option><option>Skin/Ear issues</option>
+              <option>Not eating/Drinking changes</option><option>Behavior changes</option>
+              <option>Injury/Trauma</option><option>Toxin ingestion</option>
+            </select>
+          </div>
+          <textarea id="notes" placeholder="Notes: onset, exposures (e.g., chocolate/xylitol), environment, recent travel…" aria-label="Additional notes"></textarea>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn" type="button" id="compose">Compose prompt</button>
+            <span class="hint">Tip: Use months/weeks for kittens & puppies.</span>
+          </div>
+        </form>
+
+        <!-- Quick examples -->
+        <div class="chips" id="chips">
+          <span class="chip">Dog ate chocolate ~20g (9 kg). What red flags & when to seek urgent care?</span>
+          <span class="chip">Cat breathing fast for 2 days — what to monitor before vet?</span>
+          <span class="chip">Rabbit not eating — signs of GI stasis and safe comfort steps?</span>
+          <span class="chip">Bearded dragon lethargic — husbandry checks?</span>
+        </div>
+
+        <!-- Composer -->
+        <div class="composer" style="display:grid;grid-template-columns:1fr auto;gap:8px">
+          <textarea id="msg" placeholder="Describe species, age (e.g., 8 weeks), weight, symptoms, duration, exposures, and behavior changes. RoboVet returns education, monitoring, and when to seek urgent care (no drug dosages)."></textarea>
+          <button id="send" class="btn primary" type="button" title="Send (Ctrl/⌘+Enter)">Ask RoboVet</button>
+        </div>
+
+        <!-- Scrollable AI answer pane -->
+        <div class="answer-wrap" aria-live="polite" aria-label="RoboVet response">
+          <h3 class="answer-title">RoboVet Response</h3>
+          <div id="answerScroll" class="answer-scroll"><p class="hint">Your answer will appear here in a scrollable panel.</p></div>
+        </div>
+
+        <!-- (Optional) Recent requests list (still scrollable but compact) -->
+        <div class="chat">
+          <div class="chat-stream" id="chatStream"></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px">
+            <button class="btn" id="exportChat" type="button">Export chat</button>
+            <button class="btn ghost" id="clearChat" type="button">Clear</button>
+            <label class="hint"><input type="checkbox" id="streaming" /> stream answer</label>
+          </div>
+          <div class="hint" style="margin-top:6px">
+            By using RoboVet you agree it’s educational only (no diagnoses, prescriptions, or drug dosages).
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT: COMMUNITY BOARD -->
+    <section class="panel" aria-label="Community board">
+      <h2>Community Aids Board</h2>
+      <div class="body">
+        <div class="tools">
+          <input type="url" id="link" placeholder="Paste useful article/video/care sheet URL…" />
+          <input type="text" id="ltitle" placeholder="Title" />
+          <input type="text" id="ltags" placeholder="Tags (comma-separated)" />
+          <button class="btn" id="add" type="button">Add</button>
+        </div>
+        <div class="tools">
+          <input type="text" id="search" placeholder="Search titles & tags…" />
+          <button class="btn" id="exportBoard" type="button">Export board</button>
+          <input type="file" id="importBoard" accept="application/json" />
+          <button class="btn ghost" id="wipe" type="button">Wipe</button>
+        </div>
+        <div id="board" class="board"></div>
+        <div class="hint" style="margin-top:8px">
+          Safety: posts suggesting drug dosages/prescriptions or “guaranteed cures/prognoses” may be removed.
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer class="wrap" style="color:var(--muted);padding:26px 0">
+  <!-- Donation banner (bottom) -->
+  <div class="donationbar" role="note" aria-label="Support RoboVet">
+    <span class="hint">Support RoboVet development:</span>
+    <a href="https://cash.app/$dascient" target="_blank" rel="noopener">cash.app/$dascient</a>
+  </div>
+  <div style="margin-top:10px">
+    RoboVet is an educational tool only. It does not provide diagnoses, prescriptions, or drug dosages. If in doubt, consult a licensed veterinarian.
+  </div>
+</footer>
+
+<script>
+/* ============ Relay lock ============ */
+(function () {
+  const RELAY = "https://robovet.aristocles24.workers.dev/api/ai";
+  const cfg = JSON.parse(localStorage.getItem('robovet_cfg') || '{}');
+  localStorage.setItem('robovet_cfg', JSON.stringify({
+    ...cfg, provider:'relay', relayUrl: RELAY, apiKey:'', model: cfg.model || 'gpt-4o-mini'
+  }));
+})();
+
+/* ============ Helpers & minimal Markdown ============ */
+const $ = s => document.querySelector(s);
+function escapeHTML(s){return (s+'').replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))}
+function mdToHtml(md) {
+  let h = (md||'').replace(/[&<>]/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+  h = h.replace(/^###\s+(.*)$/gm,'<h3>$1</h3>');
+  h = h.replace(/^##\s+(.*)$/gm,'<h2>$1</h2>');
+  h = h.replace(/^#\s+(.*)$/gm,'<h1>$1</h1>');
+  h = h.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  h = h.replace(/^(?:-\s+.*(?:\n|$))+?/gm, block=>{
+    const lis = block.trimEnd().split('\n').map(l=>l.replace(/^-+\s+/,'').trim()).map(x=>`<li>${x}</li>`).join('');
+    return `<ul>${lis}</ul>`;
+  });
+  h = h.replace(/(^|\n)([^\n<][^\n]*)(?=\n|$)/g,(m,a,line)=>{
+    if (/^\s*(<h\d|<ul|<\/ul|<li|<\/li)/.test(line)) return a+line;
+    return `${a}<p>${line.trim()}</p>`;
+  });
+  return h;
+}
+function downloadFile(name, blob){
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),800);
+}
+
+/* ============ Chat (recent requests list) ============ */
+const chatStream = $('#chatStream');
+let history = JSON.parse(localStorage.getItem('robovet_chat')||'[]');
+
+function addMsg(role, html){
+  const w=document.createElement('div'); w.className='msg '+(role==='user'?'me':role);
+  const a=document.createElement('div'); a.className='avatar'; a.textContent=role==='user'?'You':(role==='assistant'?'RV':'Sys');
+  const b=document.createElement('div'); b.className='bubble'; b.innerHTML=html;
+  w.appendChild(a); w.appendChild(b); chatStream.appendChild(w);
+  smoothStickToBottom();
+}
+
+function redraw(){
+  chatStream.innerHTML='';
+  history.forEach(m=>{
+    if (m.role !== 'assistant') { // show only user/system in recent list
+      addMsg(m.role, m.role==='user'?escapeHTML(m.content):mdToHtml(m.content));
+    }
+  });
+}
+redraw();
+
+/* keep-at-bottom logic only if near bottom */
+function nearBottom(el){ return (el.scrollHeight - el.scrollTop - el.clientHeight) < 80; }
+function smoothStickToBottom(){ if (nearBottom(chatStream)) chatStream.scrollTo({ top: chatStream.scrollHeight, behavior:'smooth' }) }
+
+/* auto-resize textareas */
+function autoSizeTextArea(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight, 360)+'px' }
+;['msg','notes'].forEach(id=>{ const ta=document.getElementById(id); if(ta){ ta.addEventListener('input',()=>autoSizeTextArea(ta)); autoSizeTextArea(ta);} });
+
+function redFlags(txt){
+  return [/not\s*breath/i,/unconscious|collapsed/i,/seizure|convuls/i,/bleeding\s*(heavily|a lot)/i,/poison|xylitol|antifreeze|ibuprofen|tylenol|paracetamol|rat\s*poison/i,/heat\s*stroke|overheat/i,/hit\s*by\s*(a\s*)?(car|vehicle)/i].some(r=>r.test(txt||''));
+}
+function triagePrompt(raw){
+  const sp=$('#sp').value, age=$('#age').value, ageUnit=$('#ageUnit').value, wt=$('#wt').value, c=$('#concern').value, notes=$('#notes').value;
+  const parts = [
+    sp?`Species: ${sp}`:'', age?`Age: ${age} ${ageUnit}`:'', wt?`Weight: ${wt} kg`:'', c?`Concern: ${c}`:'', notes?`Notes: ${notes}`:'', raw?`User text: ${raw}`:''
+  ].filter(Boolean).join('\n');
+  return `Educational guidance only (no diagnoses/prescriptions/drug dosages). Return sections: Red flags; Categories of possible causes (not diagnoses); Safe monitoring & comfort steps (no meds); What to tell a vet; When to seek urgent care.\n\n${parts}`;
+}
+
+/* ============ ANSWER PANE handling (scrollable) ============ */
+const answer = $('#answerScroll');
+function setAnswer(html){
+  answer.innerHTML = html || '<p class="hint">No answer.</p>';
+  if ((answer.scrollHeight - answer.scrollTop - answer.clientHeight) < 60) {
+    answer.scrollTop = answer.scrollHeight;
+  }
+}
+
+async function aiFetch(messages, stream=false){
+  const cfg=JSON.parse(localStorage.getItem('robovet_cfg')||'{}');
+  const url = cfg.relayUrl + (stream ? '?stream=1' : '');
+  const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ model: cfg.model || 'gpt-4o-mini', messages, stream }) });
+  if (stream && (res.headers.get('content-type')||'').includes('text/event-stream')) {
+    const reader = res.body.getReader(); const dec=new TextDecoder(); let out='';
+    while(true){ const {value,done}=await reader.read(); if(done)break;
+      const chunk=dec.decode(value,{stream:true});
+      for (const line of chunk.split('\n')){ if(!line.startsWith('data: ')) continue; const data=line.slice(6).trim(); if(data==='[DONE]') continue;
+        try{ const j=JSON.parse(data); out+=j.choices?.[0]?.delta?.content||''; }catch{}
+      }
+      setAnswer(mdToHtml(out));
+    }
+    return out;
+  }
+  const j=await res.json(); return j.text||'';
+}
+
+/* ---- UI events ---- */
+document.getElementById('compose').addEventListener('click', ()=>{
+  const prompt=triagePrompt(''); const m=document.getElementById('msg'); m.value=(prompt+(m.value?('\n\n'+m.value):'')).trim(); autoSizeTextArea(m); m.focus();
+});
+document.getElementById('chips').addEventListener('click', e=>{
+  const t=e.target.closest('.chip'); if(!t) return; const m=document.getElementById('msg'); m.value=t.textContent.trim(); autoSizeTextArea(m); m.focus();
+});
+document.addEventListener('keydown', e=>{ if((e.metaKey||e.ctrlKey)&&e.key==='Enter') document.getElementById('send').click(); });
+
+document.getElementById('send').addEventListener('click', async ()=>{
+  const raw=document.getElementById('msg').value.trim(); if(!raw) return; const prompt=triagePrompt(raw);
+  addMsg('user', escapeHTML(raw)); history.push({role:'user',content:raw}); localStorage.setItem('robovet_chat', JSON.stringify(history));
+  if (redFlags(raw)) {
+    const note = '<div class="hint"><strong>Potential emergency indicators detected.</strong> If severe distress, seizures, collapse, heavy bleeding, or suspected poisoning, seek an <a href="https://veccs.org/certified-facility-directory/" target="_blank" rel="noopener">emergency vet</a> now.</div>';
+    history.push({role:'system',content:note}); addMsg('system', note);
+  }
+  const msgs=[
+    {role:'system',content:`You are RoboVet, a cautious veterinary information assistant. You NEVER diagnose or prescribe and MUST NOT provide drug dosages. Educational guidance only. If immediate danger (not breathing, seizures, collapse, severe bleeding, suspected poisoning, heat stroke, vehicle trauma) advise emergency veterinary care NOW and provide reputable resources.`},
+    {role:'user',content:prompt}
+  ];
+
+  setAnswer('<p class="hint">Thinking…</p>');
+  try{
+    const text=await aiFetch(msgs, document.getElementById('streaming').checked);
+    setAnswer(mdToHtml(text));
+    history.push({role:'assistant',content:text});
+    localStorage.setItem('robovet_chat', JSON.stringify(history));
+  }catch(err){
+    setAnswer('<p class="hint">Error: '+escapeHTML(err.message||err)+'</p>');
+  }
+  const m=document.getElementById('msg'); m.value=''; autoSizeTextArea(m);
+});
+
+document.getElementById('exportChat').addEventListener('click', ()=>{
+  const txt=history.map(m=>`[${m.role.toUpperCase()}] ${m.content}`).join('\n\n'); downloadFile('robovet_chat.txt', new Blob([txt],{type:'text/plain'}));
+});
+document.getElementById('clearChat').addEventListener('click', ()=>{
+  if (!confirm('Clear the chat history on this device?')) return; history=[]; localStorage.removeItem('robovet_chat'); setAnswer('<p class="hint">Cleared. Ask a new question.</p>'); redraw();
+});
+
+/* ============ Community board (links) ============ */
+const boardEl=document.getElementById('board'); let board=JSON.parse(localStorage.getItem('robovet_board')||'[]');
+function saveBoard(){ localStorage.setItem('robovet_board', JSON.stringify(board)) }
+function renderBoard(){
+  const q=(document.getElementById('search').value||'').toLowerCase();
+  const items=board.filter(x=>{ const hay=[x.title||'',x.url||'',(x.tags||[]).join(',')].join(' ').toLowerCase(); return !q||hay.includes(q); }).sort((a,b)=>b.created-a.created);
+  boardEl.innerHTML=items.length?'':'<div class="hint">No items yet. Add helpful, reputable resources.</div>';
+  items.forEach(it=>{
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <div style="font-weight:700">${escapeHTML(it.title||'(untitled)')}</div>
+        <div class="hint">${new Date(it.created).toLocaleString()}</div>
+      </div>
+      <div style="margin:6px 0"><a href="${escapeHTML(it.url)}" target="_blank" rel="noopener">${escapeHTML(it.url)}</a></div>
+      <div class="tags">${(it.tags||[]).map(t=>`<span class="tag">${escapeHTML(t)}</span>`).join('')}</div>
+      <div style="margin-top:8px;display:flex;gap:8px"><button class="btn ghost del">Delete</button></div>`;
+    card.querySelector('.del').addEventListener('click', ()=>{ if(!confirm('Delete this item?')) return; board=board.filter(b=>b.id!==it.id); saveBoard(); renderBoard(); });
+    boardEl.appendChild(card);
+  });
+}
+renderBoard();
+document.getElementById('add').addEventListener('click', ()=>{
+  const url=document.getElementById('link').value.trim(); if(!url) return;
+  const title=document.getElementById('ltitle').value.trim()||url;
+  const tags=document.getElementById('ltags').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const text=[title,url,tags.join(',')].join(' ').toLowerCase();
+  if (/\b(mg|ml|tablet|pill|dose|dosage|amoxicillin|metronidazole|prednisone|gabapentin|enrofloxacin|clavamox|guarantee|cure|100%)\b/i.test(text)){
+    alert('For safety, please avoid posting drug dosages/prescriptions or guaranteed cure/prognosis claims.'); return;
+  }
+  board.unshift({id:'lnk_'+Math.random().toString(36).slice(2,9),title,url,tags,created:Date.now()}); saveBoard(); renderBoard();
+  document.getElementById('link').value=''; document.getElementById('ltitle').value=''; document.getElementById('ltags').value='';
+});
+document.getElementById('search').addEventListener('input', renderBoard);
+document.getElementById('exportBoard').addEventListener('click', ()=>{ downloadFile('robovet_board.json', new Blob([JSON.stringify(board,null,2)],{type:'application/json'})); });
+document.getElementById('importBoard').addEventListener('change', async e=>{
+  const f=e.target.files?.[0]; if(!f) return;
+  try{ const arr=JSON.parse(await f.text()); if(!Array.isArray(arr)) throw new Error('Invalid JSON');
+    const ids=new Set(board.map(x=>x.id)); const merged=arr.filter(x=>x&&x.id&&!ids.has(x.id)); board=[...merged,...board]; saveBoard(); renderBoard(); alert(`Imported ${merged.length} item(s).`);
+  }catch(err){ alert('Import error: '+(err.message||err)) } finally { e.target.value=''; }
+});
+document.getElementById('wipe').addEventListener('click', ()=>{ if(!confirm('Wipe your local board?')) return; board=[]; saveBoard(); renderBoard(); });
+</script>
+</body>
+</html>
