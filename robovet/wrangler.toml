@@ -1,0 +1,17 @@
+name = "robovet-ai"
+main = "workers/robovet-ai/index.ts"
+compatibility_date = "2024-11-01"
+# If you use node libs, uncomment:
+# compatibility_flags = ["nodejs_compat"]
+
+# Use your workers.dev subdomain by default
+workers_dev = true
+
+# To bind to a custom domain later, uncomment & edit:
+# routes = [
+#   { pattern = "robovet.dascient.com", custom_domain = true }
+# ]
+
+[vars]
+# Optional: restrict browser origins (CSV). Leave empty to allow all.
+ALLOWED_ORIGINS = "https://dascient.com,https://robovet.aristocles24.workers.dev"
