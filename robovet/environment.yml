@@ -1,0 +1,22 @@
+name: robovet
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  # Python runtime (for scripts, notebooks, tooling)
+  - python=3.11
+
+  # Node.js + npm (needed for Wrangler and Worker builds)
+  - nodejs=20
+  - npm
+
+  # Useful Python tools
+  - pip
+  - pip:
+      - black
+      - flake8
+      - pre-commit
+
+variables:
+  CLOUDFLARE_API_TOKEN: 1qpRpDNbaUQJfoeH9ftD6qxnp-yG2M_v6qiXhyFG
+  CLOUDFLARE_ACCOUNT_ID: 22202ff07e559347483b0526ded1fd31
