@@ -1,0 +1,5 @@
+
+app_identifier("com.yourcompany.RoboVet") # Bundle ID
+apple_id("you@example.com")               # Your Apple ID
+itc_team_id("123456789")                  # App Store Connect Team ID
+team_id("ABCDE12345")                     # Developer Team ID

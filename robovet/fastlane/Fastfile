@@ -1,0 +1,14 @@
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    build_app(
+      scheme: "RoboVet",
+      export_method: "app-store",
+      include_bitcode: false
+    )
+    upload_to_testflight
+  end
+end
