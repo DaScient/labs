@@ -73,5 +73,3 @@ Unless otherwise noted in a specific subdirectory, the contents of this reposito
 🌌 Notes
 
 “Every experiment is a window into a possible future.”
-
-Would you like me to make each subfolder’s section include **example usage snippets** (like showing how to run a Cloudflare worker or the crypto dashboard), or keep it high-level like this?
