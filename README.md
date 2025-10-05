@@ -40,7 +40,7 @@ Example:
 ```bash
 cd ml/experiment-01
 python train.py
-
+```
 🧪 Philosophy
 
 This repository is not production code. It’s a lab:
