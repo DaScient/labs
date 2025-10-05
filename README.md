@@ -21,6 +21,7 @@ The goal: to explore, test, break, and learn from the boundaries of current tech
 ---
 
 ## 📂 Repository Structure
+```bash
 labs/
 │
 ├── ml/            # Machine learning experiments
