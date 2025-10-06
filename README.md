@@ -51,20 +51,17 @@ This repository is not production code. It’s a lab:
 
 The focus is on curiosity-driven exploration over polished deliverables.
 
-⸻
 
 🤝 Contributing
 
 Contributions, ideas, and experiments are welcome.
 Please open issues or pull requests with your proposals.
 
-⸻
 
 📜 License
 
 This repository is released under the MIT License.
 
-⸻
 
 🌌 Notes
 
