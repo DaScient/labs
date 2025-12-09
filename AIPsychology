@@ -1,0 +1,943 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Artificial Intelligence in Modern Psychology</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Canela:wght@300;400;700&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        .canela { font-family: 'Canela', serif; }
+        .inter { font-family: 'Inter', sans-serif; }
+        body { 
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            overflow-x: hidden;
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.1) 0%, rgba(30, 58, 138, 0.05) 100%);
+        }
+        .toc-fixed {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(30, 58, 138, 0.1);
+            z-index: 100;
+            overflow-y: auto;
+            padding: 2rem 1.5rem;
+        }
+        .main-content {
+            margin-left: 280px;
+            min-height: 100vh;
+        }
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(30, 58, 138, 0.2) 50%, transparent 100%);
+            margin: 4rem 0;
+        }
+        .citation-link {
+            color: #1e3a8a;
+            text-decoration: none;
+            border-bottom: 1px dotted #1e3a8a;
+            transition: all 0.2s ease;
+        }
+        .citation-link:hover {
+            background: rgba(30, 58, 138, 0.1);
+            border-bottom: 1px solid #1e3a8a;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(30, 58, 138, 0.05) 0%, rgba(30, 58, 138, 0.02) 100%);
+            border-left: 4px solid #1e3a8a;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+        @media (max-width: 1024px) {
+            .toc-fixed { display: none; }
+            .main-content { margin-left: 0; }
+        }
+        @media (max-width: 768px) {
+            .bento-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+        }
+    </style>
+  <base target="_blank">
+</head>
+
+  <body class="inter text-gray-800 leading-relaxed">
+    <!-- Fixed Table of Contents -->
+    <nav class="toc-fixed">
+      <div class="mb-8">
+        <h3 class="canela text-lg font-semibold text-gray-900 mb-4">Contents</h3>
+        <ul class="space-y-2 text-sm">
+          <li>
+            <a href="#hero" class="text-gray-600 hover:text-blue-800 transition-colors">Introduction</a>
+          </li>
+          <li>
+            <a href="#cognitive-partners" class="text-gray-600 hover:text-blue-800 transition-colors">1. From Tools to Cognitive Partners</a>
+          </li>
+          <li>
+            <a href="#computational-turn" class="text-gray-600 hover:text-blue-800 transition-colors">2. The Computational Turn</a>
+          </li>
+          <li>
+            <a href="#affective-algorithms" class="text-gray-600 hover:text-blue-800 transition-colors">3. Rise of Affective Algorithms</a>
+          </li>
+          <li>
+            <a href="#identity-agency" class="text-gray-600 hover:text-blue-800 transition-colors">4. Identity &amp; Agency</a>
+          </li>
+          <li>
+            <a href="#microscope-mind" class="text-gray-600 hover:text-blue-800 transition-colors">5. AI as Mind Microscope</a>
+          </li>
+          <li>
+            <a href="#ethical-challenges" class="text-gray-600 hover:text-blue-800 transition-colors">6. Ethical &amp; Existential Challenges</a>
+          </li>
+          <li>
+            <a href="#coevolution" class="text-gray-600 hover:text-blue-800 transition-colors">7. Toward Human-AI Coevolution</a>
+          </li>
+          <li>
+            <a href="#conclusion" class="text-gray-600 hover:text-blue-800 transition-colors">8. Conclusion</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Hero Section -->
+      <section id="hero" class="hero-gradient min-h-screen flex items-center px-8 py-16">
+        <div class="max-w-7xl mx-auto w-full">
+          <div class="bento-grid">
+            <!-- Text Content -->
+            <div class="space-y-8">
+              <div class="space-y-4">
+                <div class="inline-block px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                  The Frontier of Intelligence
+                </div>
+                <h1 class="canela text-5xl md:text-6xl lg:text-7xl font-light text-gray-900 leading-tight">
+                  <span class="italic">Artificial Intelligence</span>
+                  <br/>
+                  in Modern Psychology
+                </h1>
+                <p class="text-xl text-gray-600 max-w-2xl leading-relaxed">
+                  Where cognition becomes computable and models become reflective surfaces, humanity faces its most profound questions about the nature of mind, emotion, and identity.
+                </p>
+              </div>
+
+              <!-- Key Highlights -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12">
+                <div class="highlight-box p-6 rounded-lg">
+                  <div class="flex items-center space-x-3 mb-3">
+                    <i class="fas fa-brain text-blue-800"></i>
+                    <h3 class="canela text-lg font-semibold">Cognitive Partners</h3>
+                  </div>
+                  <p class="text-sm text-gray-600">AI evolves from passive tools to active participants in psychological research and practice</p>
+                </div>
+                <div class="highlight-box p-6 rounded-lg">
+                  <div class="flex items-center space-x-3 mb-3">
+                    <i class="fas fa-heart text-blue-800"></i>
+                    <h3 class="canela text-lg font-semibold">Affective Computing</h3>
+                  </div>
+                  <p class="text-sm text-gray-600">Machines learn to detect, interpret, and simulate human emotional states</p>
+                </div>
+                <div class="highlight-box p-6 rounded-lg">
+                  <div class="flex items-center space-x-3 mb-3">
+                    <i class="fas fa-user-circle text-blue-800"></i>
+                    <h3 class="canela text-lg font-semibold">Identity Evolution</h3>
+                  </div>
+                  <p class="text-sm text-gray-600">The self transforms in response to intelligent, externalized cognitive systems</p>
+                </div>
+                <div class="highlight-box p-6 rounded-lg">
+                  <div class="flex items-center space-x-3 mb-3">
+                    <i class="fas fa-microscope text-blue-800"></i>
+                    <h3 class="canela text-lg font-semibold">Mind Microscope</h3>
+                  </div>
+                  <p class="text-sm text-gray-600">AI reveals patterns in human behavior invisible to traditional research methods</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hero Image -->
+            <div class="relative">
+              <img src="https://kimi-web-img.moonshot.cn/img/media.licdn.com/709f26a91e78f296d9694916a26a1652f1883036" alt="Abstract neural network representing AI integration with human psychology" class="w-full h-auto rounded-2xl shadow-2xl" size="large" aspect="wide" style="photo" query="abstract neural network psychology" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+              <div class="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent rounded-2xl"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 1: From Tools to Cognitive Partners -->
+      <section id="cognitive-partners" class="px-8 py-16 bg-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">1.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              From Tools to Cognitive Partners
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              AI has moved beyond metaphor to become an active cognitive partner, performing psychological tasks alongside humans and challenging our understanding of intelligence itself.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The integration of artificial intelligence into psychology marks a paradigm shift from viewing AI as a mere analytical tool to recognizing it as an active cognitive partner. This evolution is not gradual but rapid and transformative, reshaping the foundations of psychological research and practice. For over a century, psychology grappled with capturing nuanced human experience while striving for scientific precision, often adopting technological metaphors—steam engines, telegraphs, computers—to conceptualize the mind. However, the advent of sophisticated AI, particularly post-2023, has rendered these metaphors obsolete.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <blockquote class="text-lg italic text-gray-800 mb-4">
+                &#34;AI is no longer just a metaphor for the mind but a tangible system that can exhibit behaviors resembling curiosity, pattern recognition, and associative learning.&#34;
+              </blockquote>
+              <cite class="text-sm text-gray-600">
+                — <a href="https://news.qq.com/rain/a/20251121A01K8000" class="citation-link">People&#39;s Daily, 2025</a>
+              </cite>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Large Language Models as &#34;Silicon Participants&#34;
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              A groundbreaking development in AI&#39;s application to psychology involves using large language models (LLMs) as &#34;silicon participants&#34; in psychological experiments. This innovative approach, which has gained significant traction in recent years, involves using LLMs to simulate human responses to psychological tests and scenarios. By treating these models as virtual subjects, researchers can conduct large-scale experiments with unprecedented control and consistency.
+            </p>
+
+            <div class="bg-gray-50 p-6 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">The Tsinghua University Study</h4>
+              <p class="text-gray-700 mb-4">
+                A landmark study conducted by researchers at Tsinghua University&#39;s School of Economics and Management, published in <em>Nature Computational Science</em>, exemplifies this approach&#39;s power. The research team successfully replicated classic psychological experiments using an LLM, demonstrating the model&#39;s capacity to produce human-like responses to established psychological tests.
+              </p>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-external-link-alt mr-2"></i>
+                <a href="https://news.qq.com/rain/a/20241122A03X9Q00" class="citation-link">Source: Tencent News, 2024</a>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              AI&#39;s Expanding Role in Psychological Tasks
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              AI&#39;s role in psychology has expanded far beyond data analysis into active engagement with psychological tasks. These systems now evaluate emotional states, predict behavioral trajectories, assist in clinical triage, and even simulate empathy in therapeutic interactions. The integration is driven by sophisticated algorithms that process complex human data—speech patterns, facial expressions, written text—to provide valuable insights into the human mind.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-8">
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3">Emotional State Evaluation</h4>
+                <p class="text-sm text-gray-700">AI analyzes vocal tonality, facial microexpressions, and linguistic cues to infer mood, stress levels, and emotional well-being.</p>
+              </div>
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3">Clinical Triage Assistance</h4>
+                <p class="text-sm text-gray-700">AI-powered tools conduct initial assessments, generate preliminary diagnoses, and help ensure timely, appropriate care.</p>
+              </div>
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3">Behavioral Prediction</h4>
+                <p class="text-sm text-gray-700">Machine learning models identify patterns over time to predict future outcomes and likelihood of relapse.</p>
+              </div>
+              <div class="bg-blue-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3">Empathy Simulation</h4>
+                <p class="text-sm text-gray-700">Advanced NLP techniques enable AI to engage in therapeutic conversations that feel remarkably human.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 2: The Computational Turn in Mental Life -->
+      <section id="computational-turn" class="px-8 py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">2.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              The Computational Turn in Mental Life
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              AI has precipitated a &#34;computational turn&#34; in psychology, shifting focus from abstract theories to concrete, empirically testable computational systems.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              For decades, cognitive psychology has conceptualized the mind as an information-processing system. AI now provides a means to instantiate these theories in tangible form, allowing researchers to move beyond metaphor and analogy to build working models of cognitive processes that can be manipulated, tested, and refined.
+            </p>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              AI as an Empirical Model for Cognitive Theories
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              Artificial intelligence has emerged as a powerful empirical model for testing and refining cognitive theories. In the past, psychological theories were often expressed as verbal descriptions or mathematical equations, which could be difficult to test and validate. AI provides a new way to formalize these theories by translating them into computational models that can be simulated and experimented with.
+            </p>
+
+            <div class="bg-white p-8 rounded-lg shadow-sm my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Transformer Architectures and Dynamic Attention</h4>
+              <p class="text-gray-700 mb-4">
+                One of the most significant developments in AI with implications for cognitive psychology is the emergence of Transformer architectures. These models, based on a mechanism called &#34;self-attention,&#34; have revolutionized natural language processing and are now being used to model cognitive processes.
+              </p>
+              <p class="text-gray-700">
+                The self-attention mechanism allows the model to weigh the importance of different parts of the input when making predictions, similar to how humans allocate attention to different aspects of their environment. This has led to a surge of interest in using Transformers to model human attention, with researchers exploring how well these models can predict human eye movements, reading times, and other measures of attentional allocation.
+              </p>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Scalability of Cognition
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              One of the most profound implications of the computational turn is the realization that cognition is not a fixed property of biological organisms but a scalable process that can be implemented in various systems. Human cognition is bounded by biological constraints—neuron count, transmission speed, metabolic costs. AI, however, is limited only by computational resources, which can be scaled as needed.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Beyond Biological Constraints</h4>
+              <p class="text-gray-700 mb-4">
+                The scalability of AI allows researchers to conduct experiments impossible with human participants. Researchers can now investigate what would happen if working memory capacity were doubled, if attention could be perfectly global, or if emotion recognition were purely statistical.
+              </p>
+              <p class="text-gray-700">
+                These &#34;what if&#34; experiments provide valuable insights into the functional organization of the mind and help identify key principles underlying intelligent behavior. By manipulating cognitive system parameters at will, researchers can explore the space of possible minds in systematic ways.
+              </p>
+            </div>
+
+            <img src="https://kimi-web-img.moonshot.cn/img/pub.sakana.ai/215b3c20d41be8ea60ba8d99c8b327eec52c9c49.png" alt="Conceptual visualization of scalable human-AI cognitive system showing neural networks extending beyond biological limits" class="w-full h-64 object-cover rounded-lg shadow-lg my-8" size="medium" aspect="wide" style="photo" query="scalable AI neural network cognitive enhancement" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+
+            <p class="text-gray-700 leading-relaxed">
+              By building and testing artificial cognitive systems, researchers gain new insights into the unique features of human mental architecture. The comparison between human and artificial cognition illuminates the parameters of our own minds. Studying how AI systems fail to replicate human behavior reveals specific cognitive mechanisms unique to humans, helping identify what makes human intelligence so flexible, creative, and adaptable.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 3: The Rise of Affective Algorithms -->
+      <section id="affective-algorithms" class="px-8 py-16 bg-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">3.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              The Rise of Affective Algorithms
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              Affective computing—machines that detect, interpret, and simulate human emotions—is redefining therapeutic practice and human-computer interaction.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              One of the most compelling frontiers in AI-psychology intersection is affective computing, dedicated to creating machines that can recognize and respond to human emotions. By leveraging computer vision, natural language processing, and physiological sensors, affective algorithms are becoming increasingly adept at reading subtle cues that reveal our inner emotional world.
+            </p>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Science of Affective Computing
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              Affective computing combines insights from psychology, computer science, and engineering to create systems that recognize and respond to human emotions. The goal is to bridge the gap between human emotional expression and machine understanding, enabling more natural and intuitive interaction.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+              <div class="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                  <i class="fas fa-eye text-blue-600 mr-3"></i>
+                  Microexpression Detection
+                </h4>
+                <p class="text-sm text-gray-700">
+                  Computer vision algorithms detect involuntary facial expressions occurring in fractions of a second, revealing genuine emotional states that humans might miss.
+                </p>
+              </div>
+              <div class="bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                  <i class="fas fa-microphone text-purple-600 mr-3"></i>
+                  Vocal Analysis
+                </h4>
+                <p class="text-sm text-gray-700">
+                  AI models analyze pitch, volume, speaking rate, and other vocal cues to infer emotional states from speech patterns.
+                </p>
+              </div>
+              <div class="bg-gradient-to-br from-green-50 to-teal-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                  <i class="fas fa-comments text-green-600 mr-3"></i>
+                  Linguistic Cues
+                </h4>
+                <p class="text-sm text-gray-700">
+                  Natural language processing techniques identify emotional content in text and speech, classifying sentiment and specific emotions.
+                </p>
+              </div>
+              <div class="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                  <i class="fas fa-heartbeat text-orange-600 mr-3"></i>
+                  Physiological Proxies
+                </h4>
+                <p class="text-sm text-gray-700">
+                  Wearable sensors and other devices measure physiological indicators like heart rate variability and skin conductance to assess emotional states.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Redefining Therapeutic Practice
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              Affective algorithms are profoundly impacting mental health care, redefining therapy delivery and experience. AI-powered tools now provide therapeutic services from initial screening to personalized interventions, augmenting rather than replacing human therapists.
+            </p>
+
+            <div class="bg-gray-50 p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4 flex items-center">
+                <i class="fas fa-robot text-blue-600 mr-3"></i>
+                Emotion-Aware Chatbots
+              </h4>
+              <p class="text-gray-700 mb-4">
+                One of the most promising applications is emotion-aware chatbots providing front-line mental health support. These chatbots are designed to be empathetic, non-judgmental, and available 24/7, offering a safe space for individuals to share thoughts and feelings.
+              </p>
+              <p class="text-gray-700">
+                They provide psychoeducation, self-help tools, crisis support, and can connect users with human therapists when needed. This represents a significant step toward scalable mental health care.
+              </p>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Ethical Challenges in Affective Computing
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The rapid advancement of affective computing raises complex ethical challenges. As machines become more adept at reading and responding to our emotions, we must grapple with fundamental questions about privacy, autonomy, and the nature of human-machine relationships.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Preventing Emotional Manipulation</h4>
+              <p class="text-gray-700 mb-4">
+                One of the most significant ethical challenges is preventing emotional modeling from becoming manipulation. The ability to detect emotional states and tailor experiences accordingly is a powerful tool for persuasion that could be misused.
+              </p>
+              <p class="text-gray-700">
+                To prevent misuse, we need ethical guidelines based on transparency, consent, and beneficence. Users must understand how their emotional data is collected and used, and systems must be designed to empower rather than manipulate.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 4: Identity, Agency, and the Psychological Self -->
+      <section id="identity-agency" class="px-8 py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">4.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              Identity, Agency, and the Psychological Self
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              As AI systems occupy psychological roles traditionally reserved for humans, they fundamentally reshape our sense of identity, agency, and the psychological self.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              As AI systems become more conversational, reflective, and context-aware, they begin occupying psychological roles traditionally reserved for humans—mentor, collaborator, companion, critic. This has profound implications for our sense of identity and agency as we increasingly turn to AI for guidance, support, and validation.
+            </p>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              AI&#39;s Occupation of Traditional Human Psychological Roles
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The rise of AI is leading to a significant shift in human relationships, with AI systems increasingly filling psychological roles traditionally occupied by other humans. This is not just about AI performing tasks once done by people; it&#39;s about AI taking on the emotional and social functions at the heart of human connection.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+              <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-center mb-4">
+                  <i class="fas fa-graduation-cap text-3xl text-blue-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 text-center mb-3">AI as Mentors</h4>
+                <p class="text-sm text-gray-700 text-center">
+                  AI-powered chatbots provide personalized guidance and support in education, career development, and wellness, drawing on vast data to offer tailored advice.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-center mb-4">
+                  <i class="fas fa-handshake text-3xl text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 text-center mb-3">AI as Collaborators</h4>
+                <p class="text-sm text-gray-700 text-center">
+                  AI tools collaborate with writers, artists, musicians, and researchers to generate ideas, analyze data, and produce innovative work.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-center mb-4">
+                  <i class="fas fa-heart text-3xl text-red-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 text-center mb-3">AI as Companions</h4>
+                <p class="text-sm text-gray-700 text-center">
+                  AI companions provide social and emotional support, engaging in conversation and offering connection to those who are lonely or isolated.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Externalization of Intelligence and its Impact on the Self
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The increasing reliance on AI for cognitive and emotional tasks represents a significant externalization of human intelligence, fundamentally reshaping the self. As AI systems take on roles as memory aids, decision-making assistants, and emotional regulators, they actively alter the internal landscape of the mind.
+            </p>
+
+            <div class="bg-white p-8 rounded-lg shadow-sm my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">The &#34;Algorithmic Self&#34;</h4>
+              <p class="text-gray-700 mb-4">
+                The concept of the &#34;algorithmic self&#34; emerges from the growing tendency to delegate introspection to artificial intelligence. AI-powered applications position themselves as tools for expanding self-awareness, but the complete delegation of emotional reflection can lead to estrangement from one&#39;s own emotional life.
+              </p>
+              <p class="text-gray-700">
+                This reliance can lead to degradation of emotional self-awareness, as individuals increasingly trust algorithmic interpretations over their own feelings and intuitions. The result is a self-concept partially constructed by external systems, raising questions about authenticity.
+              </p>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Re-evaluating Core Psychological Constructs
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The profound impact of AI on human psychology necessitates re-evaluation of the discipline&#39;s core constructs. As AI systems become integrated into daily life, they challenge assumptions about emotional experience, attachment, identity, and cognitive labor. Traditional frameworks, developed in a pre-AI era, are often ill-equipped to address the unique dynamics of human-AI interaction.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">The Redistribution of Cognitive Labor</h4>
+              <p class="text-gray-700 mb-4">
+                The increasing reliance on AI for emotional support represents a significant redistribution of cognitive labor. Emotional regulation, traditionally developed through practice and experience, is increasingly outsourced to AI chatbots and therapeutic apps.
+              </p>
+              <p class="text-gray-700">
+                This can lead to &#34;coping skill atrophy,&#34; where individuals fail to develop internal self-regulation strategies. Research has shown that adolescents reliant on AI for emotional support may find themselves unable to regulate emotions when the AI is removed, highlighting the risk of dependency.
+              </p>
+            </div>
+
+            <img src="https://kimi-web-img.moonshot.cn/img/substackcdn.com/b37a7a23de5a318ab26638368a94e4565fd9c08c.png" alt="Abstract visualization of the &#39;algorithmic self&#39; concept showing human identity merging with digital elements" class="w-full h-64 object-cover rounded-lg shadow-lg my-8" size="medium" aspect="wide" query="algorithmic self abstract visualization" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 5: AI as a New Microscope for the Mind -->
+      <section id="microscope-mind" class="px-8 py-16 bg-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">5.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              AI as a New Microscope for the Mind
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              AI is revolutionizing psychological research by uncovering patterns in human behavior that are too subtle, complex, or vast for traditional methods.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              Artificial Intelligence is serving as a powerful analytical instrument, a &#34;new microscope for the mind,&#34; capable of uncovering patterns in human behavior that are too subtle, complex, or vast for traditional research methods. Where psychology has historically relied on controlled laboratory experiments and limited sample sizes, AI introduces a paradigm shift toward large-scale, real-world behavioral modeling.
+            </p>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Uncovering Subtle and Complex Patterns
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The application of AI in psychology has unlocked the ability to detect and analyze intricate patterns in human behavior previously invisible to researchers. By leveraging machine learning algorithms and vast datasets, AI can identify subtle correlations and predictive signals related to personality, mental health, and social dynamics.
+            </p>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Predicting Psychological Traits from Digital Footprints</h4>
+              <p class="text-gray-700 mb-4">
+                Researchers have developed sophisticated AI systems that analyze data from social media and digital platforms to infer personality characteristics and mental health risks. A notable example is the &#34;Wenxin&#34; (TextMind) system developed by the Institute of Psychology at the Chinese Academy of Sciences.
+              </p>
+              <div class="flex items-center text-sm text-gray-600">
+                <i class="fas fa-external-link-alt mr-2"></i>
+                <span>Source: Institute of Psychology, Chinese Academy of Sciences</span>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Shift from Laboratory to Real-World Modeling
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              AI is facilitating a monumental shift away from traditional laboratory constraints to the dynamic reality of everyday life. By leveraging data from smartphones, wearables, and social media, researchers can now study human behavior as it unfolds in real-time, capturing the rich complexity of human experience.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+              <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                  <i class="fas fa-users text-blue-600 mr-3"></i>
+                  Population-Scale Social Mapping
+                </h4>
+                <p class="text-sm text-gray-700">
+                  AI enables psychologists to map social behavior across entire populations, studying phenomena like information spread through social networks and the formation of online communities.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                  <i class="fas fa-dna text-green-600 mr-3"></i>
+                  Mental Illness Biomarkers
+                </h4>
+                <p class="text-sm text-gray-700">
+                  AI analyzes high-dimensional data from brain imaging, genetics, and wearable sensors to identify objective biomarkers for mental illness.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The &#34;Centaur&#34; AI Model: A Case Study
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The &#34;Centaur&#34; AI model, developed by researchers at the Helmholtz Munich research center and published in <em>Nature</em>, represents a landmark achievement in applying AI to psychology. This model was trained on the massive Psych-101 dataset, which includes data from over 60,000 participants making over 10 million choices across 160 psychological experiments.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Predicting Human Decisions and Brain Activity</h4>
+              <p class="text-gray-700 mb-4">
+                The &#34;Centaur&#34; model&#39;s capabilities extend beyond predicting human choices to providing insights into cognitive mechanisms. In experiments comparing its predictions to fMRI data, &#34;Centaur&#34; was significantly better at predicting which brain regions would be active during decision-making.
+              </p>
+              <p class="text-gray-700">
+                Further analysis revealed that &#34;Centaur&#39;s&#34; choices were guided by a &#34;minimum regret&#34; principle, demonstrating that AI can be used not only to simulate human behavior but to discover the underlying cognitive principles that govern it.
+              </p>
+            </div>
+
+            <img src="https://kimi-web-img.moonshot.cn/img/today.duke.edu/0c2c8240a37125035534cec298b8f96529fb19d2.png" alt="fMRI brain scan showing neural activity patterns" class="w-full h-64 object-cover rounded-lg shadow-lg my-8" size="medium" aspect="wide" style="photo" query="fMRI brain scan neural activity" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 6: Ethical, Clinical, and Existential Challenges -->
+      <section id="ethical-challenges" class="px-8 py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">6.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              Ethical, Clinical, and Existential Challenges
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              The integration of AI into psychology brings a dense web of ethical, clinical, and existential challenges that compel us to confront fundamental questions about privacy, autonomy, and human nature.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The integration of artificial intelligence into psychological research and practice brings with it a complex web of ethical, clinical, and existential challenges. As AI systems gain the ability to model, predict, and influence the most intimate aspects of human experience, the field of psychology must confront new responsibilities that go beyond technical hurdles to fundamental questions about what it means to be human.
+            </p>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Foundational Ethical Considerations
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The application of AI in psychology is built upon a foundation of ethical considerations that must be addressed to ensure responsible use of this powerful technology. These issues take on new urgency and complexity in the AI context.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+              <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-center mb-4">
+                  <i class="fas fa-shield-alt text-3xl text-red-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 text-center mb-3">Privacy &amp; Data Protection</h4>
+                <p class="text-sm text-gray-700 text-center">
+                  Protecting sensitive mental health data collected by AI systems through encryption, secure storage, and transparent policies.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-center mb-4">
+                  <i class="fas fa-balance-scale text-3xl text-blue-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 text-center mb-3">Algorithmic Bias</h4>
+                <p class="text-sm text-gray-700 text-center">
+                  Preventing AI systems from perpetuating and amplifying existing social biases that lead to unfair and discriminatory outcomes.
+                </p>
+              </div>
+              <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                <div class="text-center mb-4">
+                  <i class="fas fa-user-check text-3xl text-green-600"></i>
+                </div>
+                <h4 class="font-semibold text-gray-900 text-center mb-3">Human Autonomy</h4>
+                <p class="text-sm text-gray-700 text-center">
+                  Preserving human agency and drawing the line between helpful assistance and subtle behavioral nudging.
+                </p>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Clinical and Relational Risks
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The integration of AI into clinical practice introduces risks that are deeply clinical and relational, touching on fundamental aspects of human connection and psychological well-being.
+            </p>
+
+            <div class="bg-white p-8 rounded-lg shadow-sm my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Dependency and Coping Skill Atrophy</h4>
+              <p class="text-gray-700 mb-4">
+                One of the most significant clinical risks is the potential for dependency and the outsourcing of emotional regulation to machines. As AI systems become more adept at providing emotional support, individuals may become overly reliant on them and fail to develop their own internal coping skills.
+              </p>
+              <p class="text-gray-700">
+                This is particularly concerning for vulnerable populations like adolescents, who may not develop healthy emotional regulation skills if they become reliant on AI for support. Research has shown that adolescents dependent on AI for emotional support may struggle to regulate emotions when the AI is removed.
+              </p>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Existential Question
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The rise of AI forces psychology to confront its most profound question: if machines can model, predict, and replicate aspects of human cognition, emotion, and behavior, what remains distinctly and irreplaceably human?
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Defining the Irreplaceable Core of the Human Psyche</h4>
+              <p class="text-gray-700 mb-4">
+                In the face of AI&#39;s growing capabilities, psychology must grapple with defining the irreplaceable core of the human psyche. If AI can simulate empathy and creativity, what is uniquely human?
+              </p>
+              <p class="text-gray-700">
+                One possibility is that the irreplaceable core lies not in cognitive abilities but in lived experience—our capacity for joy and suffering, love and loss, wonder and awe. Another possibility is that it lies in our relationships with others—our capacity for empathy, compassion, and deep human connection.
+              </p>
+            </div>
+
+            <img src="https://kimi-web-img.moonshot.cn/img/images.squarespace-cdn.com/d10ea4f5854ac2be17d1500d708f8cc2b7698932.jpg" alt="Conceptual representation of human-AI coexistence" class="w-full h-64 object-cover rounded-lg shadow-lg my-8" size="medium" aspect="wide" query="abstract human AI coexistence" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 7: Toward a Unified Psychology of Human–AI Coevolution -->
+      <section id="coevolution" class="px-8 py-16 bg-white">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">7.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              Toward a Unified Psychology of Human–AI Coevolution
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              The integration of AI into human life is not merely a technological phenomenon but a profound psychological event that demands a new, interdisciplinary framework for understanding human-AI coevolution.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The rapid integration of artificial intelligence into human life is not just a technological phenomenon but a profound psychological event reshaping cognition, relationships, and sense of self. As AI systems evolve from passive tools into active cognitive partners, they are co-evolving with us in a dynamic and reciprocal process.
+            </p>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              AI as a Psychological Event, Not Just a Technological One
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The advent of sophisticated AI represents a pivotal moment best understood not just as a technological breakthrough but as a fundamental psychological event. These systems are active participants in our psychological and social worlds, reshaping the nature of our interactions, our sense of self, and our understanding of intelligence itself.
+            </p>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">The Co-Evolutionary Trajectory</h4>
+              <p class="text-gray-700 mb-4">
+                The relationship between humans and AI is best understood as a co-evolutionary trajectory—a dynamic process of mutual adaptation and shaping. This is not a one-way street where humans simply design and use technology, but a complex, bidirectional process.
+              </p>
+              <p class="text-gray-700">
+                As we interact with AI systems, our behaviors and values are subtly altered. In turn, as these systems are trained on our data, they become more adept at anticipating our needs, further entrenching themselves in our cognitive and emotional lives.
+              </p>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Need for an Interdisciplinary Framework
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              To fully comprehend the complexities of human-AI co-evolution, a single-discipline approach is insufficient. The profound implications of AI demand a new, integrated framework that brings together diverse perspectives and methodologies.
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 my-8">
+              <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-brain text-blue-600 mr-3"></i>
+                    Core Sciences
+                  </h4>
+                  <p class="text-sm text-gray-700">
+                    Integrating cognitive science, systems neuroscience, and machine learning to build a technical understanding of intelligence.
+                  </p>
+                </div>
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-balance-scale text-green-600 mr-3"></i>
+                    Ethics &amp; Philosophy
+                  </h4>
+                  <p class="text-sm text-gray-700">
+                    Incorporating ethics and philosophy of mind to navigate fundamental questions of consciousness, free will, and moral responsibility.
+                  </p>
+                </div>
+              </div>
+              <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-mouse-pointer text-purple-600 mr-3"></i>
+                    Human-Computer Interaction
+                  </h4>
+                  <p class="text-sm text-gray-700">
+                    Using HCI principles to design AI systems that are usable, understandable, and aligned with human values.
+                  </p>
+                </div>
+                <div class="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                  <h4 class="font-semibold text-gray-900 mb-3 flex items-center">
+                    <i class="fas fa-puzzle-piece text-orange-600 mr-3"></i>
+                    Additional Fields
+                  </h4>
+                  <p class="text-sm text-gray-700">
+                    Integrating clinical psychology, behavioral economics, and sociocultural psychology for a holistic understanding.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              The Goal of Hybrid Intelligence
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The ultimate goal of a unified psychology of human-AI co-evolution is to actively shape a positive future through the concept of &#34;hybrid intelligence&#34;—a state where human intuition, creativity, and ethical reasoning are seamlessly integrated with AI&#39;s computational power and scale.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Constructing a Framework for Responsible Co-Flourishing</h4>
+              <p class="text-gray-700 mb-4">
+                The path toward hybrid intelligence requires a comprehensive framework for responsible co-flourishing—a set of principles and practices that guide AI development in alignment with human values and well-being.
+              </p>
+              <p class="text-gray-700">
+                This framework must be built on interdisciplinary collaboration and grounded in a deep understanding of both the potential risks and benefits of AI. Key principles include human agency, fairness, transparency, and the promotion of human flourishing.
+              </p>
+            </div>
+
+            <img src="https://kimi-web-img.moonshot.cn/img/pub.mdpi-res.com/f47309417210dd96b68a47afa3b236a09141eaf2.png" alt="Abstract representation of hybrid intelligence showing human and artificial minds working together" class="w-full h-64 object-cover rounded-lg shadow-lg my-8" size="medium" aspect="wide" query="abstract hybrid intelligence" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-divider"></div>
+
+      <!-- Section 8: Conclusion -->
+      <section id="conclusion" class="px-8 py-16 bg-gray-50">
+        <div class="max-w-4xl mx-auto">
+          <div class="mb-12">
+            <span class="canela text-4xl font-light text-gray-900">8.</span>
+            <h2 class="canela text-4xl font-light text-gray-900 mt-2 mb-6">
+              Conclusion: The New Frontier of the Mind
+            </h2>
+            <p class="text-xl text-gray-600 leading-relaxed">
+              The convergence of AI and psychology marks a pivotal moment of transformation, expanding the map of what the mind can be and redefining psychology as the science of all forms of intelligence.
+            </p>
+          </div>
+
+          <div class="prose prose-lg max-w-none">
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The convergence of artificial intelligence and psychology marks a pivotal moment in the history of both fields—a moment of profound transformation and unprecedented opportunity. As AI systems evolve from passive tools into active cognitive partners, they are not only reshaping the landscape of psychological research and practice but forcing us to confront the most fundamental questions about the nature of the mind, the self, and what it means to be human.
+            </p>
+
+            <div class="bg-white p-8 rounded-lg shadow-sm my-8">
+              <h3 class="canela text-xl font-semibold text-gray-900 mb-4">AI&#39;s Role in the Metamorphosis of Psychology</h3>
+              <p class="text-gray-700 mb-4">
+                Artificial intelligence is forcing psychology into a moment of metamorphosis—a profound and irreversible transformation of its methods, theories, and foundational questions. The traditional boundaries of the discipline are dissolving as AI blurs the lines between observer and observed, tool and user, human and machine.
+              </p>
+              <p class="text-gray-700">
+                This metamorphosis is not just about new technologies and methods; it&#39;s a fundamental shift in the epistemological framework of the discipline. Psychology is no longer just the science of the human mind; it&#39;s becoming the science of intelligence in all its forms, both natural and artificial.
+              </p>
+            </div>
+
+            <h3 class="canela text-2xl font-semibold text-gray-900 mt-12 mb-6">
+              Expanding the Map of What the Mind Can Be
+            </h3>
+
+            <p class="text-gray-700 leading-relaxed mb-6">
+              The integration of AI into psychology is not just changing our understanding of the human mind; it&#39;s expanding the very map of what the mind can be. For centuries, the mind has been conceived as a singular, internal, biological entity confined to the skull. But in the age of AI, this conception is no longer tenable.
+            </p>
+
+            <div class="highlight-box p-8 rounded-lg my-8">
+              <h4 class="font-semibold text-gray-900 mb-4">Psychology as the Science of All Forms of Intelligence</h4>
+              <p class="text-gray-700 mb-4">
+                As we stand at the threshold of a new era of intelligence, psychology has a critical role to play. The discipline is uniquely positioned to navigate the complex waters of the human-AI co-evolutionary landscape.
+              </p>
+              <p class="text-gray-700">
+                With its deep understanding of the human mind, sophisticated methods for studying behavior, and commitment to human well-being, psychology can provide the guidance and wisdom needed to ensure that AI development becomes a force for good in the world. The future of psychology is about understanding intelligence in all its forms, both natural and artificial.
+              </p>
+            </div>
+
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-lg my-8">
+              <blockquote class="text-lg italic text-gray-800 mb-4">
+                &#34;This is a moment of great challenge and great opportunity. It calls for a new kind of psychology—more interdisciplinary, collaborative, and forward-looking than ever before. The new frontier of the mind is vast and uncharted, but it is territory we must explore together to create a future where both humans and AI can flourish.&#34;
+              </blockquote>
+            </div>
+
+            <div class="text-center mt-12">
+              <img src="https://kimi-web-img.moonshot.cn/img/cdn2.psychologytoday.com/dbdcfd65a8d2b5311e8cf28a21efcf7bd8f2a5e5.jpg" alt="Sunrise over a digital horizon symbolizing new beginnings in AI and psychology" class="w-full h-64 object-cover rounded-lg shadow-lg" size="medium" aspect="wide" query="sunrise digital horizon" referrerpolicy="no-referrer" data-modified="1" data-score="0.00"/>
+              <p class="text-sm text-gray-600 mt-4 italic">
+                We are standing at the threshold of a new frontier of the mind.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="px-8 py-12 bg-gray-900 text-white">
+        <div class="max-w-4xl mx-auto text-center">
+          <p class="text-gray-300 mb-4">
+            This article explores the emerging frontier where psychology and artificial intelligence meet—an interdisciplinary zone where models become reflective surfaces, cognition becomes computable, and humanity re-examines its intellectual and emotional interior.
+          </p>
+          <div class="flex justify-center space-x-6 text-sm text-gray-400">
+            <span>References: People&#39;s Daily (2025), Tencent News (2024)</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add active state to TOC links based on scroll position
+        window.addEventListener('scroll', function() {
+            const sections = document.querySelectorAll('section[id]');
+            const tocLinks = document.querySelectorAll('.toc-fixed a[href^="#"]');
+            
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 100;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            tocLinks.forEach(link => {
+                link.classList.remove('text-blue-800', 'font-semibold');
+                link.classList.add('text-gray-600');
+                if (link.getAttribute('href') === '#' + current) {
+                    link.classList.remove('text-gray-600');
+                    link.classList.add('text-blue-800', 'font-semibold');
+                }
+            });
+        });
+    </script>
+  
+
+</body></html>
