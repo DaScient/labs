@@ -14,4 +14,4 @@ workers_dev = true
 
 [vars]
 # Optional: restrict browser origins (CSV). Leave empty to allow all.
-ALLOWED_ORIGINS = "https://dascient.com,https://robovet-ai.aristocles24.workers.dev"
+# ALLOWED_ORIGINS = "https://dascient.com,https://robovet-ai.aristocles24.workers.dev"
