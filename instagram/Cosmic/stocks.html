@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stellar Markets VR - Enhanced Stock Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Core Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: 'Exo 2', sans-serif;
+      background: radial-gradient(ellipse at center, #1a0f2e 0%, #000000 70%);
+      color: #e0f7ff;
+      perspective: 1000px;
+      transform-style: preserve-3d;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    
+    /* === AUTO-HIDE SYSTEM === */
+    .auto-hide {
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      opacity: 1;
+    }
+    
+    .auto-hide.hidden {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateZ(0) !important;
+    }
+    
+    /* Reveal indicator */
+    .reveal-hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateZ(500px);
+      background: rgba(10, 20, 40, 0.8);
+      border: 1px solid rgba(0, 255, 136, 0.5);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 11px;
+      color: #00ff88;
+      font-family: 'Orbitron', monospace;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    
+    .reveal-hint.visible {
+      opacity: 0.7;
+    }
+    
+    /* Typography */
+    .cosmic-title {
+      font-family: 'Orbitron', monospace;
+      font-weight: 900;
+      background: linear-gradient(45deg, #00ff88, #00ffff, #ff00ff);
+      background-size: 400% 400%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: cosmicGradient 3s ease-in-out infinite;
+      text-shadow: 0 0 30px rgba(0, 255, 136, 0.5);
+      font-size: clamp(1.2rem, 3vw, 2rem);
+    }
+    
+    @keyframes cosmicGradient {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    /* Optimized Layout */
+    .dashboard-container {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: 70px 1fr 100px;
+      height: 100vh;
+      gap: 15px;
+      padding: 15px;
+    }
+    
+    .header {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(10, 20, 40, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 15px;
+      padding: 15px 20px;
+      transform: translateZ(100px);
+    }
+    
+    .main-chart {
+      background: rgba(10, 20, 40, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 15px;
+      padding: 15px;
+      position: relative;
+      transform: translateZ(50px);
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .sidebar {
+      background: rgba(10, 20, 40, 0.2);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 15px;
+      padding: 15px;
+      overflow-y: auto;
+      transform: translateZ(80px);
+    }
+    
+    .bottom-panel {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+    }
+    
+    .market-card {
+      background: rgba(10, 20, 40, 0.3);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      transform: translateZ(30px);
+    }
+    
+    .market-card:hover {
+      background: rgba(20, 40, 80, 0.4);
+      border-color: rgba(0, 255, 136, 0.4);
+      transform: translateY(-5px) translateZ(40px);
+      box-shadow: 0 15px 40px rgba(0, 255, 136, 0.3);
+    }
+    
+    /* Navigation */
+    .nav-menu {
+      display: flex;
+      gap: 15px;
+    }
+    
+    .nav-item {
+      color: #a0f0ff;
+      text-decoration: none;
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      font-size: clamp(10px, 2vw, 12px);
+      padding: 8px 12px;
+      border-radius: 20px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      transform: translateZ(10px);
+      white-space: nowrap;
+      text-align: center;
+    }
+    
+    .nav-item:hover {
+      color: #00ff88;
+      text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+      background: rgba(0, 255, 136, 0.1);
+      transform: translateY(-2px) translateZ(15px);
+    }
+    
+    /* Stock List */
+    .stock-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: rgba(20, 40, 60, 0.3);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      transform: translateZ(20px);
+    }
+    
+    .stock-item:hover {
+      background: rgba(0, 255, 136, 0.1);
+      transform: translateX(10px) translateZ(25px);
+      box-shadow: 0 5px 20px rgba(0, 255, 136, 0.2);
+    }
+    
+    .stock-symbol {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      color: #00ff88;
+      transform: translateZ(5px);
+      font-size: clamp(12px, 2vw, 14px);
+    }
+    
+    .stock-price {
+      font-weight: 600;
+      color: #ffffff;
+      transform: translateZ(5px);
+      font-size: clamp(12px, 2vw, 14px);
+    }
+    
+    .stock-change {
+      font-size: clamp(10px, 1.8vw, 12px);
+      font-weight: 600;
+      transform: translateZ(5px);
+    }
+    
+    .stock-change.positive {
+      color: #00ff88;
+    }
+    
+    .stock-change.negative {
+      color: #ff3366;
+    }
+    
+    /* Market Data */
+    .market-data {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+    
+    .data-item {
+      text-align: center;
+      padding: 12px;
+      background: rgba(20, 40, 60, 0.2);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      transform: translateZ(15px);
+    }
+    
+    .data-item:hover {
+      background: rgba(40, 80, 120, 0.3);
+      transform: scale(1.05) translateZ(20px);
+    }
+    
+    .data-label {
+      font-size: clamp(9px, 1.6vw, 11px);
+      color: #a0f0ff;
+      margin-bottom: 5px;
+    }
+    
+    .data-value {
+      font-family: 'Orbitron', monospace;
+      font-weight: 700;
+      font-size: clamp(14px, 2.2vw, 16px);
+      color: #00ff88;
+    }
+    
+    /* Chart Container */
+    .chart-container {
+      width: 100%;
+      height: clamp(250px, 35vh, 350px);
+      margin-bottom: 15px;
+    }
+    
+    /* Canvas Background */
+    #cosmicCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      opacity: 0.3;
+    }
+    
+    /* Status Indicators */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: clamp(9px, 1.6vw, 11px);
+      color: #a0f0ff;
+      transform: translateZ(10px);
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    
+    .status-dot.online { background: #00ff88; }
+    .status-dot.processing { background: #ffff00; }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.8; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    
+    /* VR Controls */
+    .vr-controls {
+      position: absolute;
+      top: 50%;
+      left: 15px;
+      transform: translateY(-50%) translateZ(150px);
+      z-index: 20;
+      pointer-events: all;
+    }
+    
+    .vr-toggle {
+      background: rgba(0, 255, 136, 0.2);
+      border: 2px solid rgba(0, 255, 136, 0.5);
+      border-radius: 15px;
+      padding: 8px 12px;
+      color: #00ff88;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(9px, 1.8vw, 11px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 8px;
+      transform: translateZ(20px);
+    }
+    
+    .vr-toggle:hover {
+      background: rgba(0, 255, 136, 0.3);
+      transform: translateY(-2px) translateZ(25px);
+    }
+    
+    .vr-status {
+      font-size: clamp(8px, 1.6vw, 10px);
+      color: #a0f0ff;
+      text-align: center;
+      transform: translateZ(15px);
+    }
+    
+    /* Gyroscope Info */
+    .gyro-info {
+      position: absolute;
+      top: 50%;
+      right: 15px;
+      transform: translateY(-50%) translateZ(180px);
+      background: rgba(10, 20, 40, 0.8);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      border-radius: 15px;
+      padding: 15px;
+      max-width: 180px;
+      z-index: 15;
+      pointer-events: none;
+    }
+    
+    .gyro-info h4 {
+      color: #00ff88;
+      font-family: 'Orbitron', monospace;
+      margin-bottom: 10px;
+      font-size: clamp(12px, 2.2vw, 14px);
+    }
+    
+    .gyro-info p {
+      font-size: clamp(9px, 1.8vw, 11px);
+      color: #a0f0ff;
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+    
+    .gyro-status {
+      padding: 4px 8px;
+      border-radius: 10px;
+      font-size: clamp(8px, 1.6vw, 10px);
+      font-weight: 600;
+      text-align: center;
+      margin-top: 8px;
+    }
+    
+    .gyro-status.enabled {
+      background: rgba(0, 255, 0, 0.2);
+      color: #00ff00;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+    }
+    
+    .gyro-status.disabled {
+      background: rgba(255, 0, 0, 0.2);
+      color: #ff0000;
+      border: 1px solid rgba(255, 0, 0, 0.3);
+    }
+    
+    /* VR Mode Styles */
+    .vr-mode {
+      perspective: 2000px;
+    }
+    
+    .vr-mode .dashboard-container {
+      transform: translateZ(100px);
+    }
+    
+    .vr-mode .header {
+      transform: translateZ(200px);
+    }
+    
+    .vr-mode .main-chart {
+      transform: translateZ(150px);
+    }
+    
+    .vr-mode .sidebar {
+      transform: translateZ(180px);
+    }
+    
+    .vr-mode .market-card {
+      transform: translateZ(120px);
+    }
+    
+    /* 3D Chart Container */
+    .chart-3d-container {
+      position: relative;
+      width: 100%;
+      height: clamp(250px, 35vh, 350px);
+      transform-style: preserve-3d;
+      flex: 1;
+    }
+    
+    .chart-3d-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 49%, rgba(0, 255, 136, 0.1) 50%, transparent 51%);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .dashboard-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 70px auto auto auto;
+        gap: 10px;
+        padding: 10px;
+      }
+      
+      .bottom-panel {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      
+      .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+        padding: 12px 15px;
+      }
+      
+      .nav-menu {
+        gap: 8px;
+      }
+      
+      .nav-item {
+        padding: 6px 10px;
+        font-size: 10px;
+      }
+      
+      .vr-controls {
+        left: 10px;
+      }
+      
+      .gyro-info {
+        right: 10px;
+        max-width: 160px;
+        padding: 12px;
+      }
+      
+      .main-chart {
+        padding: 12px;
+      }
+      
+      .sidebar {
+        padding: 12px;
+      }
+      
+      .market-card {
+        padding: 12px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .bottom-panel {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav-menu {
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      
+      .nav-item {
+        font-size: 9px;
+        padding: 4px 8px;
+      }
+    }
+    
+    @media (max-height: 600px) {
+      .dashboard-container {
+        grid-template-rows: 60px 1fr 80px;
+      }
+      
+      .header {
+        padding: 10px 15px;
+      }
+      
+      .chart-container {
+        height: clamp(200px, 30vh, 280px);
+      }
+      
+      .vr-controls {
+        bottom: 10px;
+        left: 10px;
+      }
+      
+      .gyro-info {
+        right: 10px;
+        max-width: 150px;
+      }
+    }
+    
+    /* Animation Classes */
+    .fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px) translateZ(-50px); }
+      to { opacity: 1; transform: translateY(0) translateZ(0); }
+    }
+    
+    .slide-in-left {
+      animation: slideInLeft 0.8s ease-out;
+    }
+    
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-50px) translateZ(-50px); }
+      to { opacity: 1; transform: translateX(0) translateZ(0); }
+    }
+    
+    .slide-in-right {
+      animation: slideInRight 0.8s ease-out;
+    }
+    
+    @keyframes slideInRight {
+      from { opacity: 0; transform: translateX(50px) translateZ(-50px); }
+      to { opacity: 1; transform: translateX(0) translateZ(0); }
+    }
+    
+    .rotate-in {
+      animation: rotateIn 1s ease-out;
+    }
+    
+    @keyframes rotateIn {
+      from { opacity: 0; transform: rotateY(-90deg) translateZ(-100px); }
+      to { opacity: 1; transform: rotateY(0deg) translateZ(0); }
+    }
+    
+    /* VR Chart Enhancements */
+    .echarts-canvas {
+      transform: translateZ(10px);
+    }
+    
+    /* Gyroscope Calibration */
+    .gyro-calibration {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) translateZ(300px);
+      background: rgba(10, 20, 40, 0.95);
+      border: 2px solid rgba(0, 255, 136, 0.5);
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      z-index: 100;
+      display: none;
+      max-width: 90vw;
+      max-height: 80vh;
+    }
+    
+    .gyro-calibration.active {
+      display: block;
+    }
+    
+    .calibration-title {
+      color: #00ff88;
+      font-family: 'Orbitron', monospace;
+      font-size: clamp(16px, 4vw, 20px);
+      margin-bottom: 15px;
+    }
+    
+    .calibration-instructions {
+      color: #e0f7ff;
+      font-size: clamp(12px, 2.5vw, 14px);
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+    
+    .calibration-button {
+      background: linear-gradient(45deg, #00ff88, #00ffff);
+      border: none;
+      border-radius: 25px;
+      padding: 10px 25px;
+      color: #000;
+      font-family: 'Orbitron', monospace;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: clamp(12px, 2.5vw, 14px);
+    }
+    
+    .calibration-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(0, 255, 136, 0.5);
+    }
+    
+    /* Performance optimizations for low-end devices */
+    .low-performance {
+      filter: blur(0px) !important;
+      backdrop-filter: none !important;
+    }
+    
+    .low-performance .cosmic-title {
+      animation: none !important;
+    }
+    
+    .low-performance .nav-item::before {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Canvas -->
+  <canvas id="cosmicCanvas"></canvas>
+  
+  <!-- Gyroscope Calibration -->
+  <div class="gyro-calibration" id="gyroCalibration">
+    <h3 class="calibration-title">🚀 STELLAR MARKETS VR</h3>
+    <p class="calibration-instructions">
+      Tilt and rotate your device to explore the financial cosmos in 3D.<br>
+      Point at charts to get detailed views.<br>
+      Use device motion to navigate through market constellations.
+    </p>
+    <button class="calibration-button" onclick="startVRExperience()">
+      ACTIVATE MARKET VR
+    </button>
+  </div>
+  
+  <!-- Reveal Hint -->
+  <div class="reveal-hint" id="revealHint">Move mouse or touch screen to show controls</div>
+  
+  <!-- Dashboard Container -->
+  <div class="dashboard-container">
+    <!-- Header (auto-hide) -->
+    <header class="header auto-hide" id="header">
+      <div>
+        <h1 class="cosmic-title">STELLAR MARKETS VR</h1>
+        <p style="color: #a0f0ff; font-size: clamp(11px, 2vw, 13px);">360° Financial Cosmos Dashboard</p>
+      </div>
+      
+      <nav class="nav-menu">
+        <a href="index.html" class="nav-item">🌌 Cosmic Hub</a>
+        <a href="stocks.html" class="nav-item">⭐ Stellar Markets</a>
+        <a href="crypto.html" class="nav-item">💎 Crypto Nebula</a>
+        <a href="ai-tools.html" class="nav-item">🤖 AI Matrix</a>
+      </nav>
+      
+      <div class="status-bar">
+        <div class="status-item">
+          <div class="status-dot online"></div>
+          <span>MARKET ACTIVE</span>
+        </div>
+        <div class="status-item">
+          <div class="status-dot processing"></div>
+          <span>VR STREAMING</span>
+        </div>
+      </div>
+    </header>
+    
+    <!-- VR Controls (auto-hide) -->
+    <div class="vr-controls auto-hide" id="vrControls">
+      <div class="vr-toggle" onclick="toggleVRExperience()">
+        📊 VR TRADING
+      </div>
+      <div class="vr-status" id="vrStatus">
+        Click to enable VR
+      </div>
+    </div>
+    
+    <!-- Gyroscope Info (auto-hide) -->
+    <div class="gyro-info auto-hide" id="gyroInfo">
+      <h4>📱 VR Controls</h4>
+      <p><strong>Tilt:</strong> Navigate 3D charts</p>
+      <p><strong>Rotate:</strong> 360° market view</p>
+      <p><strong>Point:</strong> Focus on data</p>
+      <p><strong>Touch:</strong> Select stocks</p>
+      <div class="gyro-status disabled" id="gyroStatus">
+        GYROSCOPE OFF
+      </div>
+    </div>
+    
+    <!-- Main Chart -->
+    <main class="main-chart fade-in">
+      <h3 style="color: #00ff88; margin-bottom: 15px; font-family: 'Orbitron', monospace; font-size: clamp(14px, 2.2vw, 16px);">
+        Market Constellation 3D
+      </h3>
+      <div class="chart-3d-container" id="chart3dContainer">
+        <div class="chart-container" id="mainChart"></div>
+      </div>
+    </main>
+    
+    <!-- Sidebar (auto-hide) -->
+    <aside class="sidebar slide-in-right auto-hide" id="sidebar">
+      <h3 style="color: #00ff88; margin-bottom: 15px; font-family: 'Orbitron', monospace; font-size: clamp(14px, 2.2vw, 16px);">
+        Star Portfolio
+      </h3>
+      
+      <!-- Market Data -->
+      <div class="market-data">
+        <div class="data-item">
+          <div class="data-label">Market Cap</div>
+          <div class="data-value" id="marketCap">$2.4T</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label">Volume</div>
+          <div class="data-value" id="volume">$89B</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label">Active Traders</div>
+          <div class="data-value" id="traders">1.2M</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label">Volatility Index</div>
+          <div class="data-value" id="volatility">12.5</div>
+        </div>
+      </div>
+      
+      <!-- Stock List -->
+      <div id="stockList">
+        <!-- Stocks will be populated by JavaScript -->
+      </div>
+    </aside>
+    
+    <!-- Bottom Panel (auto-hide) -->
+    <section class="bottom-panel auto-hide" id="bottomPanel">
+      <div class="market-card slide-in-left">
+        <h4 style="color: #00ff88; margin-bottom: 8px; font-size: clamp(12px, 2vw, 14px);">NASDAQ</h4>
+        <div style="font-size: clamp(16px, 2.5vw, 20px); font-weight: bold; margin-bottom: 5px;" id="nasdaqPrice">15,234.56</div>
+        <div style="font-size: clamp(10px, 1.8vw, 12px); color: #00ff88;" id="nasdaqChange">+1.23%</div>
+      </div>
+      
+      <div class="market-card slide-in-left">
+        <h4 style="color: #00ff88; margin-bottom: 8px; font-size: clamp(12px, 2vw, 14px);">S&P 500</h4>
+        <div style="font-size: clamp(16px, 2.5vw, 20px); font-weight: bold; margin-bottom: 5px;" id="sp500Price">4,567.89</div>
+        <div style="font-size: clamp(10px, 1.8vw, 12px); color: #ff3366;" id="sp500Change">-0.45%</div>
+      </div>
+      
+      <div class="market-card slide-in-right">
+        <h4 style="color: #00ff88; margin-bottom: 8px; font-size: clamp(12px, 2vw, 14px);">DOW JONES</h4>
+        <div style="font-size: clamp(16px, 2.5vw, 20px); font-weight: bold; margin-bottom: 5px;" id="dowPrice">34,567.12</div>
+        <div style="font-size: clamp(10px, 1.8vw, 12px); color: #00ff88;" id="dowChange">+0.78%</div>
+      </div>
+      
+      <div class="market-card slide-in-right">
+        <h4 style="color: #00ff88; margin-bottom: 8px; font-size: clamp(12px, 2vw, 14px);">VIX</h4>
+        <div style="font-size: clamp(16px, 2.5vw, 20px); font-weight: bold; margin-bottom: 5px;" id="vixPrice">18.45</div>
+        <div style="font-size: clamp(10px, 1.8vw, 12px); color: #ff3366;" id="vixChange">-2.15%</div>
+      </div>
+    </section>
+  </div>
+  
+  <script>
+    // Sample stock data
+    const stockData = [
+      { symbol: 'AAPL', name: 'Apple Inc.', price: 175.43, change: 2.15, percent: 1.24 },
+      { symbol: 'MSFT', name: 'Microsoft Corp.', price: 378.85, change: -1.23, percent: -0.32 },
+      { symbol: 'GOOGL', name: 'Alphabet Inc.', price: 142.56, change: 3.78, percent: 2.72 },
+      { symbol: 'AMZN', name: 'Amazon.com Inc.', price: 145.78, change: -2.45, percent: -1.65 },
+      { symbol: 'TSLA', name: 'Tesla Inc.', price: 248.91, change: 8.92, percent: 3.72 },
+      { symbol: 'NVDA', name: 'NVIDIA Corp.', price: 892.15, change: 15.67, percent: 1.79 },
+      { symbol: 'META', name: 'Meta Platforms', price: 485.32, change: -4.56, percent: -0.93 },
+      { symbol: 'NFLX', name: 'Netflix Inc.', price: 612.45, change: 7.89, percent: 1.31 },
+      { symbol: 'AMD', name: 'AMD Inc.', price: 178.23, change: -3.45, percent: -1.90 },
+      { symbol: 'CRM', name: 'Salesforce Inc.', price: 267.89, change: 4.56, percent: 1.73 }
+    ];
+    
+    // VR Variables
+    let vrMode = false;
+    let deviceOrientation = { alpha: 0, beta: 0, gamma: 0 };
+    let chart3dRotation = { x: 0, y: 0, z: 0 };
+    let myChart;
+    let autoHideManager;
+    
+    // Initialize background canvas
+    function initBackgroundCanvas() {
+      const canvas = document.getElementById('cosmicCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      const particles = [];
+      const particleCount = 80; // Reduced for performance
+      
+      // Create particles
+      for (let i = 0; i < particleCount; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          size: Math.random() * 2 + 1,
+          opacity: Math.random() * 0.5 + 0.2,
+          color: Math.random() > 0.5 ? '#00ff88' : '#00ffff'
+        });
+      }
+      
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        particles.forEach(particle => {
+          particle.x += particle.vx;
+          particle.y += particle.vy;
+          
+          if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
+          if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+          
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+          ctx.fillStyle = particle.color + Math.floor(particle.opacity * 255).toString(16).padStart(2, '0');
+          ctx.fill();
+          
+          // Add glow effect for VR
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = particle.color;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+        
+        requestAnimationFrame(animate);
+      }
+      
+      animate();
+    }
+    
+    // Initialize stock list
+    function initStockList() {
+      const stockList = document.getElementById('stockList');
+      
+      stockData.forEach(stock => {
+        const stockItem = document.createElement('div');
+        stockItem.className = 'stock-item';
+        
+        const changeClass = stock.change >= 0 ? 'positive' : 'negative';
+        const changeSymbol = stock.change >= 0 ? '+' : '';
+        
+        stockItem.innerHTML = `
+          <div>
+            <div class="stock-symbol">${stock.symbol}</div>
+            <div style="font-size: clamp(9px, 1.6vw, 11px); color: #a0f0ff;">${stock.name}</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="stock-price">$${stock.price.toFixed(2)}</div>
+            <div class="stock-change ${changeClass}">
+              ${changeSymbol}${stock.change.toFixed(2)} (${changeSymbol}${stock.percent.toFixed(2)}%)
+            </div>
+          </div>
+        `;
+        
+        stockItem.addEventListener('click', () => {
+          updateMainChart(stock);
+          if (vrMode) {
+            animateChart3D();
+          }
+          autoHideManager.resetTimer();
+        });
+        
+        stockList.appendChild(stockItem);
+      });
+    }
+    
+    // Initialize main chart
+    function initMainChart() {
+      const chartDom = document.getElementById('mainChart');
+      myChart = echarts.init(chartDom);
+      
+      // Generate sample data for the last 30 days
+      const dates = [];
+      const values = [];
+      const baseValue = 150;
+      
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        dates.push(date.toISOString().split('T')[0]);
+        
+        // Generate realistic stock price movement
+        const randomChange = (Math.random() - 0.5) * 10;
+        const trend = i < 15 ? 0.5 : -0.3; // Simulate market trend
+        const value = baseValue + (29 - i) * trend + randomChange;
+        values.push(value.toFixed(2));
+      }
+      
+      const option = {
+        backgroundColor: 'transparent',
+        title: {
+          text: 'Market Constellation 3D',
+          textStyle: {
+            color: '#00ff88',
+            fontSize: clamp(14px, 2.2vw, 16px),
+            fontFamily: 'Orbitron'
+          }
+        },
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: 'rgba(10, 20, 40, 0.9)',
+          borderColor: '#00ff88',
+          textStyle: {
+            color: '#e0f7ff'
+          }
+        },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLine: {
+            lineStyle: {
+              color: '#00ff88'
+            }
+          },
+          axisLabel: {
+            color: '#a0f0ff',
+            fontSize: clamp(9px, 1.6vw, 11px)
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: {
+            lineStyle: {
+              color: '#00ff88'
+            }
+          },
+          axisLabel: {
+            color: '#a0f0ff',
+            fontSize: clamp(9px, 1.6vw, 11px),
+            formatter: '${value}'
+          },
+          splitLine: {
+            lineStyle: {
+              color: 'rgba(0, 255, 136, 0.1)'
+            }
+          }
+        },
+        series: [{
+          data: values,
+          type: 'line',
+          smooth: true,
+          lineStyle: {
+            color: '#00ff88',
+            width: 3
+          },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [{
+                offset: 0,
+                color: 'rgba(0, 255, 136, 0.3)'
+              }, {
+                offset: 1,
+                color: 'rgba(0, 255, 136, 0.05)'
+              }]
+            }
+          },
+          symbol: 'circle',
+          symbolSize: 8,
+          itemStyle: {
+            color: '#00ff88',
+            borderColor: '#ffffff',
+            borderWidth: 2
+          }
+        }]
+      };
+      
+      myChart.setOption(option);
+      
+      // Make chart responsive
+      window.addEventListener('resize', () => {
+        myChart.resize();
+      });
+    }
+    
+    // Update main chart with specific stock
+    function updateMainChart(stock) {
+      const chartDom = document.getElementById('mainChart');
+      
+      // Generate data for the selected stock
+      const dates = [];
+      const values = [];
+      const baseValue = stock.price;
+      
+      for (let i = 29; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        dates.push(date.toISOString().split('T')[0]);
+        
+        const randomChange = (Math.random() - 0.5) * 5;
+        const trend = Math.sin((29 - i) * 0.2) * 2;
+        const value = baseValue + trend + randomChange;
+        values.push(value.toFixed(2));
+      }
+      
+      myChart.setOption({
+        title: {
+          text: `${stock.symbol} - ${stock.name}`
+        },
+        xAxis: {
+          data: dates
+        },
+        series: [{
+          data: values
+        }]
+      });
+    }
+    
+    // Animate chart in 3D for VR
+    function animateChart3D() {
+      const chartContainer = document.getElementById('chart3dContainer');
+      
+      anime({
+        targets: chartContainer,
+        rotateX: [0, 10, 0],
+        rotateY: [0, 15, 0],
+        rotateZ: [0, 5, 0],
+        duration: 2000,
+        easing: 'easeInOutQuad',
+        complete: () => {
+          anime({
+            targets: chartContainer,
+            rotateX: 0,
+            rotateY: 0,
+            rotateZ: 0,
+            duration: 1000,
+            easing: 'easeOutQuad'
+          });
+        }
+      });
+    }
+    
+    // Simulate real-time data updates
+    function simulateRealTimeData() {
+      setInterval(() => {
+        // Update random stock prices
+        stockData.forEach(stock => {
+          const change = (Math.random() - 0.5) * 2;
+          stock.price += change;
+          stock.change = change;
+          stock.percent = (change / stock.price) * 100;
+        });
+        
+        // Update market indices
+        const indices = ['nasdaqPrice', 'sp500Price', 'dowPrice', 'vixPrice'];
+        indices.forEach((index, i) => {
+          const element = document.getElementById(index);
+          const currentValue = parseFloat(element.textContent.replace(/[^0-9.]/g, ''));
+          const newValue = currentValue + (Math.random() - 0.5) * 5;
+          element.textContent = newValue.toFixed(2);
+        });
+        
+        // Update market data
+        const marketCap = document.getElementById('marketCap');
+        const volume = document.getElementById('volume');
+        const traders = document.getElementById('traders');
+        const volatility = document.getElementById('volatility');
+        
+        // Simulate changing market data
+        const currentCap = parseFloat(marketCap.textContent.replace(/[^0-9.]/g, ''));
+        marketCap.textContent = `$${(currentCap + Math.random() * 0.1 - 0.05).toFixed(1)}T`;
+        
+        const currentVolume = parseFloat(volume.textContent.replace(/[^0-9.]/g, ''));
+        volume.textContent = `$${(currentVolume + Math.random() * 2 - 1).toFixed(0)}B`;
+        
+        const currentTraders = parseFloat(traders.textContent.replace(/[^0-9.]/g, ''));
+        traders.textContent = `${(currentTraders + Math.random() * 0.1 - 0.05).toFixed(1)}M`;
+        
+        const currentVolatility = parseFloat(volatility.textContent);
+        volatility.textContent = `${(currentVolatility + (Math.random() - 0.5) * 2).toFixed(1)}`;
+        
+      }, 3000);
+    }
+    
+    // VR Controls
+    function toggleVRExperience() {
+      vrMode = !vrMode;
+      const body = document.body;
+      const vrStatus = document.getElementById('vrStatus');
+      
+      if (vrMode) {
+        body.classList.add('vr-mode');
+        vrStatus.textContent = 'VR ENABLED';
+        vrStatus.style.color = '#00ff88';
+        
+        // Initialize gyroscope
+        if (window.DeviceOrientationEvent) {
+          if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            document.getElementById('gyroCalibration').classList.add('active');
+          } else {
+            enableGyroscope();
+          }
+        }
+        
+        // Add 3D effects to chart
+        animateChart3D();
+        
+      } else {
+        body.classList.remove('vr-mode');
+        vrStatus.textContent = 'VR DISABLED';
+        vrStatus.style.color = '#a0f0ff';
+      }
+      autoHideManager.resetTimer();
+    }
+    
+    function startVRExperience() {
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission()
+          .then(response => {
+            if (response == 'granted') {
+              enableGyroscope();
+              document.getElementById('gyroCalibration').classList.remove('active');
+            }
+          })
+          .catch(console.error);
+      } else {
+        enableGyroscope();
+        document.getElementById('gyroCalibration').classList.remove('active');
+      }
+      autoHideManager.resetTimer();
+    }
+    
+    function enableGyroscope() {
+      window.addEventListener('deviceorientation', handleOrientation, true);
+      window.addEventListener('devicemotion', handleMotion, true);
+      
+      document.getElementById('gyroStatus').textContent = 'GYROSCOPE ACTIVE';
+      document.getElementById('gyroStatus').className = 'gyro-status enabled';
+      
+      // Update status bar
+      document.querySelector('.status-item span').textContent = '360° TRACKING';
+    }
+    
+    function handleOrientation(event) {
+      if (!vrMode) return;
+      
+      deviceOrientation.alpha = event.alpha || 0;
+      deviceOrientation.beta = event.beta || 0;
+      deviceOrientation.gamma = event.gamma || 0;
+      
+      // Apply VR transformations to dashboard elements
+      const rotationY = (deviceOrientation.alpha * Math.PI / 180) * 0.1;
+      const rotationX = (deviceOrientation.beta * Math.PI / 180) * 0.05;
+      
+      // Rotate main chart based on device orientation
+      const chartContainer = document.getElementById('chart3dContainer');
+      chartContainer.style.transform = `rotateY(${rotationY}rad) rotateX(${rotationX}rad) translateZ(50px)`;
+      
+      // Update market cards
+      const marketCards = document.querySelectorAll('.market-card');
+      marketCards.forEach((card, index) => {
+        const delay = index * 0.1;
+        card.style.transform = `rotateY(${rotationY * (index + 1) * 0.1}rad) translateZ(${30 + index * 10}px)`;
+      });
+      
+      autoHideManager.resetTimer();
+    }
+    
+    function handleMotion(event) {
+      if (!vrMode || !event.acceleration) return;
+      
+      const acceleration = event.acceleration;
+      
+      // Add shake effects to data when device is moved
+      if (Math.abs(acceleration.x) > 2 || Math.abs(acceleration.y) > 2 || Math.abs(acceleration.z) > 2) {
+        // Animate market data updates
+        const dataItems = document.querySelectorAll('.data-item');
+        dataItems.forEach(item => {
+          item.style.animation = 'pulse 0.5s ease-in-out';
+          setTimeout(() => {
+            item.style.animation = '';
+          }, 500);
+        });
+      }
+      autoHideManager.resetTimer();
+    }
+    
+    // Initialize application
+    window.addEventListener('load', () => {
+      initBackgroundCanvas();
+      initStockList();
+      initMainChart();
+      simulateRealTimeData();
+      
+      // Initialize Auto-Hide Manager
+      autoHideManager = new AutoHideManager();
+      
+      // Add entrance animations
+      setTimeout(() => {
+        document.querySelector('.main-chart').classList.add('fade-in');
+      }, 300);
+      
+      setTimeout(() => {
+        document.querySelector('.sidebar').classList.add('slide-in-right');
+      }, 600);
+      
+      setTimeout(() => {
+        document.querySelectorAll('.market-card').forEach((card, index) => {
+          setTimeout(() => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(50px) translateZ(-50px)';
+            card.style.transition = 'all 0.6s ease-out';
+            setTimeout(() => {
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0) translateZ(30px)';
+            }, 100);
+          }, index * 200);
+        });
+      }, 900);
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('cosmicCanvas');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      
+      if (myChart) {
+        myChart.resize();
+      }
+    });
+    
+    // === AUTO-HIDE MANAGER CLASS ===
+    class AutoHideManager {
+      constructor() {
+        this.hideDelay = 3000; // 3 seconds
+        this.elements = document.querySelectorAll('.auto-hide');
+        this.revealHint = document.getElementById('revealHint');
+        this.init();
+      }
+
+      init() {
+        this.resetTimer();
+        this.setupEventListeners();
+        this.showHintAfterDelay();
+      }
+
+      setupEventListeners() {
+        const events = ['mousemove', 'click', 'touchstart', 'touchmove', 'keydown', 'deviceorientation', 'devicemotion'];
+        events.forEach(event => {
+          window.addEventListener(event, () => this.showAll(), { passive: true });
+          window.addEventListener(event, () => this.resetTimer(), { passive: true });
+        });
+      }
+
+      showAll() {
+        this.elements.forEach(el => el.classList.remove('hidden'));
+        this.hideRevealHint();
+      }
+
+      hideAll() {
+        // Don't hide if calibration is active
+        if (document.getElementById('gyroCalibration').classList.contains('active')) return;
+        this.elements.forEach(el => el.classList.add('hidden'));
+        this.showRevealHint();
+      }
+
+      resetTimer() {
+        clearTimeout(autoHideTimer);
+        autoHideTimer = setTimeout(() => this.hideAll(), this.hideDelay);
+      }
+
+      showRevealHint() {
+        if (this.revealHint) {
+          clearTimeout(revealHintTimer);
+          this.revealHint.classList.add('visible');
+        }
+      }
+
+      hideRevealHint() {
+        if (this.revealHint) {
+          clearTimeout(revealHintTimer);
+          revealHintTimer = setTimeout(() => {
+            this.revealHint.classList.remove('visible');
+          }, 2000);
+        }
+      }
+
+      showHintAfterDelay() {
+        setTimeout(() => {
+          if (this.elements[0].classList.contains('hidden')) {
+            this.showRevealHint();
+          }
+        }, 5000);
+      }
+    }
+  </script>
+</body>
+</html>
