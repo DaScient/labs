@@ -1,4 +1,4 @@
-name: Deploy Cosmic Dashboard to Pages
+name: Deploy Cosmic to Pages
 
 on:
   push:
@@ -26,8 +26,8 @@ jobs:
 
       - name: Prepare site
         run: |
-          mkdir -p public/labs/instagram/Cosmic_Dashboard
-          cp -R "instagram/Cosmic_Dashboard/." "public/labs/instagram/Cosmic_Dashboard/"
+          mkdir -p public/labs/instagram/Cosmic
+          cp -R "instagram/Cosmic/." "public/labs/instagram/Cosmic/"
           touch public/.nojekyll
 
       - name: Upload artifact
