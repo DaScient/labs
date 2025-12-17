@@ -1,4 +1,4 @@
-# (GoZaddy.ai)[https://gozaddy.ai]
+# [GoZaddy.ai](https://gozaddy.ai)
 
 ## Live News RSS Auto-Article & Content Generator
 ### Real-time Global Trends Analytic Dashboard
