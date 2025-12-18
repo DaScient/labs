@@ -100,7 +100,69 @@
    .glitch {
      animation: glitch 0.5s infinite;
    }
- </style>
+
+   /* ===== Immersive auto-hide UI baseline ===== */
+   .ui {
+     transition: opacity 0.5s ease, transform 0.5s ease;
+     will-change: opacity, transform;
+   }
+   body.ui-hidden .ui {
+     opacity: 0;
+   }
+
+   /* VR HUD + calibration prompt */
+   #vrHUD{
+     position:fixed; top:12px; right:12px; z-index:10050;
+     font:12px/1.2 monospace; letter-spacing:0.08em;
+     color:#00ff7b; background:rgba(0,0,0,.45);
+     border:1px solid rgba(0,255,123,.25);
+     border-radius:12px; padding:8px 10px;
+     opacity:0; transform:translateY(-6px);
+     pointer-events:none;
+   }
+   #vrHUD.active{ opacity:1; transform:translateY(0); }
+
+   #vrCalibrateOverlay{
+     position:fixed; inset:0; z-index:10060;
+     display:none; align-items:center; justify-content:center;
+     background:rgba(0,0,0,.55);
+     backdrop-filter:saturate(120%) blur(10px);
+   }
+   #vrCalibrateOverlay.show{ display:flex; }
+   #vrCalibrateCard{
+     max-width:min(520px, 92vw);
+     padding:18px 18px 14px;
+     border-radius:18px;
+     background:rgba(8,10,16,.72);
+     border:1px solid rgba(255,255,255,.10);
+     box-shadow:0 18px 60px rgba(0,0,0,.5);
+     color:#e8fff3;
+     font:14px/1.35 Arial, sans-serif;
+   }
+   #vrCalibrateCard h3{
+     margin:0 0 8px 0; font:700 14px/1.2 monospace; color:#00ff7b; letter-spacing:.08em;
+   }
+   #vrCalibrateCard p{ margin:0 0 12px 0; opacity:.92; }
+   #vrCalibrateCard .row{ display:flex; gap:10px; flex-wrap:wrap; }
+   #vrCalibrateCard button{
+     background:#0f1220; color:#00ff7b; border:1px solid rgba(0,255,123,.35);
+     border-radius:12px; padding:10px 12px; font:12px monospace; cursor:pointer;
+   }
+   #vrCalibrateCard button:hover{ opacity:1; }
+   #vrCalibrateCard .muted{ opacity:.75; font-size:12px; }
+
+   /* VR mode: fade all 2D overlays except VR HUD + calibration overlay */
+   body.vr-active #controls,
+   body.vr-active #leftPanel,
+   body.vr-active #terminal,
+   body.vr-active #termToggle,
+   body.vr-active #hudHover{
+     opacity:0 !important;
+     pointer-events:none !important;
+     transform:translateY(-6px);
+   }
+
+</style>
 
   <!-- ⬇ Enhancements injected: meta + terminal hover CSS (non-destructive) -->
   <meta name="description" content="DaScient Cosmic Dashboard — hyperspectral, multidimensional visuals." />
@@ -143,10 +205,25 @@
  <canvas id="cosmicCanvas"></canvas>
  <!-- Terminal overlay -->
  <div id="hudHover" aria-hidden="true"></div>
-<button id="termToggle" type="button" title="Toggle console (T)">LOG</button>
-<div id="terminal">COSMIC DASHBOARD INITIALIZING...</div>
+<button id="termToggle" class="ui" type="button" title="Toggle console (T)">LOG</button>
+<div id="terminal" class="ui">COSMIC DASHBOARD INITIALIZING...</div>
+<div id="vrHUD" class="ui">VR MODE ACTIVE</div>
+
+<div id="vrCalibrateOverlay" aria-hidden="true">
+  <div id="vrCalibrateCard" role="dialog" aria-modal="true">
+    <h3>CALIBRATE GYRO CENTER</h3>
+    <p>Hold your device in your natural “straight ahead” pose, then calibrate. (Touch/drag still moves you through space.)</p>
+    <div class="row">
+      <button id="vrCalibrateBtn" type="button">CALIBRATE</button>
+      <button id="vrCloseCalibrateBtn" type="button">CLOSE</button>
+      <button id="vrExitBtnTop" type="button">EXIT VR</button>
+    </div>
+    <div class="muted">Tip: iOS may ask permission for motion sensors. If denied, VR falls back gracefully.</div>
+  </div>
+</div>
+
  <!-- Control Panel (bottom left, hover to reveal) -->
- <div id="controls">
+ <div id="controls" class="ui">
    <label for="resolutionSelector">Resolution:</label>
    <select id="resolutionSelector">
      <option value="low">Low</option>
@@ -156,6 +233,8 @@
      <option value="grandmaster">Grandmaster</option>
    </select>
    <button class="button" id="fullscreenBtn">Fullscreen</button>
+   <button class="button" id="vrBtn">Enter VR</button>
+   <button class="button" id="calibrateBtn">Calibrate</button>
    <button class="button" id="grandmasterBtn">Grandmaster</button>
    <br>
    <label><input type="checkbox" id="toggleAudio" checked> Audio Sensitivity</label>
@@ -174,15 +253,11 @@
      <option value="cosmic">Cosmic</option>
    </select>
  </div>
- <!-- Left (don) Panel with Website Links (hover over the left edge to reveal) -->
- <div id="leftPanel">
-   <a href="https://dascient.com" target="_blank" class="leftLink">dascient</a>
-   <a href="https://donutz.ai/stocks" target="_blank" class="leftLink">stocks</a>
-   <a href="https://dascient.github.io/labs/instagram/robovet.html" target="_blank" class="leftLink">robovet</a>
-   <a href="https://dascient.github.io/labs/gozaddy" target="_blank" class="leftLink">newsfeed</a>
-   <a href="https://medium.com/@dondmtadaya" target="_blank" class="leftLink">articles</a>
-   <a href="https://a.co/d/3BrdWAj" target="_blank" class="leftLink">Prompt Atlas</a>
-   <a href="https://a.co/d/c5ZS34q" target="_blank" class="leftLink">Machines of Meaning</a>
+ <!-- Left Panel with Website Links (hover over the left edge to reveal) -->
+ <div id="leftPanel" class="ui">
+   <a href="https://donutz.ai" target="_blank" class="leftLink">donutz.ai</a>
+   <a href="https://dascient.com" target="_blank" class="leftLink">dascient.com</a>
+   <a href="https://gozaddy.ai" target="_blank" class="leftLink">gozaddy.ai</a>
  </div>
 
  <!-- Include Three.js from a CDN -->
@@ -200,10 +275,10 @@
     * over for longer than 3.1415 seconds, a zooming-in cosmic animation is triggered,
     * and you are redirected to:
     *
-    * • A brilliant star: https://dascient.com
-    * • An enigmatic star: https://donutz.ai/stocks
-    * • A wicked enigma: https://dascient.github.io/labs/gozaddy
-    * • A dark, glitched, anti-philosophical cosmic entity: https://MorbidLullabies.com
+    * • A brilliant star: https://donutz.ai/stocks  
+    * • An enigmatic star: https://donutz.ai/crypto  
+    * • A wicked enigma: https://gozaddy.ai  
+    * • A dark, glitched, anti-philosophical cosmic entity: https://xXDaemonLoverXx.ai  
     *
     * Enjoy the transcendent journey.
     ***********************************************************************/
@@ -257,6 +332,173 @@
    scene = new THREE.Scene();
    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 10000);
    camera.position.z = 1000;
+   // ===== VR / Stereo / Gyro State =====
+   let vrMode = false;
+   const IPD = 8; // world-units inter-pupillary distance (tweak for your scene scale)
+   const leftCamera  = new THREE.PerspectiveCamera(75, (window.innerWidth/2) / window.innerHeight, 1, 10000);
+   const rightCamera = new THREE.PerspectiveCamera(75, (window.innerWidth/2) / window.innerHeight, 1, 10000);
+
+   // Device orientation tracking (stores latest readings; applied in animate() for smoothing)
+   let deviceAlpha = 0, deviceBeta = 0, deviceGamma = 0;
+   let screenOrientRad = 0;
+   let gyroListenerAttached = false;
+
+   // Calibration offset quaternion (re-centers current device pose as "forward")
+   const gyroCalibrationOffset = new THREE.Quaternion(); // inverse of current device quaternion
+   gyroCalibrationOffset.identity();
+   let hasCalibratedThisSession = false;
+
+   // Quat helper based on three.js DeviceOrientationControls (r128-era compatible)
+   const zee = new THREE.Vector3(0, 0, 1);
+   const euler = new THREE.Euler();
+   const q0 = new THREE.Quaternion();
+   const q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5)); // -PI/2 around X
+   function setObjectQuaternion(quat, alpha, beta, gamma, orient) {
+     // ZXY for the device, then adjust for camera and screen orientation
+     euler.set(beta, alpha, -gamma, 'ZXY');
+     quat.setFromEuler(euler);
+     quat.multiply(q1);
+     quat.multiply(q0.setFromAxisAngle(zee, -orient));
+   }
+
+   function updateScreenOrientation() {
+     const angle = (screen.orientation && typeof screen.orientation.angle === 'number')
+       ? screen.orientation.angle
+       : (typeof window.orientation === 'number' ? window.orientation : 0);
+     screenOrientRad = THREE.MathUtils.degToRad(angle);
+   }
+   updateScreenOrientation();
+   window.addEventListener('orientationchange', updateScreenOrientation);
+
+   function onDeviceOrientation(event) {
+     deviceAlpha = THREE.MathUtils.degToRad(event.alpha || 0); // Z
+     deviceBeta  = THREE.MathUtils.degToRad(event.beta  || 0); // X'
+     deviceGamma = THREE.MathUtils.degToRad(event.gamma || 0); // Y''
+   }
+
+   async function requestGyroPermissionIfNeeded() {
+     try {
+       if (typeof DeviceOrientationEvent !== 'undefined' &&
+           typeof DeviceOrientationEvent.requestPermission === 'function') {
+         const res = await DeviceOrientationEvent.requestPermission();
+         return res === 'granted';
+       }
+       return true; // non-iOS / older iOS where permission isn't required
+     } catch (e) {
+       return false;
+     }
+   }
+
+   function attachGyro() {
+     if (gyroListenerAttached) return;
+     window.addEventListener('deviceorientation', onDeviceOrientation, { passive: true });
+     gyroListenerAttached = true;
+   }
+   function detachGyro() {
+     if (!gyroListenerAttached) return;
+     window.removeEventListener('deviceorientation', onDeviceOrientation);
+     gyroListenerAttached = false;
+   }
+
+   function calibrateGyroNow() {
+     const deviceQ = new THREE.Quaternion();
+     setObjectQuaternion(deviceQ, deviceAlpha, deviceBeta, deviceGamma, screenOrientRad);
+     gyroCalibrationOffset.copy(deviceQ).invert(); // store inverse so (offset * deviceQ) recenters
+     hasCalibratedThisSession = true;
+     const overlay = document.getElementById('vrCalibrateOverlay');
+     if (overlay) overlay.classList.remove('show');
+     logToTerminal("Gyro calibrated. Center position locked.");
+   }
+
+   function showCalibrateOverlay() {
+     const overlay = document.getElementById('vrCalibrateOverlay');
+     if (overlay) overlay.classList.add('show');
+   }
+
+   function setVRUI(active) {
+     document.body.classList.toggle('vr-active', active);
+     const hud = document.getElementById('vrHUD');
+     if (hud) hud.classList.toggle('active', active);
+   }
+
+   async function enterVR() {
+     if (vrMode) return;
+     vrMode = true;
+     setVRUI(true);
+
+     // Disable 2D interactions that can trigger redirects accidentally
+     logToTerminal("VR mode requested…");
+
+     // Permission request (iOS 13+)
+     const ok = await requestGyroPermissionIfNeeded();
+     if (!ok) {
+       logToTerminal("Gyro permission denied or unavailable. VR rotation fallback engaged.");
+     } else {
+       attachGyro();
+     }
+
+     // In VR, gyro rotation overrides auto-camera + mouse rotation
+     autoCameraEnabled = false;
+     document.getElementById('toggleAutoCamera').checked = false;
+
+     // Prompt calibration
+     hasCalibratedThisSession = false;
+     showCalibrateOverlay();
+     logToTerminal("VR MODE ACTIVE. Calibrate to lock your forward direction.");
+   }
+
+   function exitVR() {
+     if (!vrMode) return;
+     vrMode = false;
+     setVRUI(false);
+     detachGyro();
+     // restore classic rotation targets so it doesn't "snap" weirdly
+     targetCameraRotation.copy(camera.rotation);
+     logToTerminal("VR mode exited. Traditional controls restored.");
+   }
+
+   function renderStereo() {
+     const w = window.innerWidth;
+     const h = window.innerHeight;
+
+     // Keep stereo cameras in sync with main camera
+     leftCamera.fov = camera.fov;
+     rightCamera.fov = camera.fov;
+     leftCamera.near = camera.near; rightCamera.near = camera.near;
+     leftCamera.far  = camera.far;  rightCamera.far  = camera.far;
+     leftCamera.aspect  = (w * 0.5) / h;
+     rightCamera.aspect = (w * 0.5) / h;
+     leftCamera.updateProjectionMatrix();
+     rightCamera.updateProjectionMatrix();
+
+     leftCamera.position.copy(camera.position);
+     rightCamera.position.copy(camera.position);
+     leftCamera.quaternion.copy(camera.quaternion);
+     rightCamera.quaternion.copy(camera.quaternion);
+
+     const rightVec = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+     const half = (IPD * 0.5);
+     leftCamera.position.addScaledVector(rightVec, -half);
+     rightCamera.position.addScaledVector(rightVec, +half);
+     leftCamera.updateMatrixWorld(true);
+     rightCamera.updateMatrixWorld(true);
+
+     renderer.setScissorTest(true);
+
+     // Left eye
+     renderer.setViewport(0, 0, w * 0.5, h);
+     renderer.setScissor(0, 0, w * 0.5, h);
+     renderer.render(scene, leftCamera);
+
+     // Right eye
+     renderer.setViewport(w * 0.5, 0, w * 0.5, h);
+     renderer.setScissor(w * 0.5, 0, w * 0.5, h);
+     renderer.render(scene, rightCamera);
+
+     renderer.setScissorTest(false);
+     renderer.setViewport(0, 0, w, h);
+   }
+
 
    // For organic navigation: target positions and rotations
    let targetCameraPosition = new THREE.Vector3().copy(camera.position);
@@ -268,12 +510,13 @@
    canvas.addEventListener('mousedown', (e) => {
      // Use right mouse button for rotation
      if (e.button === 2) {
+       if (vrMode) return;
        isRotating = true;
        previousMouseRotation = { x: e.clientX, y: e.clientY };
      }
    });
    canvas.addEventListener('mousemove', (e) => {
-     if (isRotating && !autoCameraEnabled) {  // Allow manual control when auto-camera is off
+     if (isRotating && !autoCameraEnabled && !vrMode) {  // Allow manual control when auto-camera is off
        let deltaX = e.clientX - previousMouseRotation.x;
        let deltaY = e.clientY - previousMouseRotation.y;
        targetCameraRotation.y -= deltaX * 0.005;
@@ -282,7 +525,8 @@
      }
    });
    canvas.addEventListener('mouseup', (e) => {
-     if (e.button === 2) { isRotating = false; }
+     if (e.button === 2) {
+       if (vrMode) return; isRotating = false; }
    });
 
    // Create a particle system with gravitational physics and chaotic behavior
@@ -410,11 +654,11 @@
    // 1. A brilliant star (redirects to stocks)
    createInteractiveStar(new THREE.Vector3(-500, 300, 0), {r:255, g:200, b:50}, "https://donutz.ai/stocks", 50);
    // 2. An enigmatic star (redirects to crypto)
-   createInteractiveStar(new THREE.Vector3(400, -200, 0), {r:50, g:255, b:200}, "https://dascient.com/robovet", 50);
+   createInteractiveStar(new THREE.Vector3(400, -200, 0), {r:50, g:255, b:200}, "https://donutz.ai/crypto", 50);
    // 3. A wicked, eclectic star (redirects to GoDaddy)
-   createInteractiveStar(new THREE.Vector3(200, 400, 0), {r:200, g:50, b:255}, "https://dascient.github.io/labs/gozaddy/analytics.html", 50);
+   createInteractiveStar(new THREE.Vector3(200, 400, 0), {r:200, g:50, b:255}, "https://gozaddy.ai", 50);
    // 4. A dark matter, glitched star (redirects to the anti-philosophical domain)
-   createInteractiveStar(new THREE.Vector3(0, -400, 0), {r:20, g:20, b:20}, "https://MorbidLullabies.com", 70, true);
+   createInteractiveStar(new THREE.Vector3(0, -400, 0), {r:20, g:20, b:20}, "https://xXDaemonLoverXx.ai", 70, true);
 
    // Raycaster and mouse vector for detecting interactions
    const raycaster = new THREE.Raycaster();
@@ -428,6 +672,7 @@
 
    // On click: if an interactive star is clicked, trigger its zoom animation and redirect
    document.addEventListener('click', (event) => {
+     if (vrMode) return;
      raycaster.setFromCamera(mouse, camera);
      const intersects = raycaster.intersectObjects(interactiveStars);
      if (intersects.length > 0) {
@@ -470,8 +715,20 @@
 
      // Smoothly update camera position and rotation (using a slightly lower lerp factor for smoother motion)
      camera.position.lerp(targetCameraPosition, 0.08);
-     camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetCameraRotation.x, 0.08);
-     camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetCameraRotation.y, 0.08);
+
+     if (vrMode && gyroListenerAttached) {
+       // Gyro-only rotation (full XYZ via quaternion); smooth via slerp
+       const deviceQ = new THREE.Quaternion();
+       setObjectQuaternion(deviceQ, deviceAlpha, deviceBeta, deviceGamma, screenOrientRad);
+
+       const targetQ = new THREE.Quaternion();
+       targetQ.copy(gyroCalibrationOffset).multiply(deviceQ);
+
+       camera.quaternion.slerp(targetQ, 0.15);
+     } else {
+       camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetCameraRotation.x, 0.08);
+       camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetCameraRotation.y, 0.08);
+     }
 
      // Update base color (dynamic or preset)
      if (dynamicColorsEnabled) {
@@ -537,6 +794,7 @@
      }
 
      // Process interactive star hover events using raycasting:
+     if (!vrMode) {
      raycaster.setFromCamera(mouse, camera);
      const starIntersects = raycaster.intersectObjects(interactiveStars);
      const now = performance.now();
@@ -559,8 +817,14 @@
        star.scale.set(baseSize * pulse, baseSize * pulse, 1);
      }
 
+     }
+
      // Render the scene
-     renderer.render(scene, camera);
+     if (vrMode) {
+       renderStereo();
+     } else {
+       renderer.render(scene, camera);
+     }
    }
    animate();
 
@@ -569,6 +833,10 @@
      camera.aspect = window.innerWidth / window.innerHeight;
      camera.updateProjectionMatrix();
      renderer.setSize(window.innerWidth, window.innerHeight);
+     leftCamera.aspect = (window.innerWidth * 0.5) / window.innerHeight;
+     rightCamera.aspect = (window.innerWidth * 0.5) / window.innerHeight;
+     leftCamera.updateProjectionMatrix();
+     rightCamera.updateProjectionMatrix();
    });
 
    /****************************
@@ -690,12 +958,27 @@
     * UI Controls and Optional Feature Toggles
     ****************************/
    let controlsTimeout;
+   let uiTimeout;
+   function bumpUIVisibility(){
+     if (vrMode) return; // VR hides 2D UI
+     document.body.classList.remove('ui-hidden');
+     clearTimeout(uiTimeout);
+     uiTimeout = setTimeout(()=>{ document.body.classList.add('ui-hidden'); }, 2500);
+   }
+
+   // Keep the original controls panel behavior, but now hide *all* UI after inactivity.
    document.addEventListener("mousemove", () => {
      const controlsDiv = document.getElementById("controls");
-     controlsDiv.style.opacity = 1;
+     if (controlsDiv) controlsDiv.style.opacity = 1;
      clearTimeout(controlsTimeout);
-     controlsTimeout = setTimeout(() => { controlsDiv.style.opacity = 0; }, 3000);
+     controlsTimeout = setTimeout(() => { if (controlsDiv) controlsDiv.style.opacity = 0; }, 2500);
+     bumpUIVisibility();
    });
+
+   document.addEventListener("touchstart", bumpUIVisibility, { passive: true });
+   document.addEventListener("keydown", bumpUIVisibility);
+   // start hidden by default
+   document.body.classList.add('ui-hidden');
 
    document.getElementById('resolutionSelector').addEventListener('change', (e) => {
      const res = e.target.value;
@@ -718,14 +1001,81 @@
      }
    });
 
+   // ===== VR Controls =====
+   const vrBtn = document.getElementById('vrBtn');
+   const calibrateBtn = document.getElementById('calibrateBtn');
+   const vrCalBtn = document.getElementById('vrCalibrateBtn');
+   const vrCloseCalBtn = document.getElementById('vrCloseCalibrateBtn');
+   const vrExitBtnTop = document.getElementById('vrExitBtnTop');
+
+   function refreshVRButtonLabel(){
+     if (!vrBtn) return;
+     vrBtn.textContent = vrMode ? 'Exit VR' : 'Enter VR';
+   }
+   refreshVRButtonLabel();
+
+   if (vrBtn) vrBtn.addEventListener('click', async () => {
+     if (vrMode) exitVR();
+     else await enterVR();
+     refreshVRButtonLabel();
+   });
+
+   if (calibrateBtn) calibrateBtn.addEventListener('click', () => {
+     // If not in VR, this just opens a helpful prompt; if in VR, it calibrates now.
+     if (!vrMode) {
+       logToTerminal("Calibration is primarily for VR gyro. Enter VR to use gyro-only rotation.");
+       showCalibrateOverlay();
+     } else {
+       showCalibrateOverlay();
+     }
+   });
+
+   if (vrCalBtn) vrCalBtn.addEventListener('click', calibrateGyroNow);
+   if (vrCloseCalBtn) vrCloseCalBtn.addEventListener('click', () => {
+     const overlay = document.getElementById('vrCalibrateOverlay');
+     if (overlay) overlay.classList.remove('show');
+   });
+   if (vrExitBtnTop) vrExitBtnTop.addEventListener('click', () => {
+     exitVR();
+     refreshVRButtonLabel();
+     const overlay = document.getElementById('vrCalibrateOverlay');
+     if (overlay) overlay.classList.remove('show');
+   });
+
+   // Keyboard shortcut: V toggles VR, C opens calibration
+   window.addEventListener('keydown', async (e) => {
+     if (e.key === 'v' || e.key === 'V') {
+       if (vrMode) exitVR();
+       else await enterVR();
+       refreshVRButtonLabel();
+     }
+     if (e.key === 'c' || e.key === 'C') {
+       showCalibrateOverlay();
+     }
+     if (e.key === 'Escape' && vrMode) {
+       exitVR();
+       refreshVRButtonLabel();
+     }
+   });
+
    // Optional feature toggles
    document.getElementById('toggleAudio').addEventListener('change', (e) => {
      audioEnabled = e.target.checked;
      if (audioEnabled) initAudio();
      logToTerminal("Audio Sensitivity " + (audioEnabled ? "enabled" : "disabled") + ".");
    });
-   document.getElementById('toggleOrientation').addEventListener('change', (e) => {
+   document.getElementById('toggleOrientation').addEventListener('change', async (e) => {
      orientationEnabled = e.target.checked;
+
+     if (orientationEnabled) {
+       const ok = await requestGyroPermissionIfNeeded();
+       if (ok) attachGyro();
+       else logToTerminal("Device Orientation permission denied/unavailable.");
+     } else {
+       // If VR is active we keep gyro listener state tied to VR; otherwise detach.
+       if (!vrMode) detachGyro();
+     }
+
      logToTerminal("Device Orientation " + (orientationEnabled ? "enabled" : "disabled") + ".");
    });
    document.getElementById('toggleTouch').addEventListener('change', (e) => {
@@ -756,6 +1106,8 @@
      terminal.scrollTop = terminal.scrollHeight;
    }
 
+
+   window.addEventListener('pagehide', () => { detachGyro(); });
    logToTerminal("CosmicDashboard initialized. Welcome to your Cosmic Dashboard! Swim freely within this living, breathing, augmented hyper-dimensional AI-Interface. Enjoy the transcendent journey through exquisite stars and dark matter mysteries.");
  </script>
 
