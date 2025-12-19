@@ -15,3 +15,5 @@ exclude:
   - "**/*.log"
   - rag/rag-ubiq/node_modules
   - "**/CHANGELOG.md"
+  - "**/*.md"
+  - "**/README.md"
