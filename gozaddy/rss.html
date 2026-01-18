@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  /* Ticker Container */
+  .news-ticker-wrap {
+    width: 100%;
+    height: 40px; /* Adjust height */
+    background-color: #0b1220; /* Dark Blue Background */
+    overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
+    border-bottom: 1px solid #333;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+  }
+
+  /* The "Breaking News" Label */
+  .ticker-label {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 10;
+    background: #b91c1c; /* Red */
+    color: #fff;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    font-weight: 800;
+    font-size: 12px;
+    text-transform: uppercase;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+  }
+
+  /* The Moving Track */
+  .ticker-move {
+    display: inline-block;
+    white-space: nowrap;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    /* Animation duration is calculated in JS based on content length */
+    animation: ticker-slide linear infinite; 
+  }
+
+  /* The individual news items */
+  .ticker-item {
+    display: inline-block;
+    padding: 0 20px;
+    font-size: 14px;
+    color: #e2e8f0;
+    text-decoration: none;
+    border-right: 1px solid #334155;
+    transition: color 0.2s;
+  }
+
+  .ticker-item:hover {
+    color: #60a5fa; /* Blue on hover */
+    text-decoration: underline;
+  }
+
+  /* Pause animation on hover */
+  .news-ticker-wrap:hover .ticker-move {
+    animation-play-state: paused;
+  }
+
+  /* The Animation Keyframes */
+  @keyframes ticker-slide {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } 
+  }
+</style>
+</head>
+<body>
+
+<div class="news-ticker-wrap">
+  <div class="ticker-label">Breaking</div>
+  <div class="ticker-move" id="ticker-track">
+    <span style="padding:0 20px; color:#aaa;">Loading news...</span>
+  </div>
+</div>
+<script>
+  (async function() {
+    const RSS_URL = "https://gozaddy-rss.aristocles24.workers.dev";
+    const track = document.getElementById('ticker-track');
+
+    try {
+      // 1. Fetch the RSS Feed
+      const response = await fetch(RSS_URL);
+      if (!response.ok) throw new Error("Failed to fetch RSS");
+      
+      // 2. Parse XML text into a DOM object
+      const str = await response.text();
+      const data = new window.DOMParser().parseFromString(str, "text/xml");
+      
+      // 3. Get all items
+      const items = data.querySelectorAll("item");
+      
+      if (items.length === 0) {
+        track.innerHTML = '<span class="ticker-item">No news available at the moment.</span>';
+        return;
+      }
+
+      // 4. Build HTML String
+      let htmlContent = "";
+      items.forEach(item => {
+        const title = item.querySelector("title").textContent;
+        const link = item.querySelector("link").textContent;
+        // Clean up title (remove CDATA if present)
+        const cleanTitle = title.replace("<![CDATA[", "").replace("]]>", "").trim();
+        
+        htmlContent += `<a href="${link}" target="_blank" class="ticker-item">${cleanTitle}</a>`;
+      });
+
+      // 5. Inject Content & Duplicate for smooth loop
+      // We put the content in twice. The animation moves from 0% to -50%
+      // This creates a perfect "infinite" loop illusion.
+      track.innerHTML = htmlContent + htmlContent;
+
+      // 6. Calculate Animation Speed dynamically
+      // Rule of thumb: 10 seconds for every 1000 pixels of text
+      const width = track.scrollWidth / 2; // Real width of one set of items
+      const duration = width / 50; // Adjust '50' to control speed (higher = faster)
+      track.style.animationDuration = `${duration}s`;
+
+    } catch (e) {
+      console.error(e);
+      track.innerHTML = '<span class="ticker-item" style="color:red">Error loading news feed. (Did you add CORS header?)</span>';
+    }
+  })();
+</script>
+
+</body>
+</html>
