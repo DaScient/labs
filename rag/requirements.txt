@@ -1,9 +1,0 @@
-fastapi
-uvicorn
-python-multipart
-aiohttp
-requests
-pypandoc
-pdfminer.six
-python-magic
-chardet
