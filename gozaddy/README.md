@@ -2,6 +2,7 @@
 
 ## Live News RSS Auto-Article & Content Generator
 ### Real-time Global Trends Analytic Dashboard
+### [Quantum Intelligence Podcast](https://rss.com/podcasts/dascient/)
 
 GoZaddy.ai is an open-source, modular platform that ingests global RSS news feeds, applies AI-driven summarization and auto-article generation, and presents real-time trend analytics and sentiment data through a unified dashboard.
 
